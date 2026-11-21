@@ -35,6 +35,7 @@ import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FileOpen
 import androidx.compose.material.icons.filled.Key
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.Spa
@@ -69,7 +70,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.core.GameBalance
-import com.example.core.GitHubConfig
+import com.example.core.PackManager
 import com.example.core.ValidationResult
 import com.example.ui.components.ConfirmModal
 import com.example.ui.components.GbaCard
@@ -548,16 +549,9 @@ private fun ParentSettingsTab(
     uiState: AppUiState,
     viewModel: ScuolaRetroViewModel
 ) {
-    val context = LocalContext.current
     val prefs = uiState.config.studyPreferences
-    val ghInit = uiState.config.github
-
-    var owner by remember(ghInit.owner) { mutableStateOf(ghInit.owner) }
-    var repo by remember(ghInit.repo) { mutableStateOf(ghInit.repo) }
-    var branch by remember(ghInit.branch) { mutableStateOf(ghInit.branch) }
-    var basePath by remember(ghInit.basePath) { mutableStateOf(ghInit.basePath) }
-    var pat by remember(ghInit.pat) { mutableStateOf(ghInit.pat) }
     var ghTestMessage by remember { mutableStateOf<String?>(null) }
+    val hasPatConfigured = remember { PackManager.hasConfiguredBuildPat() }
 
     var newProfileName by remember { mutableStateOf("") }
     var resetStep by remember { mutableIntStateOf(0) } // 0=none, 1=first confirm, 2=second confirm
@@ -700,105 +694,63 @@ private fun ParentSettingsTab(
 
         HorizontalDivider()
 
-        // GitHub Private Repository Form
-        Text("Repository GitHub Privato (Pacchetti)", style = MaterialTheme.typography.titleLarge, color = DeepBlueAccent)
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            OutlinedTextField(
-                value = owner,
-                onValueChange = { owner = it },
-                label = { Text("Owner GitHub") },
-                singleLine = true,
-                modifier = Modifier.weight(1f)
-            )
-            OutlinedTextField(
-                value = repo,
-                onValueChange = { repo = it },
-                label = { Text("Repository") },
-                singleLine = true,
-                modifier = Modifier.weight(1f)
-            )
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            OutlinedTextField(
-                value = branch,
-                onValueChange = { branch = it },
-                label = { Text("Branch") },
-                singleLine = true,
-                modifier = Modifier.weight(1f)
-            )
-            OutlinedTextField(
-                value = basePath,
-                onValueChange = { basePath = it },
-                label = { Text("Cartella (es. packs)") },
-                singleLine = true,
-                modifier = Modifier.weight(1f)
-            )
-        }
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        // Locked GitHub Repository Status (configured at build level, not editable on device)
+        Text("Repository Pacchetti GitHub", style = MaterialTheme.typography.titleLarge, color = DeepBlueAccent)
+        Surface(
+            shape = RoundedCornerShape(12.dp),
+            color = CreamSurface,
+            border = BorderStroke(2.dp, Color(0xFFCBD5E1))
         ) {
-            OutlinedTextField(
-                value = pat,
-                onValueChange = { pat = it },
-                label = { Text("Token GitHub (PAT solo lettura)") },
-                singleLine = true,
-                visualTransformation = PasswordVisualTransformation(),
+            Column(
                 modifier = Modifier
-                    .weight(1f)
-                    .testTag("github_pat_input")
-            )
-            OutlinedButton(
-                onClick = {
-                    val pasted = try {
-                        val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
-                        val clip = cm?.primaryClip
-                        if (clip != null && clip.itemCount > 0) {
-                            clip.getItemAt(0)?.coerceToText(context)?.toString()?.trim().orEmpty()
-                        } else {
-                            ""
-                        }
-                    } catch (_: Throwable) {
-                        ""
-                    }
-                    if (pasted.isNotEmpty()) {
-                        pat = pasted
-                        viewModel.showToast("PAT incollato dagli appunti.")
-                    } else {
-                        viewModel.showToast("Gli appunti sono vuoti.")
-                    }
-                },
-                modifier = Modifier
-                    .heightIn(min = 56.dp)
-                    .testTag("paste_pat_button")
+                    .fillMaxWidth()
+                    .padding(14.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Icon(Icons.Default.ContentPaste, contentDescription = null)
-                Spacer(Modifier.width(4.dp))
-                Text("Incolla PAT")
-            }
-        }
-        Button(
-            onClick = {
-                val cfg = GitHubConfig(
-                    owner = owner.trim(),
-                    repo = repo.trim(),
-                    branch = branch.trim().ifBlank { "main" },
-                    basePath = basePath.trim(),
-                    pat = pat.trim()
-                )
-                viewModel.saveAndTestGithub(cfg) { res ->
-                    ghTestMessage = res.message
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(Icons.Default.Lock, contentDescription = "Configurazione bloccata", tint = DeepBlueAccent)
+                    Text(
+                        text = "${PackManager.LOCKED_GITHUB_OWNER}/${PackManager.LOCKED_GITHUB_REPO}",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = InkPrimary
+                    )
                 }
-            },
-            enabled = !uiState.isSyncing,
-            modifier = Modifier
-                .heightIn(min = 52.dp)
-                .testTag("save_test_github_button")
-        ) {
-            Text(if (uiState.isSyncing) "Connessione in corso..." else "Salva e testa connessione")
-        }
-        ghTestMessage?.let { msg ->
-            Text(msg, style = MaterialTheme.typography.bodyMedium, color = DeepBlueAccent)
+                Text(
+                    text = "Branch: ${PackManager.LOCKED_GITHUB_BRANCH} · Cartella: ${PackManager.LOCKED_GITHUB_BASE_PATH} (bloccato a livello di app)",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = InkSecondary
+                )
+                Text(
+                    text = if (hasPatConfigured) {
+                        "Autenticazione: Token sicuro integrato nella build"
+                    } else {
+                        "Autenticazione: Accesso pubblico (imposta GITHUB_PACKS_PAT nei Secrets se il repo è privato)"
+                    },
+                    style = MaterialTheme.typography.labelLarge,
+                    color = if (hasPatConfigured) EmeraldSuccess else InkSecondary
+                )
+                Button(
+                    onClick = {
+                        viewModel.testLockedGithubConnection { res ->
+                            ghTestMessage = res.message
+                        }
+                    },
+                    enabled = !uiState.isSyncing,
+                    modifier = Modifier
+                        .heightIn(min = 48.dp)
+                        .testTag("test_github_connection_button")
+                ) {
+                    Icon(Icons.Default.CloudSync, contentDescription = null)
+                    Spacer(Modifier.width(6.dp))
+                    Text(if (uiState.isSyncing) "Connessione in corso..." else "Testa connessione")
+                }
+                ghTestMessage?.let { msg ->
+                    Text(msg, style = MaterialTheme.typography.bodyMedium, color = DeepBlueAccent)
+                }
+            }
         }
 
         HorizontalDivider()

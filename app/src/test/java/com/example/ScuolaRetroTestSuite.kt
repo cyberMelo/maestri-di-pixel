@@ -495,11 +495,16 @@ class ScuolaRetroTestSuite {
         )
         assertEquals(4, fallbackDeck.size)
 
-        // Verify all 6 active hallway doors are reachable via A* from hallway entrance
+        // Verify all 7 active hallway doors are reachable via A* from hallway entrance and have clear door signage
         val hallway = SchoolMaps.schoolHallway
         val start = hallway.spawns["from_yard"]!!
-        listOf("portal_gym", "portal_locker", "portal_lab", "portal_library", "portal_geo", "portal_english").forEach { portalId ->
+        listOf(
+            "portal_history", "portal_gym", "portal_lab", "portal_locker",
+            "portal_library", "portal_geo", "portal_english"
+        ).forEach { portalId ->
             val portal = hallway.portals.first { it.id == portalId }
+            assertTrue("Portal $portalId must have a label", portal.label.isNotBlank())
+            assertTrue("Portal $portalId must have a subtitle plaque", portal.subtitle.isNotBlank())
             val path = SchoolMaps.findPath4Dir(hallway, start, portal.pos, allowPartialPath = true)
             assertTrue("Portal $portalId must be reachable", path.isNotEmpty())
             assertEquals("Path must reach $portalId", portal.pos, path.last())

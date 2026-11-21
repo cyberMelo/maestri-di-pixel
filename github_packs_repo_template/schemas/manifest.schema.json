@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://maestridipixel.local/schemas/manifest.schema.json",
+  "title": "MaestriDiPixelManifestV1",
+  "description": "Schema ufficiale per manifest.json del repository pacchetti di Maestri di Pixel (schema_version = 1).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "packs"],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Data e ora dell'ultimo aggiornamento in formato ISO-8601 (opzionale)."
+    },
+    "packs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["pack_id", "file", "subject", "title", "version"],
+        "properties": {
+          "pack_id": {
+            "type": "string",
+            "pattern": "^[a-z0-9_]{3,48}$"
+          },
+          "file": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_-]+(/[a-zA-Z0-9_-]+)*\\.json$",
+            "description": "Percorso relativo sicuro verso il file JSON del pacchetto."
+          },
+          "subject": {
+            "type": "string",
+            "enum": ["storia", "geografia", "scienze", "matematica", "italiano", "inglese"]
+          },
+          "title": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 60
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "priority": {
+            "type": "boolean",
+            "default": false
+          },
+          "archived": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      }
+    }
+  }
+}

@@ -167,7 +167,7 @@ class LearningEngine(
     private fun buildRecommended(pack: PackData, isBoss: Boolean): RecommendedActivity {
         val minigameId = minigameIdForSubject(pack.subject)
         val location = when (pack.subject) {
-            "storia" -> "Maestro Erodoto (Cortile)"
+            "storia" -> "Aula Storia / Cortile"
             "scienze" -> "Maestra Flora / Laboratorio"
             "matematica" -> "Palestra (Corridoio)"
             "italiano" -> "Biblioteca (Corridoio)"

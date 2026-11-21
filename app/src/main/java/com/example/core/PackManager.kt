@@ -1,5 +1,6 @@
 package com.example.core
 
+import com.example.BuildConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
@@ -212,15 +213,14 @@ class PackManager(
             return SyncResult("busy", "Sincronizzazione già in corso...")
         }
         return try {
-            val gh = saveManager.config.github
-            val owner = gh.owner.trim()
-            val repo = gh.repo.trim()
-            val branch = gh.branch.trim()
-            val pat = gh.pat.trim()
-            if (owner.isEmpty() || repo.isEmpty() || branch.isEmpty() || pat.isEmpty()) {
-                return SyncResult("not_configured", "Inserisci owner, repository, branch e token GitHub.")
-            }
-            val url = buildGithubContentsUrl(owner, repo, branch, gh.basePath, "manifest.json")
+            val pat = resolvedBuildPat()
+            val url = buildGithubContentsUrl(
+                LOCKED_GITHUB_OWNER,
+                LOCKED_GITHUB_REPO,
+                LOCKED_GITHUB_BRANCH,
+                LOCKED_GITHUB_BASE_PATH,
+                "manifest.json"
+            )
             val resp = httpGetText(url, pat)
             if (!resp.ok) {
                 val safeMsg = redactSecrets(resp.errorMessage, pat)
@@ -249,18 +249,13 @@ class PackManager(
             return SyncResult("busy", "Sincronizzazione già in corso...")
         }
         return try {
-            val gh = saveManager.config.github
-            val owner = gh.owner.trim()
-            val repo = gh.repo.trim()
-            val branch = gh.branch.trim()
-            val pat = gh.pat.trim()
-            if (owner.isEmpty() || repo.isEmpty() || branch.isEmpty() || pat.isEmpty()) {
-                val res = SyncResult("not_configured", "GitHub non configurato.")
-                persistSyncState(res)
-                return res
-            }
+            val owner = LOCKED_GITHUB_OWNER
+            val repo = LOCKED_GITHUB_REPO
+            val branch = LOCKED_GITHUB_BRANCH
+            val basePath = LOCKED_GITHUB_BASE_PATH
+            val pat = resolvedBuildPat()
 
-            val manifestUrl = buildGithubContentsUrl(owner, repo, branch, gh.basePath, "manifest.json")
+            val manifestUrl = buildGithubContentsUrl(owner, repo, branch, basePath, "manifest.json")
             val manifestResp = httpGetText(manifestUrl, pat)
             if (!manifestResp.ok) {
                 val res = SyncResult(manifestResp.status, redactSecrets(manifestResp.errorMessage, pat))
@@ -305,7 +300,7 @@ class PackManager(
 
                 if (!needsDownload) continue
 
-                val packUrl = buildGithubContentsUrl(owner, repo, branch, gh.basePath, entry.file)
+                val packUrl = buildGithubContentsUrl(owner, repo, branch, basePath, entry.file)
                 val packResp = httpGetText(packUrl, pat)
                 if (!packResp.ok) {
                     errors.add("${entry.file}: ${redactSecrets(packResp.errorMessage, pat)}")
@@ -360,7 +355,7 @@ class PackManager(
     }
 
     private fun persistSyncState(res: SyncResult) {
-        val pat = saveManager.config.github.pat
+        val pat = resolvedBuildPat()
         val nowUnix = System.currentTimeMillis() / 1000L
         saveManager.updateConfig { cfg ->
             cfg.copy(
@@ -384,14 +379,16 @@ class PackManager(
 
     private suspend fun httpGetText(url: String, pat: String): HttpFetchResult = withContext(Dispatchers.IO) {
         try {
-            val request = Request.Builder()
+            val reqBuilder = Request.Builder()
                 .url(url)
-                .header("Authorization", "Bearer ${pat.trim()}")
                 .header("Accept", "application/vnd.github.raw+json")
                 .header("X-GitHub-Api-Version", "2022-11-28")
-                .header("User-Agent", "ScuolaRetroApp/1.0")
+                .header("User-Agent", "MaestriDiPixelApp/1.0")
                 .get()
-                .build()
+            if (pat.isNotBlank()) {
+                reqBuilder.header("Authorization", "Bearer ${pat.trim()}")
+            }
+            val request = reqBuilder.build()
 
             httpClient.newCall(request).execute().use { response ->
                 val code = response.code
@@ -403,14 +400,22 @@ class PackManager(
                         "error",
                         code,
                         "",
-                        "Accesso negato (HTTP $code): verifica i permessi di lettura del token GitHub."
+                        if (pat.isBlank()) {
+                            "Accesso negato (HTTP $code): se il repository è privato imposta GITHUB_PACKS_PAT nei Secrets."
+                        } else {
+                            "Accesso negato (HTTP $code): verifica i permessi di lettura del token GITHUB_PACKS_PAT."
+                        }
                     )
                     code == 404 -> HttpFetchResult(
                         false,
                         "error",
                         code,
                         "",
-                        "Percorso non trovato (HTTP 404): controlla owner, repository, branch e cartella."
+                        if (pat.isBlank()) {
+                            "Non trovato (HTTP 404): verifica packs/manifest.json oppure imposta GITHUB_PACKS_PAT se il repo è privato."
+                        } else {
+                            "Percorso non trovato (HTTP 404): verifica che packs/manifest.json esista nel branch $LOCKED_GITHUB_BRANCH."
+                        }
                     )
                     else -> HttpFetchResult(
                         false,
@@ -447,6 +452,19 @@ class PackManager(
     }
 
     companion object {
+        const val LOCKED_GITHUB_OWNER = "cyberMelo"
+        const val LOCKED_GITHUB_REPO = "maestri-di-pixel-packs"
+        const val LOCKED_GITHUB_BRANCH = "main"
+        const val LOCKED_GITHUB_BASE_PATH = "packs"
+        private const val PAT_PLACEHOLDER = "GITHUB_PACKS_PAT_DEFAULT_VALUE"
+
+        fun resolvedBuildPat(): String {
+            val raw = BuildConfig.GITHUB_PACKS_PAT.trim()
+            return if (raw.isEmpty() || raw == PAT_PLACEHOLDER) "" else raw
+        }
+
+        fun hasConfiguredBuildPat(): Boolean = resolvedBuildPat().isNotEmpty()
+
         fun buildGithubContentsUrl(
             owner: String,
             repo: String,

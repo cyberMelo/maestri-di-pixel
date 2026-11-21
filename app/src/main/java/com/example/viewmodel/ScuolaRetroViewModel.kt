@@ -365,6 +365,33 @@ class ScuolaRetroViewModel(application: Application) : AndroidViewModel(applicat
                 audioManager.playSfx(SfxType.DOOR_OPEN)
                 navigateTo(AppScreen.Hub(action.targetHubId, action.targetSpawnId))
             }
+            PortalAction.OpenHistoryPicker -> {
+                audioManager.playSfx(SfxType.DOOR_OPEN)
+                val types = setOf("multiple_choice", "true_false")
+                val historyPacks = packManager.getActivePacks().filter { p ->
+                    p.subject == "storia" && p.playableQuestions.any { it.type in types }
+                }
+                if (historyPacks.isEmpty()) {
+                    showModal(
+                        ActiveModal.Dialog(
+                            title = "Aula di Storia",
+                            message = "Non ci sono ancora capitoli di Storia pronti in aula!",
+                            speakerSpriteId = "npc_history"
+                        )
+                    )
+                } else {
+                    showModal(
+                        ActiveModal.PackPicker(
+                            title = "Aula di Storia · Maestro Erodoto",
+                            subtitle = "Sfida di Storia in stile GBA!",
+                            packs = historyPacks,
+                            minigameId = "yard_battle",
+                            returnScene = "school_hallway",
+                            returnSpawnId = "from_history"
+                        )
+                    )
+                }
+            }
             PortalAction.OpenGymPicker -> {
                 audioManager.playSfx(SfxType.DOOR_OPEN)
                 val gymTypes = setOf("numeric_input", "multiple_choice", "true_false")
@@ -761,14 +788,18 @@ class ScuolaRetroViewModel(application: Application) : AndroidViewModel(applicat
         refreshSnapshot()
     }
 
-    fun saveAndTestGithub(gh: GitHubConfig, onResult: (SyncResult) -> Unit) {
-        saveGithubConfig(gh)
+    fun testLockedGithubConnection(onResult: (SyncResult) -> Unit) {
         viewModelScope.launch {
             _uiState.update { it.copy(isSyncing = true) }
             val result = packManager.testGithubConnection()
             refreshSnapshot()
             onResult(result)
         }
+    }
+
+    fun saveAndTestGithub(gh: GitHubConfig, onResult: (SyncResult) -> Unit) {
+        saveGithubConfig(gh)
+        testLockedGithubConnection(onResult)
     }
 
     fun syncNow(onDone: ((SyncResult) -> Unit)? = null) {

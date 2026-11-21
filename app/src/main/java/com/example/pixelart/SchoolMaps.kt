@@ -18,12 +18,14 @@ data class HubNpc(
 data class HubPortal(
     val id: String,
     val label: String,
+    val subtitle: String = "",
     val pos: GridPos,
     val action: PortalAction
 )
 
 sealed interface PortalAction {
     data class GoToHub(val targetHubId: String, val targetSpawnId: String) : PortalAction
+    data object OpenHistoryPicker : PortalAction
     data object OpenGymPicker : PortalAction
     data object OpenScienceLabPicker : PortalAction
     data object OpenLibraryPicker : PortalAction
@@ -152,7 +154,8 @@ object SchoolMaps {
         val portals = listOf(
             HubPortal(
                 id = "portal_school_entrance",
-                label = "Ingresso",
+                label = "Scuola",
+                subtitle = "Aule & Corridoio",
                 pos = GridPos(13, 4),
                 action = PortalAction.GoToHub("school_hallway", "from_yard")
             )
@@ -179,127 +182,199 @@ object SchoolMaps {
     }
 
     private fun buildSchoolHallway(): SchoolMapData {
-        val w = 28
-        val h = 14
+        val w = 26
+        val h = 16
         val grid = Array(h) { y ->
             Array(w) { x ->
                 if ((x + y) % 2 == 0) TileKind.HALL_FLOOR_A else TileKind.HALL_FLOOR_B
             }
         }
 
-        // Walls around hallway
+        // Outer perimeter walls
         for (x in 0 until w) {
-            grid[0][x] = TileKind.HALL_WALL
+            grid[0][x] = TileKind.HALL_WALL_TOP
             grid[1][x] = TileKind.HALL_WALL
             grid[2][x] = TileKind.HALL_WALL
             grid[h - 1][x] = TileKind.HALL_WALL
         }
         for (y in 0 until h) {
-            grid[y][0] = TileKind.HALL_WALL
-            grid[y][w - 1] = TileKind.HALL_WALL
+            grid[y][0] = TileKind.HALL_WALL_TOP
+            grid[y][w - 1] = TileKind.HALL_WALL_TOP
         }
 
-        // Interior hallway props along top wall
+        // Royal blue & gold carpet runners connecting the foyer, central atrium plaza, and side wings
+        for (y in 3..14) {
+            for (x in 12..14) grid[y][x] = TileKind.HALL_CARPET
+        }
+        for (y in 5..9) {
+            for (x in 10..16) grid[y][x] = TileKind.HALL_CARPET
+        }
+        // Carpet welcome strips toward mid & lower side classrooms
+        for (x in 4..10) grid[8][x] = TileKind.HALL_CARPET
+        for (x in 16..21) grid[8][x] = TileKind.HALL_CARPET
+        for (x in 4..12) grid[13][x] = TileKind.HALL_CARPET
+        for (x in 14..21) grid[13][x] = TileKind.HALL_CARPET
+
+        // Central Atrium Trophy & Reading Island (3x2 centerpiece on blue-gold carpet)
+        grid[6][12] = TileKind.BOOKSHELF
+        grid[6][13] = TileKind.TROPHY_CASE
+        grid[6][14] = TileKind.BOOKSHELF
+        grid[7][12] = TileKind.STUDY_DESK
+        grid[7][13] = TileKind.STUDY_DESK
+        grid[7][14] = TileKind.STUDY_DESK
+
+        // Corner plants & cozy indoor benches on tiled floor framing the central carpet plaza & foyer
+        grid[5][9] = TileKind.POTTED_PLANT
+        grid[5][17] = TileKind.POTTED_PLANT
+        grid[7][9] = TileKind.INDOOR_BENCH
+        grid[7][17] = TileKind.INDOOR_BENCH
+        grid[9][9] = TileKind.POTTED_PLANT
+        grid[9][17] = TileKind.POTTED_PLANT
+        grid[11][9] = TileKind.INDOOR_BENCH
+        grid[11][17] = TileKind.INDOOR_BENCH
+        grid[14][9] = TileKind.POTTED_PLANT
+        grid[14][17] = TileKind.POTTED_PLANT
+        grid[3][1] = TileKind.POTTED_PLANT
+        grid[3][24] = TileKind.POTTED_PLANT
+
+        // North Wall props strictly BETWEEN the 3 wide-spaced North doors (x = 5, 13, 21)
         grid[1][2] = TileKind.WINDOW_INT
-        grid[1][6] = TileKind.NOTICE_BOARD
-        grid[1][14] = TileKind.NOTICE_BOARD
-        grid[1][22] = TileKind.NOTICE_BOARD
-        grid[1][25] = TileKind.WINDOW_INT
+        grid[1][9] = TileKind.NOTICE_BOARD
+        grid[1][17] = TileKind.NOTICE_BOARD
+        grid[1][23] = TileKind.WINDOW_INT
 
         grid[2][2] = TileKind.LOCKER_PROP
-        grid[2][10] = TileKind.LOCKER_PROP
-        grid[2][18] = TileKind.LOCKER_PROP
-        grid[2][26] = TileKind.LOCKER_PROP
+        grid[2][9] = TileKind.LOCKER_PROP
+        grid[2][17] = TileKind.LOCKER_PROP
+        grid[2][23] = TileKind.LOCKER_PROP
 
-        // Potted plants
-        grid[3][1] = TileKind.POTTED_PLANT
-        grid[3][26] = TileKind.POTTED_PLANT
-        grid[12][1] = TileKind.POTTED_PLANT
-        grid[12][26] = TileKind.POTTED_PLANT
+        // Mid-West Wing (Palestra · Matematica) alcove: x = 1..5, y = 5..7
+        for (x in 1..5) {
+            grid[5][x] = TileKind.HALL_WALL_TOP
+            grid[6][x] = TileKind.HALL_WALL
+            grid[7][x] = TileKind.HALL_WALL
+        }
+        grid[6][1] = TileKind.WINDOW_INT
+        grid[7][3] = TileKind.DOOR_GYM
+        grid[8][3] = TileKind.DOORMAT
 
-        // 6 Active Doors evenly spaced on North wall (row 2) with doormats (row 3)
-        // 1. Palestra (Matematica) at (4, 2)
-        grid[2][4] = TileKind.DOOR_GYM
-        grid[3][4] = TileKind.DOORMAT
+        // Mid-East Wing (Laboratorio · Scienze) alcove: x = 20..24, y = 5..7
+        for (x in 20..24) {
+            grid[5][x] = TileKind.HALL_WALL_TOP
+            grid[6][x] = TileKind.HALL_WALL
+            grid[7][x] = TileKind.HALL_WALL
+        }
+        grid[6][24] = TileKind.WINDOW_INT
+        grid[7][22] = TileKind.DOOR_ACTIVE
+        grid[8][22] = TileKind.DOORMAT
 
-        // 2. Armadietto & Spaccio (Locker) at (8, 2)
-        grid[2][8] = TileKind.DOOR_LOCKER
-        grid[3][8] = TileKind.DOORMAT
+        // Lower-West Wing (Geografia · Mongolfiera) alcove: x = 1..5, y = 10..12
+        for (x in 1..5) {
+            grid[10][x] = TileKind.HALL_WALL_TOP
+            grid[11][x] = TileKind.HALL_WALL
+            grid[12][x] = TileKind.HALL_WALL
+        }
+        grid[11][1] = TileKind.WINDOW_INT
+        grid[12][3] = TileKind.DOOR_GEO
+        grid[13][3] = TileKind.DOORMAT
 
-        // 3. Laboratorio (Scienze) at (12, 2)
-        grid[2][12] = TileKind.DOOR_ACTIVE
-        grid[3][12] = TileKind.DOORMAT
+        // Lower-East Wing (Inglese · Parole EN) alcove: x = 20..24, y = 10..12
+        for (x in 20..24) {
+            grid[10][x] = TileKind.HALL_WALL_TOP
+            grid[11][x] = TileKind.HALL_WALL
+            grid[12][x] = TileKind.HALL_WALL
+        }
+        grid[11][24] = TileKind.WINDOW_INT
+        grid[12][22] = TileKind.DOOR_ENGLISH
+        grid[13][22] = TileKind.DOORMAT
 
-        // 4. Biblioteca (Italiano) at (16, 2)
-        grid[2][16] = TileKind.DOOR_LIBRARY
-        grid[3][16] = TileKind.DOORMAT
+        // North Wing Doors (spaced 8 tiles apart: x = 5, 13, 21)
+        // 1. Aula di Storia at (5, 2)
+        grid[2][5] = TileKind.DOOR_HISTORY
+        grid[3][5] = TileKind.DOORMAT
 
-        // 5. Aula di Geografia at (20, 2)
-        grid[2][20] = TileKind.DOOR_GEO
-        grid[3][20] = TileKind.DOORMAT
+        // 2. Armadietto & Spaccio (grand center) at (13, 2)
+        grid[2][13] = TileKind.DOOR_LOCKER
+        grid[3][13] = TileKind.DOORMAT
 
-        // 6. Aula di Inglese at (24, 2)
-        grid[2][24] = TileKind.DOOR_ENGLISH
-        grid[3][24] = TileKind.DOORMAT
+        // 3. Biblioteca (Italiano) at (21, 2)
+        grid[2][21] = TileKind.DOOR_LIBRARY
+        grid[3][21] = TileKind.DOORMAT
 
-        // South Exit Door back to Yard at (14, 13)
-        grid[13][14] = TileKind.DOOR_ACTIVE
-        grid[12][14] = TileKind.DOORMAT
+        // South Exit Door back to Yard centered at (13, 15)
+        grid[15][13] = TileKind.DOOR_ACTIVE
+        grid[14][13] = TileKind.DOORMAT
 
         val portals = listOf(
             HubPortal(
-                id = "portal_gym",
-                label = "Palestra",
-                pos = GridPos(4, 2),
-                action = PortalAction.OpenGymPicker
+                id = "portal_history",
+                label = "Aula Storia",
+                subtitle = "Storia",
+                pos = GridPos(5, 2),
+                action = PortalAction.OpenHistoryPicker
             ),
             HubPortal(
                 id = "portal_locker",
                 label = "Armadietto",
-                pos = GridPos(8, 2),
+                subtitle = "Premi",
+                pos = GridPos(13, 2),
                 action = PortalAction.OpenLocker
-            ),
-            HubPortal(
-                id = "portal_lab",
-                label = "Laboratorio",
-                pos = GridPos(12, 2),
-                action = PortalAction.OpenScienceLabPicker
             ),
             HubPortal(
                 id = "portal_library",
                 label = "Biblioteca",
-                pos = GridPos(16, 2),
+                subtitle = "Italiano",
+                pos = GridPos(21, 2),
                 action = PortalAction.OpenLibraryPicker
+            ),
+            HubPortal(
+                id = "portal_gym",
+                label = "Palestra",
+                subtitle = "Matematica",
+                pos = GridPos(3, 7),
+                action = PortalAction.OpenGymPicker
+            ),
+            HubPortal(
+                id = "portal_lab",
+                label = "Laboratorio",
+                subtitle = "Scienze",
+                pos = GridPos(22, 7),
+                action = PortalAction.OpenScienceLabPicker
             ),
             HubPortal(
                 id = "portal_geo",
                 label = "Geografia",
-                pos = GridPos(20, 2),
+                subtitle = "Mongolfiera",
+                pos = GridPos(3, 12),
                 action = PortalAction.OpenGeoPicker
             ),
             HubPortal(
                 id = "portal_english",
                 label = "Inglese",
-                pos = GridPos(24, 2),
+                subtitle = "Parole EN",
+                pos = GridPos(22, 12),
                 action = PortalAction.OpenEnglishPicker
             ),
             HubPortal(
                 id = "portal_to_yard",
                 label = "Cortile",
-                pos = GridPos(14, 13),
+                subtitle = "Uscita",
+                pos = GridPos(13, 15),
                 action = PortalAction.GoToHub("school_yard", "from_hallway")
             )
         )
 
+        // Spawns strictly >= 1 walkable tile away from doors (anti-loop rule)
         val spawns = mapOf(
-            "from_yard" to GridPos(14, 11),
-            "from_gym" to GridPos(4, 4),
-            "from_locker" to GridPos(8, 4),
-            "from_lab" to GridPos(12, 4),
-            "from_library" to GridPos(16, 4),
-            "from_geo" to GridPos(20, 4),
-            "from_english" to GridPos(24, 4),
-            "default" to GridPos(14, 8)
+            "from_yard" to GridPos(13, 13),
+            "from_history" to GridPos(5, 4),
+            "from_locker" to GridPos(13, 4),
+            "from_library" to GridPos(21, 4),
+            "from_gym" to GridPos(3, 9),
+            "from_lab" to GridPos(22, 9),
+            "from_geo" to GridPos(3, 14),
+            "from_english" to GridPos(22, 14),
+            "default" to GridPos(13, 10)
         )
 
         return SchoolMapData(

@@ -15,10 +15,13 @@ enum class TileKind(val solid: Boolean) {
     SCHOOL_ROOF(true),
     HALL_FLOOR_A(false),
     HALL_FLOOR_B(false),
+    HALL_CARPET(false),
     HALL_WALL(true),
+    HALL_WALL_TOP(true),
     DOOR_ACTIVE(false),
     DOOR_WIP(true),
     DOOR_GYM(false),
+    DOOR_HISTORY(false),
     DOOR_LOCKER(false),
     DOOR_LIBRARY(false),
     DOOR_GEO(false),
@@ -29,6 +32,10 @@ enum class TileKind(val solid: Boolean) {
     LOCKER_PROP(true),
     NOTICE_BOARD(true),
     BENCH(true),
+    INDOOR_BENCH(true),
+    TROPHY_CASE(true),
+    BOOKSHELF(true),
+    STUDY_DESK(true),
     POTTED_PLANT(true)
 }
 
@@ -201,12 +208,35 @@ object PixelArtAssets {
                 rect(0, 0, 16, 1, hex(0xFFD8CCB6))
                 rect(0, 0, 1, 16, hex(0xFFD8CCB6))
             }
+            TileKind.HALL_CARPET -> {
+                // Royal-blue school atrium carpet with warm gold stitched border & diamond weave
+                rect(0, 0, 16, 16, hex(0xFF1D4ED8))
+                rect(0, 0, 16, 1, hex(0xFFFBBF24))
+                rect(0, 15, 16, 1, hex(0xFFFBBF24))
+                rect(0, 0, 1, 16, hex(0xFFD97706))
+                rect(15, 0, 1, 16, hex(0xFFD97706))
+                rect(2, 2, 12, 12, hex(0xFF2563EB))
+                // Subtle woven center motif
+                px(7, 6, hex(0xFF60A5FA)); px(8, 6, hex(0xFF60A5FA))
+                px(6, 7, hex(0xFF60A5FA)); px(9, 7, hex(0xFF60A5FA))
+                px(7, 8, hex(0xFFFDE047)); px(8, 8, hex(0xFFFDE047))
+                px(6, 9, hex(0xFF60A5FA)); px(9, 9, hex(0xFF60A5FA))
+                px(7, 10, hex(0xFF60A5FA)); px(8, 10, hex(0xFF60A5FA))
+            }
             TileKind.HALL_WALL -> {
                 rect(0, 0, 16, 11, hex(0xFFE2E8F0))
                 rect(0, 0, 16, 2, hex(0xFFF1F5F9)) // crown trim
                 rect(0, 10, 16, 1, hex(0xFF94A3B8))
                 rect(0, 11, 16, 4, hex(0xFFCBD5E1)) // wainscoting
                 rect(0, 15, 16, 1, hex(0xFF64748B))
+            }
+            TileKind.HALL_WALL_TOP -> {
+                // 2.5D top-down architectural wall cap separating protruding classroom wings
+                rect(0, 0, 16, 16, hex(0xFF334155))
+                rect(0, 0, 16, 2, hex(0xFF1E293B))
+                rect(1, 2, 14, 11, hex(0xFF475569))
+                rect(1, 2, 14, 2, hex(0xFF64748B))
+                rect(0, 14, 16, 2, hex(0xFF1E293B))
             }
             TileKind.DOOR_ACTIVE -> {
                 rect(0, 0, 16, 16, hex(0xFF334155))
@@ -240,6 +270,20 @@ object PixelArtAssets {
                 rect(10, 4, 3, 5, hex(0xFF38BDF8)); px(11, 5, hex(0xFFE0F2FE))
                 // Metallic pushbars
                 rect(3, 11, 3, 1, hex(0xFFE2E8F0)); rect(10, 11, 3, 1, hex(0xFFE2E8F0))
+            }
+            TileKind.DOOR_HISTORY -> {
+                // Warm antique terracotta & bronze museum door with parchment scroll emblem
+                rect(0, 0, 16, 16, hex(0xFF78350F))
+                rect(1, 1, 14, 15, hex(0xFFB45309))
+                rect(2, 2, 12, 14, hex(0xFFD97706))
+                rect(3, 3, 10, 12, hex(0xFF92400E))
+                // Golden scroll / ancient temple plaque on upper door
+                rect(4, 4, 8, 5, hex(0xFFFEF3C7))
+                rect(4, 4, 8, 1, hex(0xFFF59E0B))
+                rect(4, 8, 8, 1, hex(0xFFF59E0B))
+                rect(6, 6, 4, 1, hex(0xFF92400E))
+                // Brass doorknob
+                rect(11, 11, 2, 2, hex(0xFFFDE047))
             }
             TileKind.DOOR_LOCKER -> {
                 rect(0, 0, 16, 16, hex(0xFFB45309))
@@ -337,6 +381,71 @@ object PixelArtAssets {
                 rect(1, 8, 14, 3, hex(0xFFB45309)); rect(1, 8, 14, 1, hex(0xFFF59E0B))
                 rect(2, 11, 2, 4, hex(0xFF334155))
                 rect(12, 11, 2, 4, hex(0xFF334155))
+            }
+            TileKind.INDOOR_BENCH -> {
+                rect(0, 0, 16, 16, hex(0xFFF6F1E7))
+                rect(2, 13, 12, 2, hex(0xFFD6CCBA)) // soft indoor floor shadow
+                rect(1, 4, 14, 3, hex(0xFF92400E)); rect(1, 4, 14, 1, hex(0xFFD97706))
+                rect(1, 8, 14, 3, hex(0xFFB45309)); rect(1, 8, 14, 1, hex(0xFFF59E0B))
+                rect(2, 11, 2, 4, hex(0xFF334155))
+                rect(12, 11, 2, 4, hex(0xFF334155))
+            }
+            TileKind.TROPHY_CASE -> {
+                // School atrium golden trophy & medal display cabinet
+                rect(0, 0, 16, 16, hex(0xFF1D4ED8)) // sits on carpet
+                rect(1, 1, 14, 14, hex(0xFF78350F)) // mahogany frame
+                rect(2, 2, 12, 8, hex(0xFF0F172A)) // velvet glass interior
+                rect(2, 2, 12, 2, hex(0xFF1E3A8A)) // top glass reflection
+                // Golden trophy cup in center
+                rect(6, 3, 4, 3, hex(0xFFFACC15))
+                px(5, 4, hex(0xFFF59E0B)); px(10, 4, hex(0xFFF59E0B)) // handles
+                rect(7, 6, 2, 2, hex(0xFFD97706))
+                rect(6, 8, 4, 1, hex(0xFFFDE047))
+                // Mini side medals
+                px(3, 6, hex(0xFF38BDF8)); px(3, 7, hex(0xFFFBBF24))
+                px(12, 6, hex(0xFFEF4444)); px(12, 7, hex(0xFFFBBF24))
+                // Wooden base pedestal with gold plaque
+                rect(2, 10, 12, 4, hex(0xFFB45309))
+                rect(5, 11, 6, 2, hex(0xFFFDE68A))
+            }
+            TileKind.BOOKSHELF -> {
+                // Cozy oak school bookshelf packed with colorful books
+                rect(0, 0, 16, 16, hex(0xFF1D4ED8))
+                rect(1, 1, 14, 14, hex(0xFF78350F))
+                rect(2, 2, 12, 12, hex(0xFF92400E))
+                // Top shelf books
+                rect(2, 3, 2, 4, hex(0xFFDC2626))
+                rect(4, 2, 2, 5, hex(0xFF2563EB))
+                rect(6, 3, 2, 4, hex(0xFF16A34A))
+                rect(8, 2, 2, 5, hex(0xFFF59E0B))
+                rect(10, 3, 2, 4, hex(0xFF7C3AED))
+                rect(12, 3, 2, 4, hex(0xFF0284C7))
+                rect(2, 7, 12, 1, hex(0xFF451A03))
+                // Bottom shelf books
+                rect(2, 9, 2, 4, hex(0xFF0D9488))
+                rect(4, 8, 3, 5, hex(0xFFE11D48))
+                rect(7, 9, 2, 4, hex(0xFF2563EB))
+                rect(9, 8, 2, 5, hex(0xFFFACC15))
+                rect(11, 9, 3, 4, hex(0xFF15803D))
+                rect(2, 13, 12, 1, hex(0xFF451A03))
+            }
+            TileKind.STUDY_DESK -> {
+                // Wooden study/reading desk with open notebook & tiny globe
+                rect(0, 0, 16, 16, hex(0xFF1D4ED8))
+                rect(2, 13, 12, 2, hex(0xFF1E3A8A)) // cast shadow
+                rect(1, 3, 14, 8, hex(0xFFB45309))
+                rect(2, 4, 12, 6, hex(0xFFD97706))
+                rect(2, 4, 12, 1, hex(0xFFF59E0B))
+                // Open white notebook
+                rect(3, 5, 5, 4, hex(0xFFFFFFFF))
+                rect(5, 5, 1, 4, hex(0xFFCBD5E1))
+                px(4, 6, hex(0xFF334155)); px(6, 7, hex(0xFF334155))
+                // Mini teal/green globe + yellow pencil
+                rect(10, 5, 3, 3, hex(0xFF0EA5E9)); px(11, 6, hex(0xFF22C55E))
+                rect(9, 9, 4, 1, hex(0xFFFACC15))
+                // Desk legs
+                rect(2, 11, 2, 3, hex(0xFF78350F))
+                rect(12, 11, 2, 3, hex(0xFF78350F))
             }
             TileKind.POTTED_PLANT -> {
                 rect(0, 0, 16, 16, hex(0xFFF6F1E7))

@@ -92,6 +92,9 @@ def validate_pack(path: Path) -> int:
         if "hint" in q and q["hint"] is not None:
             if not isinstance(q["hint"], str) or len(strip_markers(q["hint"]).strip()) > 90:
                 errors.append(f"questions[{i}].hint deve essere stringa max 90 caratteri (senza **).")
+        if "topic" in q and q["topic"] is not None:
+            if not isinstance(q["topic"], str) or len(q["topic"].strip()) > 40:
+                errors.append(f"questions[{i}].topic deve essere stringa max 40 caratteri.")
 
         if qtype == "multiple_choice":
             opts = q.get("options")
@@ -140,6 +143,9 @@ def validate_pack(path: Path) -> int:
             errors.append(f"generators[{j}].pool_size deve essere tra 4 e 30.")
         else:
             playable += ps
+        if "topic" in g and g["topic"] is not None:
+            if not isinstance(g["topic"], str) or len(g["topic"].strip()) > 40:
+                errors.append(f"generators[{j}].topic deve essere stringa max 40 caratteri.")
 
     if playable < 5:
         errors.append(f"Servono almeno 5 domande giocabili (trovate {playable}).")

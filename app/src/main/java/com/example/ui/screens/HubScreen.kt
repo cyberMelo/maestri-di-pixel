@@ -332,9 +332,12 @@ fun HubScreen(
                             return@detectTapGestures
                         }
 
-                        // Check direct tap on Portal/Door
+                        // Check direct tap on Portal/Door or its overhead classroom plaque
                         val tappedPortal = map.findPortalAt(tappedPos)
-                            ?: map.portals.firstOrNull { abs(it.pos.x - tx) == 0 && abs(it.pos.y - ty) <= 1 }
+                            ?: map.portals.firstOrNull {
+                                (abs(it.pos.x - tx) == 0 && abs(it.pos.y - ty) <= 1) ||
+                                    (abs(it.pos.x - tx) <= 1 && ty == it.pos.y - 1)
+                            }
                         if (tappedPortal != null) {
                             val dist = abs(playerGrid.x - tappedPortal.pos.x) + abs(playerGrid.y - tappedPortal.pos.y)
                             if (dist <= 1) {
@@ -389,6 +392,12 @@ fun HubScreen(
                                 color = Color(0x44E0F2FE),
                                 topLeft = Offset(dx + tileDrawPx * 0.22f, dy + tileDrawPx * 0.22f),
                                 size = androidx.compose.ui.geometry.Size(tileDrawPx * 0.20f, tileDrawPx * 0.16f)
+                            )
+                        } else if (kind == com.example.pixelart.TileKind.TROPHY_CASE && phase <= 1) {
+                            drawCircle(
+                                color = Color(0xCCFEF08A),
+                                radius = tileDrawPx * 0.08f,
+                                center = Offset(dx + tileDrawPx * 0.50f, dy + tileDrawPx * 0.28f)
                             )
                         }
                     }
@@ -491,6 +500,26 @@ fun HubScreen(
                     isAntiAlias = true
                 }
 
+                val shadowPaint = Paint().apply {
+                    color = android.graphics.Color.argb(95, 15, 23, 42)
+                    isAntiAlias = true
+                }
+                val subBgPaint = Paint().apply {
+                    color = android.graphics.Color.rgb(254, 249, 238)
+                    isAntiAlias = true
+                }
+                val subTextPaint = Paint().apply {
+                    color = android.graphics.Color.rgb(30, 41, 59)
+                    textSize = tileDrawPx * 0.22f
+                    typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+                    textAlign = Paint.Align.CENTER
+                    isAntiAlias = true
+                }
+                val bracketPaint = Paint().apply {
+                    color = android.graphics.Color.rgb(51, 65, 85)
+                    isAntiAlias = true
+                }
+
                 fun drawTag(cx: Float, topY: Float, label: String, hasPriorityBadge: Boolean, accentRgb: Int) {
                     val tw = textPaint.measureText(label)
                     val padH = 11f
@@ -524,6 +553,92 @@ fun HubScreen(
                     }
                 }
 
+                fun drawDoorPlaque(
+                    cx: Float,
+                    doorTopY: Float,
+                    label: String,
+                    subtitle: String,
+                    hasPriorityBadge: Boolean,
+                    accentRgb: Int
+                ) {
+                    val cleanSub = subtitle.uppercase()
+                    val titleW = textPaint.measureText(label)
+                    val subW = if (cleanSub.isNotEmpty()) subTextPaint.measureText(cleanSub) else 0f
+                    val padH = 12f
+                    val plaqueW = maxOf(titleW, subW, tileDrawPx * 1.6f) + padH * 2f
+                    val titleH = tileDrawPx * 0.42f
+                    val subH = if (cleanSub.isNotEmpty()) tileDrawPx * 0.34f else 0f
+                    val totalH = titleH + subH
+                    val bottomY = doorTopY - 4f
+                    val topY = bottomY - totalH
+                    val left = cx - plaqueW / 2f
+                    val right = cx + plaqueW / 2f
+
+                    // Small wall-mount pins connecting plaque to door lintel
+                    canvas.nativeCanvas.drawRect(cx - 10f, bottomY - 1f, cx - 6f, doorTopY + 2f, bracketPaint)
+                    canvas.nativeCanvas.drawRect(cx + 6f, bottomY - 1f, cx + 10f, doorTopY + 2f, bracketPaint)
+
+                    // Drop shadow
+                    canvas.nativeCanvas.drawRoundRect(
+                        left + 2.5f, topY + 3f, right + 2.5f, bottomY + 3f,
+                        10f, 10f, shadowPaint
+                    )
+
+                    // Cream lower body (full plaque background)
+                    canvas.nativeCanvas.drawRoundRect(
+                        left, topY, right, bottomY,
+                        10f, 10f, subBgPaint
+                    )
+
+                    // Colored top header band for room name
+                    bgPaint.color = accentRgb
+                    canvas.nativeCanvas.drawRoundRect(
+                        left, topY, right, topY + titleH + if (cleanSub.isEmpty()) 0f else 4f,
+                        10f, 10f, bgPaint
+                    )
+                    if (cleanSub.isNotEmpty()) {
+                        // Crisp horizontal split between header & subject plate
+                        canvas.nativeCanvas.drawRect(
+                            left + 2f, topY + titleH, right - 2f, topY + titleH + 4f,
+                            subBgPaint
+                        )
+                    }
+
+                    // Outer crisp retro border
+                    canvas.nativeCanvas.drawRoundRect(
+                        left, topY, right, bottomY,
+                        10f, 10f, borderPaint
+                    )
+
+                    // Room title text (white bold)
+                    canvas.nativeCanvas.drawText(
+                        label,
+                        cx,
+                        topY + titleH * 0.72f,
+                        textPaint
+                    )
+
+                    // Subject / room purpose text (dark crisp ink on cream)
+                    if (cleanSub.isNotEmpty()) {
+                        canvas.nativeCanvas.drawText(
+                            cleanSub,
+                            cx,
+                            topY + titleH + subH * 0.72f,
+                            subTextPaint
+                        )
+                    }
+
+                    if (hasPriorityBadge) {
+                        val bounce = if (reducedMotion) 0f else if (ambientTick % 2 == 0) -3.5f else 0f
+                        val bx = right + 6f
+                        val by = topY + titleH * 0.5f + bounce
+                        val r = tileDrawPx * 0.24f
+                        canvas.nativeCanvas.drawCircle(bx, by, r, badgeBg)
+                        canvas.nativeCanvas.drawCircle(bx, by, r, badgeBorder)
+                        canvas.nativeCanvas.drawText("!", bx, by + tileDrawPx * 0.12f, badgeText)
+                    }
+                }
+
                 for (npc in map.npcs) {
                     val cx = (npc.pos.x + 0.5f) * tileDrawPx - camX
                     val topY = npc.pos.y * tileDrawPx - camY - 5f
@@ -544,9 +659,10 @@ fun HubScreen(
 
                 for (portal in map.portals) {
                     val cx = (portal.pos.x + 0.5f) * tileDrawPx - camX
-                    val topY = portal.pos.y * tileDrawPx - camY - 5f
+                    val doorTopY = portal.pos.y * tileDrawPx - camY
                     val hasPrio = when (portal.id) {
-                        "portal_school_entrance" -> mathPriority || scienzePriority || italianoPriority || geografiaPriority || inglesePriority
+                        "portal_school_entrance" -> storiaPriority || mathPriority || scienzePriority || italianoPriority || geografiaPriority || inglesePriority
+                        "portal_history" -> storiaPriority
                         "portal_gym" -> mathPriority
                         "portal_lab" -> scienzePriority
                         "portal_library" -> italianoPriority
@@ -555,16 +671,17 @@ fun HubScreen(
                         else -> false
                     }
                     val signColor = when (portal.id) {
-                        "portal_gym" -> android.graphics.Color.argb(238, 185, 28, 28)
-                        "portal_lab" -> android.graphics.Color.argb(238, 13, 148, 136)
-                        "portal_library" -> android.graphics.Color.argb(238, 124, 58, 237)
-                        "portal_geo" -> android.graphics.Color.argb(238, 2, 132, 199)
-                        "portal_english" -> android.graphics.Color.argb(238, 37, 99, 235)
-                        "portal_locker" -> android.graphics.Color.argb(238, 217, 119, 6)
-                        "portal_school_entrance", "portal_to_yard" -> android.graphics.Color.argb(235, 15, 76, 129)
-                        else -> android.graphics.Color.argb(225, 71, 85, 105)
+                        "portal_history" -> android.graphics.Color.argb(245, 180, 83, 9)
+                        "portal_gym" -> android.graphics.Color.argb(245, 185, 28, 28)
+                        "portal_lab" -> android.graphics.Color.argb(245, 13, 148, 136)
+                        "portal_library" -> android.graphics.Color.argb(245, 124, 58, 237)
+                        "portal_geo" -> android.graphics.Color.argb(245, 2, 132, 199)
+                        "portal_english" -> android.graphics.Color.argb(245, 37, 99, 235)
+                        "portal_locker" -> android.graphics.Color.argb(245, 217, 119, 6)
+                        "portal_school_entrance", "portal_to_yard" -> android.graphics.Color.argb(240, 15, 76, 129)
+                        else -> android.graphics.Color.argb(230, 71, 85, 105)
                     }
-                    drawTag(cx, topY, portal.label, hasPrio, signColor)
+                    drawDoorPlaque(cx, doorTopY, portal.label, portal.subtitle, hasPrio, signColor)
                 }
             }
         }
@@ -573,7 +690,7 @@ fun HubScreen(
         HubHudOverlay(
             uiState = uiState,
             isCompactWidth = isCompactWidth,
-            hubTitle = if (hubId == "school_hallway") "Corridoio" else "Cortile",
+            hubTitle = if (hubId == "school_hallway") "Atrio Scuola" else "Cortile",
             onGuidanceClick = onGuidanceClick,
             onToggleMute = onToggleMute,
             onOpenParentGate = onOpenParentGate,
@@ -603,7 +720,13 @@ fun HubScreen(
             // Quick contextual Interact Button when next to an NPC or Portal
             if (adjacentNpc != null || adjacentPortal != null) {
                 val label = adjacentNpc?.let { "Parla con ${it.name}" }
-                    ?: adjacentPortal?.let { "Entra: ${it.label}" }
+                    ?: adjacentPortal?.let {
+                        if (it.subtitle.isNotBlank() && !it.label.equals(it.subtitle, ignoreCase = true)) {
+                            "Entra: ${it.label} (${it.subtitle})"
+                        } else {
+                            "Entra: ${it.label}"
+                        }
+                    }
                     ?: ""
                 Button(
                     onClick = {

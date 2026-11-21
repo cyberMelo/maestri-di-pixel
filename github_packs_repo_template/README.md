@@ -43,8 +43,8 @@ Per la massima sicurezza, crea un token con **soli permessi di lettura** sul sin
 
 ## 4. Flusso rapido settimanale per aggiungere un nuovo capitolo
 
-1. Trasforma 1–2 pagine del sussidiario in un file `.json` (`schema_version = 1`).
-2. Verifica il file sul PC prima del caricamento usando lo script incluso:
+1. Trasforma 1–2 pagine del sussidiario in un file `.json` (`schema_version = 1`) usando lo schema ufficiale in `schemas/pack.schema.json` (e `schemas/manifest.schema.json` per l'indice).
+2. Verifica il file sul PC prima del caricamento usando lo script incluso (controlla anche unicità ID, duplicati case-insensitive e limiti al netto dei marcatori `**`):
    ```bash
    python3 validate_pack.py packs/nuovo_capitolo.json
    ```
