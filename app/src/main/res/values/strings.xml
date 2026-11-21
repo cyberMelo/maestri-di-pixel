@@ -1,0 +1,30 @@
+<resources>
+    <string name="app_name">Maestri di Pixel</string>
+    <string name="boot_loading">Preparazione della scuola...</string>
+    <string name="profile_welcome_title">Benvenuto in Maestri di Pixel!</string>
+    <string name="profile_welcome_subtitle">Scegli il tuo nome e il tuo personaggio per iniziare.</string>
+    <string name="profile_name_hint">Il tuo nome</string>
+    <string name="profile_start_button">Inizia l\'avventura!</string>
+    <string name="action_train">Allenati</string>
+    <string name="action_boss_challenge">Sfida Boss</string>
+    <string name="action_boss_rematch">Rivincita Boss</string>
+    <string name="action_hint">Indizio</string>
+    <string name="action_fifty_fifty">50/50</string>
+    <string name="action_read_aloud">Ascolta</string>
+    <string name="action_understood">Ho capito!</string>
+    <string name="action_cancel">Annulla</string>
+    <string name="action_confirm">Conferma</string>
+    <string name="action_exit">Esci</string>
+    <string name="action_back_hallway">Torna in corridoio</string>
+    <string name="exit_app_title">Vuoi uscire da Maestri di Pixel?</string>
+    <string name="exit_app_body">Tutti i tuoi progressi e le tue stelle sono già al sicuro.</string>
+    <string name="exit_minigame_title">Vuoi tornare a scuola?</string>
+    <string name="exit_minigame_body">I progressi e le stelle delle risposte già date restano salvati.</string>
+    <string name="wip_door_message">Lavori in corso — Presto disponibile!</string>
+    <string name="parent_area_title">Area Genitori</string>
+    <string name="pin_initial_hint">PIN iniziale: 1234 (modificabile nelle Impostazioni)</string>
+    <string name="studio_sereno_title">Attiva Profilo Studio Sereno</string>
+    <string name="studio_sereno_subtitle">Sfide brevi, senza timer, lettura vocale e pausa di lettura</string>
+    <string name="studio_sereno_toast">Profilo Studio Sereno attivato! Puoi regolare ogni opzione qui sotto.</string>
+    <string name="micro_break_message">Hai fatto 2 sfide di fila, grande! Prenditi 2 minuti di pausa per muoverti e bere un bicchiere d\'acqua, poi torna quando vuoi.</string>
+</resources>

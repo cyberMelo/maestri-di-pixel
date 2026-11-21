@@ -1,0 +1,144 @@
+{
+  "schema_version": 1,
+  "pack_id": "inglese_base",
+  "subject": "inglese",
+  "grade": 4,
+  "title": "Inglese: Parole e Frasi Base",
+  "version": 1,
+  "boss_name": "Teacher Emma",
+  "boss_title": "Maestra d'Inglese",
+  "medal_name": "Medaglia del Globetrotter",
+  "medal_icon": "medal_english",
+  "questions": [
+    {
+      "id": "eng_base_001",
+      "topic": "Animali e Natura",
+      "type": "multiple_choice",
+      "difficulty": 1,
+      "prompt": "Come si dice **farfalla** in inglese?",
+      "hint": "Inizia con 'butter' e finisce con 'fly' (volare)!",
+      "options": ["Butterfly", "Dragonfly", "Ladybug", "Turtle"],
+      "correct_index": 0,
+      "explanation": "**Butterfly** significa **farfalla** in inglese."
+    },
+    {
+      "id": "eng_base_002",
+      "topic": "Animali e Natura",
+      "type": "multiple_choice",
+      "difficulty": 1,
+      "prompt": "Che animale è uno **squirrel**?",
+      "hint": "Vive sugli alberi, ha una coda folta e ama le ghiande.",
+      "options": ["Scoiattolo", "Riccio", "Volpe", "Gufo"],
+      "correct_index": 0,
+      "explanation": "**Squirrel** in italiano significa **scoiattolo**."
+    },
+    {
+      "id": "eng_base_003",
+      "topic": "Scuola e Colori",
+      "type": "multiple_choice",
+      "difficulty": 1,
+      "prompt": "Come si dice **zaino** in inglese?",
+      "hint": "Letteralmente è lo zaino che porti sulla schiena ('back').",
+      "options": ["Backpack", "Notebook", "Pencil case", "Ruler"],
+      "correct_index": 0,
+      "explanation": "**Backpack** (oppure schoolbag) significa **zaino**."
+    },
+    {
+      "id": "eng_base_004",
+      "topic": "Scuola e Colori",
+      "type": "multiple_choice",
+      "difficulty": 1,
+      "prompt": "Quale colore corrisponde alla parola **purple**?",
+      "hint": "È il colore che ottieni mescolando rosso e blu.",
+      "options": ["Viola", "Arancione", "Marrone", "Grigio"],
+      "correct_index": 0,
+      "explanation": "**Purple** è il colore **viola**."
+    },
+    {
+      "id": "eng_base_005",
+      "topic": "Cibo e Giorni",
+      "type": "multiple_choice",
+      "difficulty": 1,
+      "prompt": "Come si dice **fragola** in inglese?",
+      "hint": "Finisce con '-berry', come molti frutti di bosco.",
+      "options": ["Strawberry", "Blueberry", "Pineapple", "Watermelon"],
+      "correct_index": 0,
+      "explanation": "**Strawberry** significa **fragola**!"
+    },
+    {
+      "id": "eng_base_006",
+      "topic": "Cibo e Giorni",
+      "type": "multiple_choice",
+      "difficulty": 2,
+      "prompt": "Quale giorno della settimana è **Wednesday**?",
+      "hint": "Si trova proprio a metà settimana, tra martedì e giovedì.",
+      "options": ["Mercoledì", "Martedì", "Giovedì", "Sabato"],
+      "correct_index": 0,
+      "explanation": "**Wednesday** corrisponde a **mercoledì**."
+    },
+    {
+      "id": "eng_base_007",
+      "topic": "Frasi Quotidiane",
+      "type": "multiple_choice",
+      "difficulty": 2,
+      "prompt": "Come rispondi in inglese a **'How old are you?'**?",
+      "hint": "La domanda chiede quanti anni hai!",
+      "options": ["I am ten years old", "I am fine, thank you", "My name is Marco", "I live in Italy"],
+      "correct_index": 0,
+      "explanation": "**'How old are you?'** chiede l'età: in inglese si usa il verbo essere (**I am ten years old**)."
+    },
+    {
+      "id": "eng_base_008",
+      "topic": "Scuola e Colori",
+      "type": "true_false",
+      "difficulty": 2,
+      "prompt": "La parola **library** in inglese significa **biblioteca**.",
+      "hint": "Attenzione: libreria dove si comprano i libri si dice 'bookshop'!",
+      "correct_bool": true,
+      "explanation": "Vero! **Library** è la **biblioteca** dove si prendono in prestito i libri."
+    },
+    {
+      "id": "eng_base_009",
+      "topic": "Frasi Quotidiane",
+      "type": "multiple_choice",
+      "difficulty": 2,
+      "prompt": "Cosa significa **'What time is it?'**?",
+      "hint": "Guardi l'orologio quando senti questa domanda.",
+      "options": ["Che ore sono?", "Che tempo fa?", "Dove vai?", "Come ti chiami?"],
+      "correct_index": 0,
+      "explanation": "**'What time is it?'** significa **'Che ore sono?'**."
+    },
+    {
+      "id": "eng_base_010",
+      "topic": "Animali e Natura",
+      "type": "multiple_choice",
+      "difficulty": 2,
+      "prompt": "Quale stagione è **autumn**?",
+      "hint": "È la stagione in cui cadono le foglie colorate.",
+      "options": ["Autunno", "Primavera", "Inverno", "Estate"],
+      "correct_index": 0,
+      "explanation": "**Autumn** (o 'fall' negli USA) significa **autunno**."
+    },
+    {
+      "id": "eng_base_011",
+      "topic": "Cibo e Giorni",
+      "type": "true_false",
+      "difficulty": 2,
+      "prompt": "In inglese **breakfast** significa **colazione**.",
+      "hint": "È il primo pasto che fai appena sveglio al mattino.",
+      "correct_bool": true,
+      "explanation": "Esatto! **Breakfast** è la colazione, **lunch** il pranzo e **dinner** la cena."
+    },
+    {
+      "id": "eng_base_012",
+      "topic": "Frasi Quotidiane",
+      "type": "multiple_choice",
+      "difficulty": 3,
+      "prompt": "Completa la frase: **'She ___ a red bike.'** (Lei ha una bici rossa)",
+      "hint": "Con he, she e it il verbo 'have' cambia forma!",
+      "options": ["has got", "have got", "are", "am"],
+      "correct_index": 0,
+      "explanation": "Alla terza persona singolare (he/she/it) si usa **has got**: 'She **has got** a red bike'."
+    }
+  ]
+}

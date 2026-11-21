@@ -1,0 +1,143 @@
+{
+  "schema_version": 1,
+  "pack_id": "storia_egizi",
+  "subject": "storia",
+  "grade": 4,
+  "title": "Gli Antichi Egizi",
+  "version": 1,
+  "boss_name": "Faraone Tutankhamon",
+  "boss_title": "Guardiano del Nilo",
+  "medal_name": "Medaglia dello Scarabeo",
+  "medal_icon": "medal_egypt",
+  "questions": [
+    {
+      "id": "sto_egizi_001",
+      "topic": "Il Nilo e il territorio",
+      "type": "multiple_choice",
+      "difficulty": 1,
+      "prompt": "Quale **fiume** ha reso fertile la terra dell'antico Egitto?",
+      "hint": "È il fiume più lungo dell'Africa e sfocia nel Mediterraneo.",
+      "options": ["Nilo", "Tigri", "Eufrate", "Po"],
+      "correct_index": 0,
+      "explanation": "Le piene annuali del **Nilo** lasciavano il **limo**, un fango ricco e fertile."
+    },
+    {
+      "id": "sto_egizi_002",
+      "topic": "Religione e Piramidi",
+      "type": "true_false",
+      "difficulty": 1,
+      "prompt": "Gli antichi Egizi erano **politeisti**, cioè credevano in molti dei.",
+      "hint": "La parola 'poli' in greco antico significa 'molti'.",
+      "correct_bool": true,
+      "explanation": "Sì! Adoravano molte divinità legate alla natura, come **Ra**, **Osiride** e **Anubi**."
+    },
+    {
+      "id": "sto_egizi_003",
+      "topic": "Società e Scrittura",
+      "type": "multiple_choice",
+      "difficulty": 1,
+      "prompt": "Come si chiamava il **sovrano** supremo dell'antico Egitto?",
+      "hint": "Viveva nel palazzo reale e indossava la doppia corona.",
+      "options": ["Faraone", "Imperatore", "Console", "Sultano"],
+      "correct_index": 0,
+      "explanation": "Il **Faraone** era il re d'Egitto ed era considerato come un dio in terra."
+    },
+    {
+      "id": "sto_egizi_004",
+      "topic": "Società e Scrittura",
+      "type": "multiple_choice",
+      "difficulty": 1,
+      "prompt": "Quale pianta usavano gli Egizi per creare i fogli su cui **scrivere**?",
+      "hint": "Cresceva in abbondanza lungo le rive del Nilo.",
+      "options": ["Papiro", "Bambù", "Cotone", "Ulivo"],
+      "correct_index": 0,
+      "explanation": "Dal fusto del **papiro** intrecciato e pressato nascevano lunghi rotoli per scrivere."
+    },
+    {
+      "id": "sto_egizi_005",
+      "topic": "Società e Scrittura",
+      "type": "multiple_choice",
+      "difficulty": 2,
+      "prompt": "Come si chiama la famosa **scrittura** egizia fatta di piccoli disegni?",
+      "hint": "Il suo nome significa 'segni sacri' e veniva incisa nei templi.",
+      "options": ["Geroglifici", "Cuneiforme", "Alfabeto latino", "Rune"],
+      "correct_index": 0,
+      "explanation": "I **geroglifici** univano simboli e suoni ed erano usati dagli **scribi**."
+    },
+    {
+      "id": "sto_egizi_006",
+      "topic": "Religione e Piramidi",
+      "type": "multiple_choice",
+      "difficulty": 2,
+      "prompt": "A cosa servivano principalmente le grandi **piramidi**?",
+      "hint": "Al loro interno veniva custodito il sarcofago del re.",
+      "options": ["Tombe dei faraoni", "Magazzini di grano", "Torri di guardia", "Teatri reali"],
+      "correct_index": 0,
+      "explanation": "Le **piramidi** erano tombe monumentali costruite per proteggere il **faraone** nell'aldilà."
+    },
+    {
+      "id": "sto_egizi_007",
+      "topic": "Società e Scrittura",
+      "type": "true_false",
+      "difficulty": 2,
+      "prompt": "Lo **scriba** era uno dei pochi cittadini che sapevano leggere e scrivere.",
+      "hint": "Pensa a quanto fosse lungo imparare centinaia di segni.",
+      "correct_bool": true,
+      "explanation": "Esatto! Gli **scribi** studiavano per anni e avevano un ruolo molto rispettato."
+    },
+    {
+      "id": "sto_egizi_008",
+      "topic": "Il Nilo e il territorio",
+      "type": "multiple_choice",
+      "difficulty": 2,
+      "prompt": "Come si chiamava il fango scuro e **fertile** lasciato dal Nilo?",
+      "hint": "È una parola corta di quattro lettere che inizia con la L.",
+      "options": ["Limo", "Sabbia", "Ghiaia", "Argilla rossa"],
+      "correct_index": 0,
+      "explanation": "Quando le acque si ritiravano, il **limo** rendeva i campi perfetti per il raccolto."
+    },
+    {
+      "id": "sto_egizi_009",
+      "topic": "Religione e Piramidi",
+      "type": "multiple_choice",
+      "difficulty": 3,
+      "prompt": "Chi era **Ra** nella religione degli antichi Egizi?",
+      "hint": "Viaggiava ogni giorno nel cielo sulla sua barca splendente.",
+      "options": ["Il dio del Sole", "La dea della Luna", "Il dio del vento", "Il dio del mare"],
+      "correct_index": 0,
+      "explanation": "**Ra** era il potentissimo **dio del Sole**, sorgente di luce e vita per tutto l'Egitto."
+    },
+    {
+      "id": "sto_egizi_010",
+      "topic": "Religione e Piramidi",
+      "type": "multiple_choice",
+      "difficulty": 3,
+      "prompt": "Quale tecnica permetteva di **conservare** il corpo dei defunti?",
+      "hint": "Il corpo veniva trattato con sali naturali e avvolto in bende di lino.",
+      "options": ["Mummificazione", "Scultura", "Pittura murale", "Tessitura"],
+      "correct_index": 0,
+      "explanation": "Con la **mummificazione** gli Egizi preparavano il corpo per il viaggio nell'aldilà."
+    },
+    {
+      "id": "sto_egizi_011",
+      "topic": "Il Nilo e il territorio",
+      "type": "true_false",
+      "difficulty": 3,
+      "prompt": "Il **Basso Egitto** si trovava a sud, vicino alle montagne africane.",
+      "hint": "Il Nilo scorre da sud verso nord: dove arriva al mare la terra è più bassa.",
+      "correct_bool": false,
+      "explanation": "No, il **Basso Egitto** era a nord, nella zona del **delta** del Nilo verso il mare."
+    },
+    {
+      "id": "sto_egizi_012",
+      "topic": "Società e Scrittura",
+      "type": "multiple_choice",
+      "difficulty": 3,
+      "prompt": "Quale famoso reperto ha permesso di decifrare i **geroglifici**?",
+      "hint": "È una grande pietra scura con lo stesso testo inciso in tre scritture.",
+      "options": ["Stele di Rosetta", "Vaso di Giza", "Maschera di Luxor", "Colonna di Tebe"],
+      "correct_index": 0,
+      "explanation": "La **Stele di Rosetta** riportava lo stesso decreto in geroglifico, demotico e greco."
+    }
+  ]
+}

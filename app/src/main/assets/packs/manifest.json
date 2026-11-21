@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "updated_at": "2026-11-21T10:30:00Z",
+  "packs": [
+    {
+      "pack_id": "storia_egizi",
+      "file": "storia_egizi.json",
+      "subject": "storia",
+      "title": "Gli Antichi Egizi",
+      "version": 1,
+      "priority": false,
+      "archived": false
+    },
+    {
+      "pack_id": "scienze_fotosintesi",
+      "file": "scienze_fotosintesi.json",
+      "subject": "scienze",
+      "title": "La Fotosintesi delle Piante",
+      "version": 1,
+      "priority": false,
+      "archived": false
+    },
+    {
+      "pack_id": "matematica_calcolo_base",
+      "file": "matematica_calcolo_base.json",
+      "subject": "matematica",
+      "title": "Calcolo Base e Tabelline",
+      "version": 1,
+      "priority": false,
+      "archived": false
+    },
+    {
+      "pack_id": "italiano_grammatica",
+      "file": "italiano_grammatica.json",
+      "subject": "italiano",
+      "title": "Grammatica e Ortografia",
+      "version": 1,
+      "priority": false,
+      "archived": false
+    },
+    {
+      "pack_id": "geografia_italia",
+      "file": "geografia_italia.json",
+      "subject": "geografia",
+      "title": "L'Italia: Monti, Fiumi e Regioni",
+      "version": 1,
+      "priority": false,
+      "archived": false
+    },
+    {
+      "pack_id": "inglese_base",
+      "file": "inglese_base.json",
+      "subject": "inglese",
+      "title": "Inglese: Parole e Frasi Base",
+      "version": 1,
+      "priority": false,
+      "archived": false
+    }
+  ]
+}

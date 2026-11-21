@@ -1,0 +1,144 @@
+{
+  "schema_version": 1,
+  "pack_id": "geografia_italia",
+  "subject": "geografia",
+  "grade": 4,
+  "title": "L'Italia: Monti, Fiumi e Regioni",
+  "version": 1,
+  "boss_name": "Esploratore Marco",
+  "boss_title": "Capitano della Mongolfiera",
+  "medal_name": "Medaglia della Bussola",
+  "medal_icon": "medal_geo",
+  "questions": [
+    {
+      "id": "geo_ita_001",
+      "topic": "Monti e Vulcani",
+      "type": "multiple_choice",
+      "difficulty": 1,
+      "prompt": "Quale catena montuosa forma un grande arco a **nord** dell'Italia?",
+      "hint": "Qui si trovano il Monte Bianco e il Monte Rosa.",
+      "options": ["Alpi", "Appennini", "Ande", "Pirenei"],
+      "correct_index": 0,
+      "explanation": "Le **Alpi** proteggono l'Italia a nord e ospitano le cime più alte d'Europa."
+    },
+    {
+      "id": "geo_ita_002",
+      "topic": "Fiumi e Laghi",
+      "type": "multiple_choice",
+      "difficulty": 1,
+      "prompt": "Qual è il **fiume** più lungo d'Italia?",
+      "hint": "Attraversa tutta la Pianura Padana e ha un nome di due lettere.",
+      "options": ["Po", "Tevere", "Arno", "Adige"],
+      "correct_index": 0,
+      "explanation": "Il **Po** è lungo 652 chilometri: nasce dal Monviso e sfocia nel Mare Adriatico."
+    },
+    {
+      "id": "geo_ita_003",
+      "topic": "Mari e Isole",
+      "type": "multiple_choice",
+      "difficulty": 1,
+      "prompt": "Quali sono le **due isole** più grandi d'Italia?",
+      "hint": "Una ha la forma di un triangolo e l'altra si trova più a ovest.",
+      "options": ["Sicilia e Sardegna", "Elba e Capri", "Corsica e Malta", "Ischia e Sicilia"],
+      "correct_index": 0,
+      "explanation": "La **Sicilia** e la **Sardegna** sono le due isole maggiori del Mediterraneo italiano."
+    },
+    {
+      "id": "geo_ita_004",
+      "topic": "Regioni e Capoluoghi",
+      "type": "multiple_choice",
+      "difficulty": 1,
+      "prompt": "Qual è il capoluogo della **Lombardia**?",
+      "hint": "È famosa per il Duomo e per essere la capitale italiana della moda.",
+      "options": ["Milano", "Torino", "Venezia", "Bologna"],
+      "correct_index": 0,
+      "explanation": "**Milano** è il capoluogo della Lombardia, nel cuore dell'Italia settentrionale."
+    },
+    {
+      "id": "geo_ita_005",
+      "topic": "Monti e Vulcani",
+      "type": "multiple_choice",
+      "difficulty": 2,
+      "prompt": "Quale catena montuosa percorre tutta la **penisola** da nord a sud?",
+      "hint": "È chiamata la 'spina dorsale' dell'Italia.",
+      "options": ["Appennini", "Alpi", "Dolomiti", "Carpazi"],
+      "correct_index": 0,
+      "explanation": "Gli **Appennini** scendono dalla Liguria fino alla Calabria e proseguono in Sicilia."
+    },
+    {
+      "id": "geo_ita_006",
+      "topic": "Fiumi e Laghi",
+      "type": "multiple_choice",
+      "difficulty": 2,
+      "prompt": "Qual è il **lago** più grande d'Italia?",
+      "hint": "Bagna Lombardia, Veneto e Trentino-Alto Adige.",
+      "options": ["Lago di Garda", "Lago di Como", "Lago Trasimeno", "Lago Maggiore"],
+      "correct_index": 0,
+      "explanation": "Il **Lago di Garda** è il più esteso d'Italia e ha origine glaciale."
+    },
+    {
+      "id": "geo_ita_007",
+      "topic": "Mari e Isole",
+      "type": "true_false",
+      "difficulty": 2,
+      "prompt": "Il **Mare Adriatico** bagna le coste orientali (a est) dell'Italia.",
+      "hint": "Pensa a Venezia, Rimini e Bari: guardano verso est.",
+      "correct_bool": true,
+      "explanation": "Vero! Il **Mare Adriatico** è a est, mentre il **Mar Tirreno** è a ovest."
+    },
+    {
+      "id": "geo_ita_008",
+      "topic": "Monti e Vulcani",
+      "type": "multiple_choice",
+      "difficulty": 2,
+      "prompt": "Qual è il **vulcano attivo** più alto d'Europa, situato in Sicilia?",
+      "hint": "Si trova vicino a Catania e il suo nome ha quattro lettere.",
+      "options": ["Etna", "Vesuvio", "Stromboli", "Vulcano"],
+      "correct_index": 0,
+      "explanation": "L'**Etna** supera i 3.300 metri ed è il vulcano attivo più alto d'Europa."
+    },
+    {
+      "id": "geo_ita_009",
+      "topic": "Regioni e Capoluoghi",
+      "type": "multiple_choice",
+      "difficulty": 2,
+      "prompt": "Qual è il capoluogo della **Toscana**?",
+      "hint": "È attraversata dal fiume Arno ed è celebre per il Ponte Vecchio.",
+      "options": ["Firenze", "Pisa", "Siena", "Genova"],
+      "correct_index": 0,
+      "explanation": "**Firenze** è il capoluogo della Toscana, culla dell'arte e del Rinascimento."
+    },
+    {
+      "id": "geo_ita_010",
+      "topic": "Fiumi e Laghi",
+      "type": "multiple_choice",
+      "difficulty": 2,
+      "prompt": "Quale fiume attraversa la città di **Roma**?",
+      "hint": "Nasce sull'Appennino e sfocia nel Mar Tirreno vicino a Ostia.",
+      "options": ["Tevere", "Arno", "Po", "Piave"],
+      "correct_index": 0,
+      "explanation": "Il **Tevere** attraversa Roma e ha accompagnato la storia della città fin dall'antichità."
+    },
+    {
+      "id": "geo_ita_011",
+      "topic": "Regioni e Capoluoghi",
+      "type": "true_false",
+      "difficulty": 3,
+      "prompt": "In Italia ci sono in tutto **20 regioni**.",
+      "hint": "Quindici a statuto ordinario e cinque a statuto speciale.",
+      "correct_bool": true,
+      "explanation": "Esatto! L'Italia è suddivisa in **20 regioni**, ognuna con il proprio capoluogo."
+    },
+    {
+      "id": "geo_ita_012",
+      "topic": "Mari e Isole",
+      "type": "multiple_choice",
+      "difficulty": 3,
+      "prompt": "Quale mare bagna le coste della **Liguria**?",
+      "hint": "Prende il nome proprio dalla regione di Genova.",
+      "options": ["Mar Ligure", "Mar Ionio", "Mare Adriatico", "Mar di Sardegna"],
+      "correct_index": 0,
+      "explanation": "Il **Mar Ligure** bagna la Liguria e la parte nord della Toscana."
+    }
+  ]
+}

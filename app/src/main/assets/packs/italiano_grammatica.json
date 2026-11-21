@@ -1,0 +1,144 @@
+{
+  "schema_version": 1,
+  "pack_id": "italiano_grammatica",
+  "subject": "italiano",
+  "grade": 4,
+  "title": "Grammatica e Ortografia",
+  "version": 1,
+  "boss_name": "Bibliotecaria Sofia",
+  "boss_title": "Custode delle Parole",
+  "medal_name": "Medaglia della Penna d'Oro",
+  "medal_icon": "medal_book",
+  "questions": [
+    {
+      "id": "ita_gram_001",
+      "topic": "Ortografia",
+      "type": "multiple_choice",
+      "difficulty": 1,
+      "prompt": "Quale parola è scritta nel modo **corretto**?",
+      "hint": "Le parole della famiglia di 'acqua' vogliono sempre **cqu**.",
+      "options": ["Acquario", "Aquario", "Accuario", "Aqquario"],
+      "correct_index": 0,
+      "explanation": "**Acquario** deriva da acqua e si scrive con **cqu**."
+    },
+    {
+      "id": "ita_gram_002",
+      "topic": "Ortografia",
+      "type": "multiple_choice",
+      "difficulty": 1,
+      "prompt": "Quale forma vuole la lettera **H** davanti?",
+      "hint": "Metti la H solo quando significa possedere, sentire o compiere un'azione.",
+      "options": ["Ho mangiato", "Ho al parco", "Ha scuola", "Hanno nuovo"],
+      "correct_index": 0,
+      "explanation": "**Ho mangiato** è il verbo avere: vuole la **H**! Invece 'a scuola' e 'anno' no."
+    },
+    {
+      "id": "ita_gram_003",
+      "topic": "Nomi e Articoli",
+      "type": "multiple_choice",
+      "difficulty": 1,
+      "prompt": "Quale di questi è un **nome collettivo**?",
+      "hint": "Un nome collettivo indica un insieme di persone, animali o cose al singolare.",
+      "options": ["Stormo", "Uccelli", "Piuma", "Albero"],
+      "correct_index": 0,
+      "explanation": "**Stormo** è singolare ma indica un intero gruppo di uccelli in volo."
+    },
+    {
+      "id": "ita_gram_004",
+      "topic": "Nomi e Articoli",
+      "type": "multiple_choice",
+      "difficulty": 1,
+      "prompt": "Quale **articolo determinativo** si mette davanti alla parola **zaino**?",
+      "hint": "Davanti a parole maschili che iniziano con z si usa un articolo speciale.",
+      "options": ["Lo", "Il", "La", "Gli"],
+      "correct_index": 0,
+      "explanation": "Davanti a **z** (e s+consonante) al maschile singolare si usa **lo**: lo zaino."
+    },
+    {
+      "id": "ita_gram_005",
+      "topic": "Verbi",
+      "type": "multiple_choice",
+      "difficulty": 2,
+      "prompt": "A quale **coniugazione** appartiene il verbo **leggere**?",
+      "hint": "Guarda come finisce l'infinito: -are è la prima, -ere la seconda, -ire la terza.",
+      "options": ["Seconda (-ere)", "Prima (-are)", "Terza (-ire)", "Propria"],
+      "correct_index": 0,
+      "explanation": "**Leggere** termina in **-ere**, quindi appartiene alla **seconda coniugazione**."
+    },
+    {
+      "id": "ita_gram_006",
+      "topic": "Verbi",
+      "type": "multiple_choice",
+      "difficulty": 2,
+      "prompt": "In quale **tempo** è coniugato il verbo nella frase 'Domani **partiremo** presto'?",
+      "hint": "La parola 'domani' indica qualcosa che deve ancora succedere.",
+      "options": ["Futuro semplice", "Presente", "Imperfetto", "Passato remoto"],
+      "correct_index": 0,
+      "explanation": "**Partiremo** indica un'azione che avverrà in seguito: è **futuro semplice**."
+    },
+    {
+      "id": "ita_gram_007",
+      "topic": "Ortografia",
+      "type": "true_false",
+      "difficulty": 2,
+      "prompt": "La parola **un'amica** si scrive con l'apostrofo perché 'amica' è femminile.",
+      "hint": "Chiediti se davanti a un nome femminile 'una' perde la a finale.",
+      "correct_bool": true,
+      "explanation": "Esatto! Davanti ai nomi femminili che iniziano per vocale, **una** diventa **un'**."
+    },
+    {
+      "id": "ita_gram_008",
+      "topic": "Nomi e Articoli",
+      "type": "multiple_choice",
+      "difficulty": 2,
+      "prompt": "Quale tra queste parole è un **aggettivo qualificativo**?",
+      "hint": "L'aggettivo qualificativo descrive una qualità: com'è qualcosa?",
+      "options": ["Luminoso", "Lampada", "Accendere", "Sopra"],
+      "correct_index": 0,
+      "explanation": "**Luminoso** descrive una qualità di un nome, quindi è un aggettivo qualificativo."
+    },
+    {
+      "id": "ita_gram_009",
+      "topic": "Analisi e Frasi",
+      "type": "multiple_choice",
+      "difficulty": 2,
+      "prompt": "Nella frase 'Il gatto **dorme** sul divano', qual è il **soggetto**?",
+      "hint": "Chiediti: chi compie l'azione di dormire?",
+      "options": ["Il gatto", "Sul divano", "Dorme", "Il divano"],
+      "correct_index": 0,
+      "explanation": "Chi compie l'azione di dormire? **Il gatto**, che è il **soggetto** della frase."
+    },
+    {
+      "id": "ita_gram_010",
+      "topic": "Analisi e Frasi",
+      "type": "multiple_choice",
+      "difficulty": 3,
+      "prompt": "Nella frase 'Luca legge **un libro**', che funzione ha 'un libro'?",
+      "hint": "Risponde alla domanda: che cosa legge Luca?",
+      "options": ["Complemento oggetto", "Soggetto", "Predicato verbale", "Complemento di luogo"],
+      "correct_index": 0,
+      "explanation": "Risponde direttamente alla domanda 'che cosa?': è il **complemento oggetto**."
+    },
+    {
+      "id": "ita_gram_011",
+      "topic": "Verbi",
+      "type": "true_false",
+      "difficulty": 3,
+      "prompt": "Nella frase 'Giulia **correva** nel parco', il verbo è al tempo **imperfetto**.",
+      "hint": "L'imperfetto racconta azioni passate che duravano nel tempo (-ava, -eva, -iva).",
+      "correct_bool": true,
+      "explanation": "Vero! **Correva** è l'indicativo **imperfetto** del verbo correre."
+    },
+    {
+      "id": "ita_gram_012",
+      "topic": "Analisi e Frasi",
+      "type": "multiple_choice",
+      "difficulty": 3,
+      "prompt": "Quale segno di punteggiatura introduce un **elenco** o una spiegazione?",
+      "hint": "Sono formati da due piccoli puntini uno sopra l'altro.",
+      "options": ["Due punti (:)", "Punto interrogativo (?)", "Virgola (,)", "Punto esclamativo (!)"],
+      "correct_index": 0,
+      "explanation": "I **due punti (:)** servono per introdurre un elenco, una spiegazione o un discorso diretto."
+    }
+  ]
+}

@@ -1,0 +1,131 @@
+{
+  "schema_version": 1,
+  "pack_id": "scienze_fotosintesi",
+  "subject": "scienze",
+  "grade": 4,
+  "title": "La Fotosintesi delle Piante",
+  "version": 1,
+  "boss_name": "Prof. Clorofillo",
+  "boss_title": "Custode della Serra",
+  "medal_name": "Medaglia della Foglia d'Oro",
+  "medal_icon": "medal_leaf",
+  "questions": [
+    {
+      "id": "sci_foto_001",
+      "type": "multiple_choice",
+      "difficulty": 1,
+      "prompt": "In quale parte della pianta avviene soprattutto la **fotosintesi**?",
+      "hint": "È la parte verde che cattura meglio la luce del sole.",
+      "options": ["Foglie", "Radici", "Semi", "Corteccia"],
+      "correct_index": 0,
+      "explanation": "La **fotosintesi** avviene nelle **foglie**, ricche di clorofilla verde."
+    },
+    {
+      "id": "sci_foto_002",
+      "type": "multiple_choice",
+      "difficulty": 1,
+      "prompt": "Quale sostanza dà alle foglie il loro colore **verde**?",
+      "hint": "Il suo nome inizia con 'cloro-' che in greco significa verde.",
+      "options": ["Clorofilla", "Amido", "Resina", "Polline"],
+      "correct_index": 0,
+      "explanation": "La **clorofilla** colora le foglie di verde e assorbe l'energia del **sole**."
+    },
+    {
+      "id": "sci_foto_003",
+      "type": "true_false",
+      "difficulty": 1,
+      "prompt": "Per fare la **fotosintesi**, le piante hanno bisogno della **luce** del sole.",
+      "hint": "La parola 'foto' significa proprio 'luce'.",
+      "correct_bool": true,
+      "explanation": "Vero! La **luce solare** fornisce l'energia per trasformare acqua e aria in nutrimento."
+    },
+    {
+      "id": "sci_foto_004",
+      "type": "multiple_choice",
+      "difficulty": 1,
+      "prompt": "Quale parte della pianta assorbe **acqua** e sali minerali dal terreno?",
+      "hint": "Cresce sotto terra e tiene ben salda la pianta.",
+      "options": ["Radici", "Petali", "Frutti", "Gemme"],
+      "correct_index": 0,
+      "explanation": "Le **radici** assorbono acqua e sali minerali dal suolo formando la **linfa grezza**."
+    },
+    {
+      "id": "sci_foto_005",
+      "type": "multiple_choice",
+      "difficulty": 2,
+      "prompt": "Quale gas prezioso liberano le piante nell'aria durante la **fotosintesi**?",
+      "hint": "È il gas che respiriamo ogni secondo per vivere.",
+      "options": ["Ossigeno", "Elio", "Metano", "Azoto"],
+      "correct_index": 0,
+      "explanation": "Durante la fotosintesi le piante producono **ossigeno**, fondamentale per tutti gli esseri viventi."
+    },
+    {
+      "id": "sci_foto_006",
+      "type": "multiple_choice",
+      "difficulty": 2,
+      "prompt": "Quale gas assorbono le foglie dall'aria per produrre il loro **nutrimento**?",
+      "hint": "È lo stesso gas che noi espiriamo quando buttiamo fuori aria.",
+      "options": ["Anidride carbonica", "Ossigeno puro", "Vapore freddo", "Idrogeno"],
+      "correct_index": 0,
+      "explanation": "Le foglie assorbono **anidride carbonica** dall'aria attraverso piccoli pori."
+    },
+    {
+      "id": "sci_foto_007",
+      "type": "true_false",
+      "difficulty": 2,
+      "prompt": "Le piante sono organismi **autotrofi**, cioè fabbricano da sole il proprio cibo.",
+      "hint": "'Auto' significa 'da sé': le piante non devono cacciare per nutrirsi.",
+      "correct_bool": true,
+      "explanation": "Esatto! Grazie alla fotosintesi le piante sono **autotrofe** e creano i propri zuccheri."
+    },
+    {
+      "id": "sci_foto_008",
+      "type": "multiple_choice",
+      "difficulty": 2,
+      "prompt": "Come si chiama il liquido di acqua e sali che sale dalle **radici**?",
+      "hint": "Non è ancora stato trasformato in zuccheri dalle foglie.",
+      "options": ["Linfa grezza", "Linfa elaborata", "Nettare", "Rugiada"],
+      "correct_index": 0,
+      "explanation": "La **linfa grezza** sale lungo il fusto fino alle foglie per essere trasformata."
+    },
+    {
+      "id": "sci_foto_009",
+      "type": "multiple_choice",
+      "difficulty": 3,
+      "prompt": "Come si chiamano i minuscoli pori sotto la foglia da cui entra l'**aria**?",
+      "hint": "Il nome assomiglia alla parola greca per 'piccola bocca'.",
+      "options": ["Stomi", "Spore", "Tuberi", "Sepali"],
+      "correct_index": 0,
+      "explanation": "Gli **stomi** si aprono e si chiudono per far scambiare i gas tra foglia e aria."
+    },
+    {
+      "id": "sci_foto_010",
+      "type": "multiple_choice",
+      "difficulty": 3,
+      "prompt": "Come si chiama lo zucchero prodotto dalle foglie nella **fotosintesi**?",
+      "hint": "È una fonte di energia dolce il cui nome inizia con 'glu-'.",
+      "options": ["Glucosio", "Sale marino", "Calcio", "Ferro"],
+      "correct_index": 0,
+      "explanation": "Il **glucosio** è lo zucchero che nutre tutta la pianta attraverso la **linfa elaborata**."
+    },
+    {
+      "id": "sci_foto_011",
+      "type": "true_false",
+      "difficulty": 3,
+      "prompt": "Di notte, al buio completo, le piante continuano a fare la **fotosintesi**.",
+      "hint": "Ricorda l'ingrediente indispensabile nel nome 'foto-sintesi'.",
+      "correct_bool": false,
+      "explanation": "Di notte manca la **luce**, quindi la fotosintesi si ferma e la pianta continua solo a respirare."
+    },
+    {
+      "id": "sci_foto_012",
+      "type": "multiple_choice",
+      "difficulty": 3,
+      "prompt": "Quale liquido porta il **nutrimento** dalle foglie a tutta la pianta?",
+      "hint": "È la linfa ormai pronta e ricca di zuccheri.",
+      "options": ["Linfa elaborata", "Linfa grezza", "Acqua piovana", "Humus"],
+      "correct_index": 0,
+      "explanation": "La **linfa elaborata** scende dalle foglie e nutre fusto, frutti e **radici**."
+    }
+  ]
+}

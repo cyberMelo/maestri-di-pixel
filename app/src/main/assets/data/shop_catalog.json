@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "items": [
+    {"id": "pet_owl", "category": "companion", "name": "Gufo Saggio", "price": 80, "icon": "pet_owl"},
+    {"id": "pet_cat", "category": "companion", "name": "Micio Pixel", "price": 100, "icon": "pet_cat"},
+    {"id": "pet_dog", "category": "companion", "name": "Cagnolino Lampo", "price": 120, "icon": "pet_dog"},
+    {"id": "pet_robot", "category": "companion", "name": "Robottino Bit", "price": 150, "icon": "pet_robot"},
+    {"id": "sticker_rocket", "category": "sticker", "name": "Razzo Spaziale", "price": 30, "icon": "sticker_rocket"},
+    {"id": "sticker_dino", "category": "sticker", "name": "Dinosauro Rex", "price": 35, "icon": "sticker_dino"},
+    {"id": "sticker_planet", "category": "sticker", "name": "Pianeta Saturno", "price": 40, "icon": "sticker_planet"},
+    {"id": "sticker_book", "category": "sticker", "name": "Libro Magico", "price": 45, "icon": "sticker_book"},
+    {"id": "sticker_trophy", "category": "sticker", "name": "Coppa d'Oro", "price": 50, "icon": "sticker_trophy"},
+    {"id": "sticker_lightning", "category": "sticker", "name": "Fulmine Turbo", "price": 60, "icon": "sticker_lightning"},
+    {"id": "frame_classic", "category": "frame", "name": "Cornice Classica", "price": 0, "color_hex": "#1E293B"},
+    {"id": "frame_emerald", "category": "frame", "name": "Cornice Smeraldo", "price": 70, "color_hex": "#059669"},
+    {"id": "frame_gold", "category": "frame", "name": "Cornice Oro", "price": 90, "color_hex": "#D97706"},
+    {"id": "frame_space", "category": "frame", "name": "Cornice Galassia", "price": 110, "color_hex": "#7C3AED"}
+  ]
+}

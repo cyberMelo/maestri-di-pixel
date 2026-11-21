@@ -1,0 +1,6 @@
+{
+  "name": "Maestri di Pixel",
+  "description": "App educativa offline-first in pixel-art 16-bit per bambini di 4a e 5a elementare con 6 materie e mini-giochi dedicati, argomenti selezionabili, metodo Leitner, Armadietto, Area Genitori con PIN e sync pacchetti GitHub.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
