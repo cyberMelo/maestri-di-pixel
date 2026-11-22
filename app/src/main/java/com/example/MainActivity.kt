@@ -29,9 +29,12 @@ import com.example.core.LearningEngine
 import com.example.core.MinigameLaunchConfig
 import com.example.core.SfxType
 import com.example.ui.components.ConfirmModal
+import com.example.ui.components.DailyMissionsModal
 import com.example.ui.components.DialogBoxModal
 import com.example.ui.components.PackPickerModal
 import com.example.ui.components.PinModal
+import com.example.ui.components.QuickMapModal
+import com.example.ui.components.TrophyHallModal
 import com.example.ui.screens.BootScreen
 import com.example.ui.screens.EnglishMatchScreen
 import com.example.ui.screens.GeoBalloonScreen
@@ -56,12 +59,10 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            ScuolaRetroTheme {
-                ScuolaRetroApp(
-                    viewModel = viewModel,
-                    onExitApp = { finish() }
-                )
-            }
+            ScuolaRetroApp(
+                viewModel = viewModel,
+                onExitApp = { finish() }
+            )
         }
     }
 
@@ -89,6 +90,7 @@ fun ScuolaRetroApp(
         }
     }
 
+    ScuolaRetroTheme(darkTheme = uiState.config.studyPreferences.darkMode) {
     Box(modifier = Modifier.fillMaxSize()) {
         when (val screen = uiState.screen) {
             AppScreen.Boot -> BootScreen()
@@ -104,6 +106,10 @@ fun ScuolaRetroApp(
                 onNpcInteract = { viewModel.onNpcInteract(it) },
                 onPortalTrigger = { viewModel.onPortalTrigger(it) },
                 onGuidanceClick = { viewModel.onGuidancePillClicked() },
+                onOpenQuickMap = { viewModel.openQuickMap() },
+                onOpenDailyMissions = { viewModel.openDailyMissions() },
+                onOpenTrophyHall = { viewModel.openTrophyHall() },
+                onPetTap = { viewModel.onPetInteracted() },
                 onToggleMute = { viewModel.toggleMute() },
                 onOpenParentGate = { viewModel.openParentPinGate() },
                 onPlayStepSfx = { viewModel.audioManager.playSfx(SfxType.STEP) },
@@ -195,6 +201,21 @@ fun ScuolaRetroApp(
                 onSetNewPin = { viewModel.updateParentPin(it) },
                 onDismiss = { viewModel.dismissModal() }
             )
+            ActiveModal.TrophyHall -> TrophyHallModal(
+                uiState = uiState,
+                onDismiss = { viewModel.dismissModal() }
+            )
+            ActiveModal.DailyMissions -> DailyMissionsModal(
+                missions = uiState.dailyMissions,
+                onClaim = { viewModel.claimDailyMission(it) },
+                onDismiss = { viewModel.dismissModal() }
+            )
+            ActiveModal.QuickMap -> QuickMapModal(
+                uiState = uiState,
+                currentHubId = (uiState.screen as? AppScreen.Hub)?.hubId ?: "school_hallway",
+                onSelectAction = { viewModel.onPortalTrigger(it) },
+                onDismiss = { viewModel.dismissModal() }
+            )
         }
 
         // Scene transition fade overlay
@@ -232,5 +253,6 @@ fun ScuolaRetroApp(
                 )
             }
         }
+    }
     }
 }

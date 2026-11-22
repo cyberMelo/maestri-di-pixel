@@ -64,18 +64,22 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.core.GameBalance
 import com.example.core.ShopItem
+import com.example.pixelart.Facing
 import com.example.pixelart.PixelArtAssets
 import com.example.ui.components.GbaCard
 import com.example.ui.components.PixelSprite
+import com.example.ui.theme.BackdropScrimDark
 import com.example.ui.theme.CreamBackground
-import com.example.ui.theme.CreamSurface
+import com.example.ui.theme.DarkCardBg
 import com.example.ui.theme.DeepBlueAccent
 import com.example.ui.theme.EmeraldSuccess
+import com.example.ui.theme.HudNightBg
+import com.example.ui.theme.IceWhiteText
 import com.example.ui.theme.InkPrimary
-import com.example.ui.theme.InkSecondary
+import com.example.ui.theme.LocalDarkTheme
 import com.example.ui.theme.SilkscreenFontFamily
 import com.example.ui.theme.SoftGold
-import com.example.ui.theme.WarmAmber
+import com.example.ui.theme.StarYellow
 import com.example.viewmodel.AppUiState
 import com.example.viewmodel.ScuolaRetroViewModel
 
@@ -87,6 +91,7 @@ fun LockerRoomScreen(
     BackHandler { viewModel.handleGlobalBack() }
 
     val profile = uiState.activeProfile
+    val isDark = LocalDarkTheme.current
     var selectedTab by remember { mutableIntStateOf(0) }
     var editingStickerSlot by remember { mutableStateOf<Int?>(null) }
 
@@ -97,7 +102,7 @@ fun LockerRoomScreen(
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
-                    colors = listOf(Color(0xFFFEF3C7), Color(0xFFFDE68A))
+                    colors = if (isDark) listOf(HudNightBg, DarkCardBg) else listOf(Color(0xFFFEF3C7), Color(0xFFFDE68A))
                 )
             )
             .safeDrawingPadding()
@@ -120,18 +125,18 @@ fun LockerRoomScreen(
                     modifier = Modifier
                         .heightIn(min = 48.dp)
                         .testTag("locker_back_hallway"),
-                    colors = ButtonDefaults.buttonColors(containerColor = DeepBlueAccent)
+                    colors = ButtonDefaults.buttonColors(containerColor = DeepBlueAccent, contentColor = IceWhiteText)
                 ) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Torna in corridoio")
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Torna in atrio")
                     Spacer(Modifier.width(4.dp))
-                    Text("Corridoio", style = MaterialTheme.typography.labelLarge)
+                    Text("Atrio", style = MaterialTheme.typography.labelLarge)
                 }
 
                 Text(
                     text = "ARMADIETTO",
                     fontFamily = SilkscreenFontFamily,
                     fontSize = 16.sp,
-                    color = InkPrimary,
+                    color = if (isDark) IceWhiteText else InkPrimary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f),
@@ -140,19 +145,19 @@ fun LockerRoomScreen(
 
                 Surface(
                     shape = RoundedCornerShape(12.dp),
-                    color = CreamBackground,
-                    border = BorderStroke(2.dp, SoftGold)
+                    color = MaterialTheme.colorScheme.surface,
+                    border = BorderStroke(2.dp, if (isDark) StarYellow else SoftGold)
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        Icon(Icons.Default.Star, contentDescription = "Stelle", tint = SoftGold)
+                        Icon(Icons.Default.Star, contentDescription = "Stelle", tint = if (isDark) StarYellow else SoftGold)
                         Text(
                             text = "${profile?.stars ?: 0}",
                             style = MaterialTheme.typography.titleMedium,
-                            color = InkPrimary
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 }
@@ -167,8 +172,8 @@ fun LockerRoomScreen(
             ) {
                 TabRow(
                     selectedTabIndex = selectedTab,
-                    containerColor = CreamSurface,
-                    contentColor = DeepBlueAccent
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    contentColor = MaterialTheme.colorScheme.primary
                 ) {
                     tabs.forEachIndexed { idx, title ->
                         Tab(
@@ -191,6 +196,7 @@ fun LockerRoomScreen(
                             uiState = uiState,
                             onSlotClick = { editingStickerSlot = it },
                             onEquipCompanion = { viewModel.equipCompanion(it) },
+                            onEquipHat = { viewModel.equipHat(it) },
                             onEquipFrame = { viewModel.equipFrame(it) }
                         )
                         2 -> RewardShopTab(
@@ -210,7 +216,7 @@ fun LockerRoomScreen(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.55f))
+                    .background(BackdropScrimDark)
                     .clickable { editingStickerSlot = null },
                 contentAlignment = Alignment.Center
             ) {
@@ -224,14 +230,14 @@ fun LockerRoomScreen(
                     Text(
                         text = "Scegli adesivo per Slot ${slotIdx + 1}",
                         style = MaterialTheme.typography.titleLarge,
-                        color = DeepBlueAccent
+                        color = MaterialTheme.colorScheme.primary
                     )
                     Spacer(Modifier.height(10.dp))
                     if (ownedStickers.isEmpty()) {
                         Text(
                             text = "Non hai ancora adesivi! Visita lo Spaccio Ricompense per sbloccarne qualcuno con le tue stelle.",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = InkSecondary
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     } else {
                         LazyColumn(
@@ -247,8 +253,8 @@ fun LockerRoomScreen(
                                             viewModel.setLockerSticker(slotIdx, st.id)
                                             editingStickerSlot = null
                                         },
-                                    color = CreamSurface,
-                                    border = BorderStroke(2.dp, GameBalance.GBA_FRAME_DARK)
+                                    color = MaterialTheme.colorScheme.surfaceVariant,
+                                    border = BorderStroke(2.dp, MaterialTheme.colorScheme.outline)
                                 ) {
                                     Row(
                                         modifier = Modifier.padding(10.dp),
@@ -260,7 +266,7 @@ fun LockerRoomScreen(
                                             contentDescription = st.name,
                                             modifier = Modifier.size(36.dp)
                                         )
-                                        Text(st.name, style = MaterialTheme.typography.titleMedium, color = InkPrimary)
+                                        Text(st.name, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
                                     }
                                 }
                             }
@@ -300,7 +306,6 @@ fun LockerRoomScreen(
 @Composable
 private fun MedalBoardTab(uiState: AppUiState) {
     val earnedIds = uiState.activeProfile?.medals?.toSet() ?: emptySet()
-    // Show all active packs + any archived packs whose medal was already earned
     val visiblePacks = uiState.allPacksIncludingArchived.filter { !it.archived || it.packId in earnedIds }
 
     LazyVerticalGrid(
@@ -314,33 +319,32 @@ private fun MedalBoardTab(uiState: AppUiState) {
             val subjColor = GameBalance.subjectColor(pack.subject)
             Surface(
                 shape = RoundedCornerShape(14.dp),
-                color = if (earned) Color(0xFFFFFBEB) else CreamSurface,
-                border = BorderStroke(2.5.dp, if (earned) SoftGold else Color(0xFFCBD5E1)),
+                color = if (earned) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceVariant,
+                border = BorderStroke(2.5.dp, if (earned) SoftGold else MaterialTheme.colorScheme.outlineVariant),
                 shadowElevation = if (earned) 4.dp else 1.dp
             ) {
                 Column(
                     modifier = Modifier.padding(14.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // Double-ring retro medal emblem
                     Box(
                         modifier = Modifier
                             .size(62.dp)
                             .clip(androidx.compose.foundation.shape.CircleShape)
                             .background(
                                 if (earned) {
-                                    androidx.compose.ui.graphics.Brush.radialGradient(
+                                    Brush.radialGradient(
                                         colors = listOf(Color(0xFFFEF08A), Color(0xFFF59E0B), Color(0xFFB45309))
                                     )
                                 } else {
-                                    androidx.compose.ui.graphics.Brush.radialGradient(
-                                        colors = listOf(Color(0xFFE2E8F0), Color(0xFFCBD5E1))
+                                    Brush.radialGradient(
+                                        colors = listOf(Color(0xFF94A3B8), Color(0xFF64748B))
                                     )
                                 }
                             )
                             .border(
                                 width = 3.dp,
-                                color = if (earned) Color(0xFF92400E) else Color(0xFF94A3B8),
+                                color = if (earned) Color(0xFF92400E) else MaterialTheme.colorScheme.outline,
                                 shape = androidx.compose.foundation.shape.CircleShape
                             ),
                         contentAlignment = Alignment.Center
@@ -351,7 +355,7 @@ private fun MedalBoardTab(uiState: AppUiState) {
                                 .clip(androidx.compose.foundation.shape.CircleShape)
                                 .border(
                                     width = 1.5.dp,
-                                    color = if (earned) Color(0xFFFFFBEB) else Color(0xFFF8FAFC),
+                                    color = if (earned) Color(0xFFFFFBEB) else Color(0xFFE2E8F0),
                                     shape = androidx.compose.foundation.shape.CircleShape
                                 ),
                             contentAlignment = Alignment.Center
@@ -359,7 +363,7 @@ private fun MedalBoardTab(uiState: AppUiState) {
                             Icon(
                                 imageVector = if (earned) Icons.Default.EmojiEvents else Icons.Default.Lock,
                                 contentDescription = if (earned) "Conquistata" else "Bloccata",
-                                tint = if (earned) Color(0xFF78350F) else Color(0xFF64748B),
+                                tint = if (earned) Color(0xFF78350F) else Color(0xFFF1F5F9),
                                 modifier = Modifier.size(30.dp)
                             )
                         }
@@ -368,24 +372,24 @@ private fun MedalBoardTab(uiState: AppUiState) {
                     Text(
                         text = pack.medalName,
                         style = MaterialTheme.typography.titleMedium,
-                        color = InkPrimary,
+                        color = MaterialTheme.colorScheme.onSurface,
                         textAlign = TextAlign.Center
                     )
                     Text(
                         text = pack.title,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = subjColor,
+                        color = if (LocalDarkTheme.current) MaterialTheme.colorScheme.primary else subjColor,
                         textAlign = TextAlign.Center
                     )
                     Spacer(Modifier.height(4.dp))
                     Surface(
                         shape = RoundedCornerShape(8.dp),
-                        color = if (earned) Color(0xFFD1FAE5) else Color(0xFFE2E8F0)
+                        color = if (earned) MaterialTheme.colorScheme.tertiaryContainer else MaterialTheme.colorScheme.surface
                     ) {
                         Text(
                             text = if (earned) "Conquistata!" else "Sconfiggi ${pack.bossName}",
                             style = MaterialTheme.typography.labelMedium,
-                            color = if (earned) EmeraldSuccess else InkSecondary,
+                            color = if (earned) MaterialTheme.colorScheme.onTertiaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                         )
@@ -401,49 +405,122 @@ private fun MyLockerTab(
     uiState: AppUiState,
     onSlotClick: (Int) -> Unit,
     onEquipCompanion: (String) -> Unit,
+    onEquipHat: (String) -> Unit,
     onEquipFrame: (String) -> Unit
 ) {
     val profile = uiState.activeProfile ?: return
     val ownedSet = profile.ownedItems.toSet()
     val ownedCompanions = uiState.shopCatalog.filter { it.category == "companion" && it.id in ownedSet }
+    val ownedHats = uiState.shopCatalog.filter { it.category == "hat" && it.id in ownedSet }
     val ownedFrames = uiState.shopCatalog.filter { it.category == "frame" && it.id in ownedSet }
 
     LazyColumn(
         verticalArrangement = Arrangement.spacedBy(16.dp),
         modifier = Modifier.fillMaxSize()
     ) {
+        // Live Avatar Style Preview card (compact so sticker slots stay visible above the fold on small portrait screens)
+        item {
+            val frameCol = GameBalance.frameColor(profile.equippedFrame)
+            Surface(
+                shape = RoundedCornerShape(14.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                border = BorderStroke(3.dp, frameCol)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(58.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(MaterialTheme.colorScheme.primaryContainer)
+                            .border(2.dp, frameCol, RoundedCornerShape(10.dp)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        PixelSprite(
+                            bitmap = PixelArtAssets.getCharacterSprite(
+                                id = "avatar_${profile.avatarId}",
+                                facing = Facing.DOWN,
+                                stepFrame = 0,
+                                hatId = profile.equippedHat
+                            ),
+                            contentDescription = "Anteprima avatar",
+                            modifier = Modifier.size(46.dp)
+                        )
+                    }
+                    if (profile.equippedCompanion.isNotBlank()) {
+                        Box(
+                            modifier = Modifier
+                                .size(50.dp)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(MaterialTheme.colorScheme.secondaryContainer)
+                                .border(2.dp, SoftGold, RoundedCornerShape(10.dp)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            PixelSprite(
+                                bitmap = PixelArtAssets.getCompanionSprite(profile.equippedCompanion, 0),
+                                contentDescription = "Mascotte attiva",
+                                modifier = Modifier.size(38.dp)
+                            )
+                        }
+                    }
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = profile.name,
+                            fontFamily = SilkscreenFontFamily,
+                            fontSize = 14.sp,
+                            color = MaterialTheme.colorScheme.primary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Text(
+                            text = "Grado: ${uiState.explorerRank.title}",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+            }
+        }
+
         // 6 Sticker Slots
         item {
-            Text("I 6 Slot Adesivi dell'Armadietto", style = MaterialTheme.typography.titleLarge, color = DeepBlueAccent)
+            Text("I 6 Slot Adesivi dell'Armadietto", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
             Spacer(Modifier.height(8.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 for (slotIdx in 0..5) {
                     val stickerId = profile.lockerStickers.getOrElse(slotIdx) { "" }
                     Surface(
                         modifier = Modifier
                             .weight(1f)
-                            .height(86.dp)
+                            .height(78.dp)
                             .clip(RoundedCornerShape(12.dp))
                             .clickable { onSlotClick(slotIdx) }
                             .testTag("locker_slot_$slotIdx"),
                         shape = RoundedCornerShape(12.dp),
-                        color = if (stickerId.isNotBlank()) Color(0xFFE0F2FE) else CreamSurface,
-                        border = BorderStroke(2.dp, GameBalance.GBA_FRAME_DARK)
+                        color = if (stickerId.isNotBlank()) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
+                        border = BorderStroke(2.dp, MaterialTheme.colorScheme.outline)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             if (stickerId.isNotBlank()) {
                                 PixelSprite(
                                     bitmap = PixelArtAssets.getStickerIcon(stickerId),
                                     contentDescription = "Adesivo slot ${slotIdx + 1}",
-                                    modifier = Modifier.size(48.dp)
+                                    modifier = Modifier.size(44.dp)
                                 )
                             } else {
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Icon(Icons.Default.Add, contentDescription = "Aggiungi adesivo", tint = InkSecondary)
-                                    Text("Slot ${slotIdx + 1}", fontSize = 11.sp, color = InkSecondary)
+                                    Icon(Icons.Default.Add, contentDescription = "Aggiungi adesivo", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Text("Slot ${slotIdx + 1}", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
                             }
                         }
@@ -452,9 +529,61 @@ private fun MyLockerTab(
             }
         }
 
+        // Wearable Avatar Hats selector
+        item {
+            Text("Cappelli & Accessori Avatar", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
+            Spacer(Modifier.height(8.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                OutlinedButton(
+                    onClick = { onEquipHat("") },
+                    modifier = Modifier.heightIn(min = 52.dp),
+                    border = BorderStroke(if (profile.equippedHat.isEmpty()) 3.dp else 1.5.dp, MaterialTheme.colorScheme.primary)
+                ) {
+                    Text("Nessuno")
+                }
+                ownedHats.forEach { hat ->
+                    val selected = profile.equippedHat == hat.id
+                    Surface(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(10.dp))
+                            .clickable { onEquipHat(hat.id) }
+                            .testTag("equip_hat_${hat.id}"),
+                        color = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
+                        border = BorderStroke(if (selected) 3.dp else 1.5.dp, if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            PixelSprite(
+                                bitmap = PixelArtAssets.getHatIcon(hat.id),
+                                contentDescription = hat.name,
+                                modifier = Modifier.size(34.dp)
+                            )
+                            Text(hat.name, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurface)
+                        }
+                    }
+                }
+                if (ownedHats.isEmpty()) {
+                    Text(
+                        text = "Sblocca cappelli nello Spaccio Ricompense!",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.align(Alignment.CenterVertically)
+                    )
+                }
+            }
+        }
+
         // Companion selector
         item {
-            Text("Mascotte al tuo fianco nell'Hub", style = MaterialTheme.typography.titleLarge, color = DeepBlueAccent)
+            Text("Mascotte al tuo fianco nell'Hub", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
             Spacer(Modifier.height(8.dp))
             Row(
                 modifier = Modifier
@@ -465,7 +594,7 @@ private fun MyLockerTab(
                 OutlinedButton(
                     onClick = { onEquipCompanion("") },
                     modifier = Modifier.heightIn(min = 52.dp),
-                    border = BorderStroke(if (profile.equippedCompanion.isEmpty()) 3.dp else 1.5.dp, DeepBlueAccent)
+                    border = BorderStroke(if (profile.equippedCompanion.isEmpty()) 3.dp else 1.5.dp, MaterialTheme.colorScheme.primary)
                 ) {
                     Text("Nessuna")
                 }
@@ -475,8 +604,8 @@ private fun MyLockerTab(
                         modifier = Modifier
                             .clip(RoundedCornerShape(10.dp))
                             .clickable { onEquipCompanion(pet.id) },
-                        color = if (selected) Color(0xFFDBEAFE) else CreamSurface,
-                        border = BorderStroke(if (selected) 3.dp else 1.5.dp, if (selected) DeepBlueAccent else Color(0xFFCBD5E1))
+                        color = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
+                        border = BorderStroke(if (selected) 3.dp else 1.5.dp, if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant)
                     ) {
                         Row(
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
@@ -488,7 +617,7 @@ private fun MyLockerTab(
                                 contentDescription = pet.name,
                                 modifier = Modifier.size(34.dp)
                             )
-                            Text(pet.name, style = MaterialTheme.typography.labelLarge)
+                            Text(pet.name, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurface)
                         }
                     }
                 }
@@ -497,7 +626,7 @@ private fun MyLockerTab(
 
         // Frame selector
         item {
-            Text("Cornice Profilo", style = MaterialTheme.typography.titleLarge, color = DeepBlueAccent)
+            Text("Cornice Profilo", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
             Spacer(Modifier.height(8.dp))
             Row(
                 modifier = Modifier
@@ -512,7 +641,7 @@ private fun MyLockerTab(
                         modifier = Modifier
                             .clip(RoundedCornerShape(10.dp))
                             .clickable { onEquipFrame(frame.id) },
-                        color = if (selected) fColor.copy(alpha = 0.15f) else CreamSurface,
+                        color = if (selected) fColor.copy(alpha = 0.22f) else MaterialTheme.colorScheme.surfaceVariant,
                         border = BorderStroke(if (selected) 3.dp else 2.dp, fColor)
                     ) {
                         Row(
@@ -526,7 +655,7 @@ private fun MyLockerTab(
                                     .clip(RoundedCornerShape(4.dp))
                                     .background(fColor)
                             )
-                            Text(frame.name, style = MaterialTheme.typography.labelLarge, color = InkPrimary)
+                            Text(frame.name, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurface)
                             if (selected) {
                                 Icon(Icons.Default.Check, contentDescription = "Attiva", tint = fColor, modifier = Modifier.size(18.dp))
                             }
@@ -557,8 +686,8 @@ private fun RewardShopTab(
             val canAfford = profile.stars >= item.price
             Surface(
                 shape = RoundedCornerShape(12.dp),
-                color = CreamSurface,
-                border = BorderStroke(2.dp, if (owned) EmeraldSuccess else Color(0xFFCBD5E1))
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                border = BorderStroke(2.dp, if (owned) EmeraldSuccess else MaterialTheme.colorScheme.outlineVariant)
             ) {
                 Column(
                     modifier = Modifier.padding(12.dp),
@@ -571,6 +700,11 @@ private fun RewardShopTab(
                             contentDescription = item.name,
                             modifier = Modifier.size(48.dp)
                         )
+                        "hat" -> PixelSprite(
+                            bitmap = PixelArtAssets.getHatIcon(item.id),
+                            contentDescription = item.name,
+                            modifier = Modifier.size(48.dp)
+                        )
                         "sticker" -> PixelSprite(
                             bitmap = PixelArtAssets.getStickerIcon(item.id),
                             contentDescription = item.name,
@@ -580,23 +714,24 @@ private fun RewardShopTab(
                             modifier = Modifier
                                 .size(48.dp)
                                 .clip(RoundedCornerShape(10.dp))
-                                .background(CreamBackground)
+                                .background(MaterialTheme.colorScheme.surface)
                                 .border(5.dp, GameBalance.frameColor(item.id), RoundedCornerShape(10.dp))
                         )
                     }
                     Text(
                         text = item.name,
                         style = MaterialTheme.typography.titleMedium,
-                        color = InkPrimary,
+                        color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                     val categoryLabel = when (item.category) {
                         "companion" -> "Mascotte"
+                        "hat" -> "Cappello Avatar"
                         "sticker" -> "Adesivo"
                         else -> "Cornice"
                     }
-                    Text(categoryLabel, style = MaterialTheme.typography.labelMedium, color = InkSecondary)
+                    Text(categoryLabel, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Button(
                         onClick = { onPurchase(item) },
                         enabled = !owned && canAfford,
@@ -606,7 +741,7 @@ private fun RewardShopTab(
                             .testTag("shop_buy_${item.id}"),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = if (owned) EmeraldSuccess else SoftGold,
-                            contentColor = if (owned) Color.White else Color(0xFF451A03)
+                            contentColor = if (owned) IceWhiteText else Color(0xFF451A03)
                         )
                     ) {
                         if (owned) {

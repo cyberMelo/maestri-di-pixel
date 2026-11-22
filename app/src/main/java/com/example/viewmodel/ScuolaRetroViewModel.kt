@@ -6,9 +6,11 @@ import androidx.lifecycle.viewModelScope
 import com.example.core.AppConfig
 import com.example.core.AudioManager
 import com.example.core.BundledAssetReader
+import com.example.core.DailyMissionItem
 import com.example.core.GameBalance
 import com.example.core.GitHubConfig
 import com.example.core.LearningEngine
+import com.example.core.MasteryRankInfo
 import com.example.core.MinigameLaunchConfig
 import com.example.core.MinigameResult
 import com.example.core.MusicTrack
@@ -21,6 +23,7 @@ import com.example.core.SaveManager
 import com.example.core.SfxType
 import com.example.core.ShopItem
 import com.example.core.StudyPreferences
+import com.example.core.SubjectMasterySummary
 import com.example.core.SyncResult
 import com.example.core.TTSManager
 import com.example.core.ValidationResult
@@ -79,6 +82,9 @@ sealed interface ActiveModal {
     ) : ActiveModal
 
     data class PinGate(val mode: PinMode) : ActiveModal
+    data object TrophyHall : ActiveModal
+    data object DailyMissions : ActiveModal
+    data object QuickMap : ActiveModal
 }
 
 data class AppUiState(
@@ -93,6 +99,9 @@ data class AppUiState(
     val recommendedActivity: RecommendedActivity? = null,
     val sessionsThisWeek: Int = 0,
     val weakQuestions: List<WeakQuestionItem> = emptyList(),
+    val dailyMissions: List<DailyMissionItem> = emptyList(),
+    val subjectMastery: Map<String, SubjectMasterySummary> = emptyMap(),
+    val explorerRank: MasteryRankInfo = MasteryRankInfo("Curioso", 0, 0),
     val isSyncing: Boolean = false,
     val activeModal: ActiveModal = ActiveModal.None,
     val toastMessage: String? = null,
@@ -167,6 +176,9 @@ class ScuolaRetroViewModel(application: Application) : AndroidViewModel(applicat
                 recommendedActivity = learningEngine.getRecommendedActivity(),
                 sessionsThisWeek = learningEngine.getSessionsThisWeek(),
                 weakQuestions = learningEngine.getTopWeakQuestions(5),
+                dailyMissions = learningEngine.getDailyMissions(),
+                subjectMastery = learningEngine.getSubjectMasteryMap(),
+                explorerRank = learningEngine.getOverallExplorerRank(),
                 isSyncing = packManager.isSyncing
             )
         }
@@ -277,6 +289,43 @@ class ScuolaRetroViewModel(application: Application) : AndroidViewModel(applicat
     fun onNpcInteract(npc: HubNpc) {
         if (_uiState.value.isTransitioning || _uiState.value.activeModal != ActiveModal.None) return
         audioManager.playSfx(SfxType.UI_CLICK)
+
+        if (npc.subjectFilter == "janitor") {
+            val profile = saveManager.activeProfile
+            val claimable = learningEngine.getDailyMissions().count { it.isClaimable }
+            val msg = when {
+                claimable > 0 -> "Ehi ${profile?.name ?: "campione"}! Hai $claimable premi pronti sulla Bacheca Missioni! Toccala o apri il pulsante Missioni in alto!"
+                (profile?.medals?.size ?: 0) == 0 -> "Ciao! Ho appena lucidato la Teca dei Trofei qui al centro. Toccando la teca vedrai tutte le medaglie che puoi conquistare!"
+                else -> "L'Atrio brilla oggi! Hai già **${profile?.medals?.size ?: 0} medaglie** e **${profile?.stars ?: 0} stelle**. Continua così!"
+            }
+            showModal(
+                ActiveModal.Dialog(
+                    title = "Bidello Pippo",
+                    message = msg,
+                    speakerSpriteId = npc.spriteId
+                )
+            )
+            return
+        }
+
+        if (npc.subjectFilter == "classmate") {
+            val rec = learningEngine.getRecommendedActivity()
+            val rank = learningEngine.getOverallExplorerRank()
+            val msg = if (rec != null) {
+                "Ciao! Sei già di grado **${rank.title}**! Io oggi provo **${rec.title}** (${rec.targetLocationLabel}). Usa anche la **Mappa** in alto per volare subito in aula!"
+            } else {
+                "Ciao! Hai visto i nuovi cappelli e mascotte nell'Armadietto? Puoi indossarli mentre giri per la scuola!"
+            }
+            showModal(
+                ActiveModal.Dialog(
+                    title = "Compagna Gaia",
+                    message = msg,
+                    speakerSpriteId = npc.spriteId
+                )
+            )
+            return
+        }
+
         val yardTypes = setOf("multiple_choice", "true_false")
         val allActive = packManager.getActivePacks()
 
@@ -529,6 +578,12 @@ class ScuolaRetroViewModel(application: Application) : AndroidViewModel(applicat
                 audioManager.playSfx(SfxType.DOOR_OPEN)
                 navigateTo(AppScreen.LockerRoom)
             }
+            PortalAction.OpenTrophyHall -> {
+                openTrophyHall()
+            }
+            PortalAction.OpenDailyMissions -> {
+                openDailyMissions()
+            }
             is PortalAction.WipDoor -> {
                 audioManager.playSfx(SfxType.UI_CLICK)
                 showModal(
@@ -539,6 +594,40 @@ class ScuolaRetroViewModel(application: Application) : AndroidViewModel(applicat
                 )
             }
         }
+    }
+
+    fun openTrophyHall() {
+        if (_uiState.value.isTransitioning) return
+        audioManager.playSfx(SfxType.UI_CLICK)
+        refreshSnapshot()
+        showModal(ActiveModal.TrophyHall)
+    }
+
+    fun openDailyMissions() {
+        if (_uiState.value.isTransitioning) return
+        audioManager.playSfx(SfxType.UI_CLICK)
+        refreshSnapshot()
+        showModal(ActiveModal.DailyMissions)
+    }
+
+    fun openQuickMap() {
+        if (_uiState.value.isTransitioning) return
+        audioManager.playSfx(SfxType.UI_CLICK)
+        refreshSnapshot()
+        showModal(ActiveModal.QuickMap)
+    }
+
+    fun claimDailyMission(missionKey: String) {
+        val reward = learningEngine.claimDailyMission(missionKey)
+        if (reward > 0) {
+            audioManager.playSfx(SfxType.VICTORY_FANFARE)
+            refreshSnapshot()
+            showToast("Missione completata! +$reward stelle!")
+        }
+    }
+
+    fun onPetInteracted() {
+        audioManager.playSfx(SfxType.STAR_GAIN)
     }
 
     fun onGuidancePillClicked() {
@@ -611,11 +700,13 @@ class ScuolaRetroViewModel(application: Application) : AndroidViewModel(applicat
             saveManager.updateActiveProfile { p ->
                 val newOwned = (p.ownedItems + item.id).distinct()
                 val newCompanion = if (item.category == "companion" && p.equippedCompanion.isBlank()) item.id else p.equippedCompanion
+                val newHat = if (item.category == "hat") item.id else p.equippedHat
                 val newFrame = if (item.category == "frame") item.id else p.equippedFrame
                 p.copy(
                     stars = p.stars - item.price,
                     ownedItems = newOwned,
                     equippedCompanion = newCompanion,
+                    equippedHat = newHat,
                     equippedFrame = newFrame
                 )
             }
@@ -633,6 +724,12 @@ class ScuolaRetroViewModel(application: Application) : AndroidViewModel(applicat
     fun equipCompanion(companionId: String) {
         audioManager.playSfx(SfxType.UI_CLICK)
         saveManager.updateActiveProfile { it.copy(equippedCompanion = companionId) }
+        refreshSnapshot()
+    }
+
+    fun equipHat(hatId: String) {
+        audioManager.playSfx(SfxType.UI_CLICK)
+        saveManager.updateActiveProfile { it.copy(equippedHat = hatId) }
         refreshSnapshot()
     }
 

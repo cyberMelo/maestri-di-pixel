@@ -321,7 +321,144 @@ class LearningEngine(
         saveManager.flushAll()
     }
 
+    fun getDailyMissions(
+        nowUnix: Long = System.currentTimeMillis() / 1000L,
+        timeZone: TimeZone = TimeZone.getDefault()
+    ): List<DailyMissionItem> {
+        val profile = saveManager.activeProfile
+        val dayKey = computeDayKey(nowUnix, timeZone)
+        val dayStartUnix = computeDayMidnightUnix(nowUnix, timeZone)
+        val todaySessions = profile?.recentSessions
+            ?.filter { it.timestampUnix >= dayStartUnix }
+            .orEmpty()
+        val claimed = profile?.claimedMissionKeys?.toSet().orEmpty()
+
+        val sessionsCount = todaySessions.size
+        val distinctSubjects = todaySessions.mapNotNull { s ->
+            packManager.getPack(s.packId)?.subject ?: s.minigameId
+        }.distinct().size
+        val firstTryToday = todaySessions.sumOf { it.correctFirstTry }
+
+        val m1Key = "${dayKey}_first_challenge"
+        val m2Key = "${dayKey}_two_subjects"
+        val m3Key = "${dayKey}_sharp_answers"
+
+        return listOf(
+            DailyMissionItem(
+                missionKey = m1Key,
+                title = "Esploratore del Giorno",
+                description = "Completa 1 sfida in qualsiasi aula oggi",
+                progress = min(sessionsCount, 1),
+                target = 1,
+                rewardStars = 25,
+                claimed = m1Key in claimed
+            ),
+            DailyMissionItem(
+                missionKey = m2Key,
+                title = "Giro delle Aule",
+                description = "Allenati in 2 materie diverse oggi",
+                progress = min(distinctSubjects, 2),
+                target = 2,
+                rewardStars = 40,
+                claimed = m2Key in claimed
+            ),
+            DailyMissionItem(
+                missionKey = m3Key,
+                title = "Colpo da Maestro",
+                description = "Indovina 4 domande al primo colpo oggi",
+                progress = min(firstTryToday, 4),
+                target = 4,
+                rewardStars = 35,
+                claimed = m3Key in claimed
+            )
+        )
+    }
+
+    fun claimDailyMission(
+        missionKey: String,
+        nowUnix: Long = System.currentTimeMillis() / 1000L,
+        timeZone: TimeZone = TimeZone.getDefault()
+    ): Int {
+        val mission = getDailyMissions(nowUnix, timeZone).firstOrNull { it.missionKey == missionKey }
+            ?: return 0
+        if (!mission.isClaimable) return 0
+        saveManager.updateActiveProfile { p ->
+            if (missionKey in p.claimedMissionKeys) return@updateActiveProfile p
+            p.copy(
+                stars = p.stars + mission.rewardStars,
+                claimedMissionKeys = (p.claimedMissionKeys + missionKey).takeLast(30)
+            )
+        }
+        return mission.rewardStars
+    }
+
+    fun getSubjectMasteryMap(): Map<String, SubjectMasterySummary> {
+        val activePacks = packManager.getActivePacks()
+        val medals = saveManager.activeProfile?.medals?.toSet().orEmpty()
+        val subjects = listOf("storia", "matematica", "scienze", "italiano", "geografia", "inglese")
+        return subjects.associateWith { subj ->
+            val subjPacks = activePacks.filter { it.subject == subj }
+            val avgMastery = if (subjPacks.isEmpty()) {
+                0f
+            } else {
+                subjPacks.map { getPackMasteryPercent(it) }.average().toFloat()
+            }
+            SubjectMasterySummary(
+                subject = subj,
+                averageMasteryPct = avgMastery,
+                rank = rankForMastery(avgMastery),
+                packCount = subjPacks.size,
+                medalsEarned = subjPacks.count { it.packId in medals },
+                hasPriority = subjPacks.any { it.priority }
+            )
+        }
+    }
+
+    fun getOverallExplorerRank(): MasteryRankInfo {
+        val map = getSubjectMasteryMap()
+        val activeSubjects = map.values.filter { it.packCount > 0 }
+        val avg = if (activeSubjects.isEmpty()) 0f else activeSubjects.map { it.averageMasteryPct }.average().toFloat()
+        val medalsCount = saveManager.activeProfile?.medals?.size ?: 0
+        val boosted = (avg + medalsCount * 8f).coerceAtMost(100f)
+        return rankForMastery(boosted)
+    }
+
     companion object {
+        fun rankForMastery(pct: Float): MasteryRankInfo = when {
+            pct >= 80f -> MasteryRankInfo("Maestro di Pixel", 3, 80)
+            pct >= 50f -> MasteryRankInfo("Esploratore", 2, 50)
+            pct >= 20f -> MasteryRankInfo("Apprendista", 1, 20)
+            else -> MasteryRankInfo("Curioso", 0, 0)
+        }
+
+        fun computeDayKey(
+            nowUnix: Long,
+            timeZone: TimeZone = TimeZone.getDefault()
+        ): String {
+            val cal = Calendar.getInstance(timeZone).apply {
+                timeInMillis = nowUnix * 1000L
+            }
+            return "%04d-%02d-%02d".format(
+                cal.get(Calendar.YEAR),
+                cal.get(Calendar.MONTH) + 1,
+                cal.get(Calendar.DAY_OF_MONTH)
+            )
+        }
+
+        fun computeDayMidnightUnix(
+            nowUnix: Long,
+            timeZone: TimeZone = TimeZone.getDefault()
+        ): Long {
+            val cal = Calendar.getInstance(timeZone).apply {
+                timeInMillis = nowUnix * 1000L
+            }
+            val secondsSinceMidnight =
+                cal.get(Calendar.HOUR_OF_DAY) * 3600L +
+                    cal.get(Calendar.MINUTE) * 60L +
+                    cal.get(Calendar.SECOND)
+            return nowUnix - secondsSinceMidnight
+        }
+
         fun minigameIdForSubject(subject: String): String = when (subject) {
             "matematica" -> "gym_rhythm"
             "scienze" -> "science_catapult"

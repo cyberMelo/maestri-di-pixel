@@ -1,6 +1,7 @@
 package com.example.ui.components
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
@@ -8,6 +9,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -60,12 +63,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -78,14 +85,23 @@ import com.example.core.PackData
 import com.example.core.TextFormatter
 import com.example.pixelart.Facing
 import com.example.pixelart.PixelArtAssets
+import com.example.ui.theme.BackdropScrimDark
 import com.example.ui.theme.CreamBackground
 import com.example.ui.theme.CreamSurface
+import com.example.ui.theme.DarkBorderSlate
+import com.example.ui.theme.DarkCardBg
+import com.example.ui.theme.DarkSurfaceVariant
 import com.example.ui.theme.DeepBlueAccent
 import com.example.ui.theme.EmeraldSuccess
+import com.example.ui.theme.IceWhiteText
 import com.example.ui.theme.InkPrimary
 import com.example.ui.theme.InkSecondary
+import com.example.ui.theme.LocalDarkTheme
 import com.example.ui.theme.SilkscreenFontFamily
+import com.example.ui.theme.SkyHighlight
+import com.example.ui.theme.SlateMutedText
 import com.example.ui.theme.SoftGold
+import com.example.ui.theme.StarYellow
 import com.example.ui.theme.WarmAmber
 import com.example.viewmodel.PinMode
 import kotlinx.coroutines.delay
@@ -107,24 +123,30 @@ fun PixelSprite(
 @Composable
 fun GbaCard(
     modifier: Modifier = Modifier,
-    borderColor: Color = GameBalance.GBA_FRAME_DARK,
-    backgroundColor: Color = CreamBackground,
+    borderColor: Color = MaterialTheme.colorScheme.outline,
+    backgroundColor: Color = MaterialTheme.colorScheme.surface,
     contentPadding: PaddingValues = PaddingValues(16.dp),
     content: @Composable ColumnScope.() -> Unit
 ) {
+    val isDark = LocalDarkTheme.current
     val outerShape = RoundedCornerShape(14.dp)
     val innerShape = RoundedCornerShape(11.dp)
     Surface(
         modifier = modifier,
         shape = outerShape,
         color = backgroundColor,
-        border = BorderStroke(3.dp, borderColor),
+        contentColor = MaterialTheme.colorScheme.onSurface,
+        border = BorderStroke(2.5.dp, borderColor),
         shadowElevation = 6.dp
     ) {
         Box(
             modifier = Modifier
                 .padding(3.dp)
-                .border(1.5.dp, Color.White.copy(alpha = 0.65f), innerShape)
+                .border(
+                    width = 1.5.dp,
+                    color = if (isDark) Color.White.copy(alpha = 0.08f) else Color.White.copy(alpha = 0.65f),
+                    shape = innerShape
+                )
         ) {
             Column(
                 modifier = Modifier.padding(contentPadding),
@@ -188,13 +210,14 @@ fun ProgressStepper(
     currentIndex: Int,
     modifier: Modifier = Modifier
 ) {
+    val isDark = LocalDarkTheme.current
     val total = states.size.coerceAtLeast(1)
     val displayCurrent = (currentIndex + 1).coerceIn(1, total)
     Row(
         modifier = modifier
             .clip(RoundedCornerShape(20.dp))
-            .background(CreamBackground.copy(alpha = 0.95f))
-            .border(2.dp, GameBalance.GBA_FRAME_DARK, RoundedCornerShape(20.dp))
+            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.95f))
+            .border(2.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(20.dp))
             .padding(horizontal = 14.dp, vertical = 6.dp)
             .testTag("progress_stepper"),
         verticalAlignment = Alignment.CenterVertically,
@@ -203,13 +226,13 @@ fun ProgressStepper(
         Text(
             text = "Domanda $displayCurrent di $total",
             style = MaterialTheme.typography.labelLarge,
-            color = InkPrimary
+            color = MaterialTheme.colorScheme.onSurface
         )
         Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
             states.forEach { st ->
                 val color = when (st) {
-                    StepDotState.PENDING -> Color(0xFFCBD5E1)
-                    StepDotState.CURRENT -> DeepBlueAccent
+                    StepDotState.PENDING -> if (isDark) Color(0xFF475569) else Color(0xFFCBD5E1)
+                    StepDotState.CURRENT -> MaterialTheme.colorScheme.primary
                     StepDotState.RETRY -> WarmAmber
                     StepDotState.COMPLETED -> EmeraldSuccess
                 }
@@ -219,7 +242,7 @@ fun ProgressStepper(
                         .size(size)
                         .clip(CircleShape)
                         .background(color)
-                        .border(1.5.dp, InkPrimary.copy(alpha = 0.5f), CircleShape)
+                        .border(1.5.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f), CircleShape)
                 )
             }
         }
@@ -236,14 +259,14 @@ fun DialogBoxModal(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.52f))
+            .background(BackdropScrimDark)
             .clickable(onClick = onDismiss),
         contentAlignment = Alignment.Center
     ) {
         GbaCard(
             modifier = Modifier
                 .padding(24.dp)
-                .widthIn(max = 560.dp)
+                .widthIn(max = 580.dp)
                 .clickable(enabled = false) {}
                 .testTag("dialog_box_modal")
         ) {
@@ -257,8 +280,8 @@ fun DialogBoxModal(
                         modifier = Modifier
                             .size(64.dp)
                             .clip(RoundedCornerShape(10.dp))
-                            .background(CreamSurface)
-                            .border(2.dp, GameBalance.GBA_FRAME_DARK, RoundedCornerShape(10.dp)),
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                            .border(2.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(10.dp)),
                         contentAlignment = Alignment.Center
                     ) {
                         PixelSprite(
@@ -272,13 +295,13 @@ fun DialogBoxModal(
                     Text(
                         text = title,
                         style = MaterialTheme.typography.titleLarge,
-                        color = DeepBlueAccent
+                        color = MaterialTheme.colorScheme.primary
                     )
                     Spacer(Modifier.height(6.dp))
                     Text(
                         text = TextFormatter.toAnnotatedString(message),
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = InkPrimary
+                        style = MaterialTheme.typography.bodyLarge.copy(lineHeight = 30.sp),
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
@@ -309,18 +332,18 @@ fun ConfirmModal(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.55f)),
+            .background(BackdropScrimDark),
         contentAlignment = Alignment.Center
     ) {
         GbaCard(
             modifier = Modifier
                 .padding(24.dp)
-                .widthIn(max = 500.dp)
+                .widthIn(max = 520.dp)
                 .testTag("confirm_modal")
         ) {
-            Text(text = title, style = MaterialTheme.typography.titleLarge, color = InkPrimary)
+            Text(text = title, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurface)
             Spacer(Modifier.height(10.dp))
-            Text(text = message, style = MaterialTheme.typography.bodyLarge, color = InkSecondary)
+            Text(text = message, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(20.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -372,10 +395,11 @@ fun ExplanationModal(
         onDispose { onStopSpeak() }
     }
 
+    val isDark = LocalDarkTheme.current
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.58f)),
+            .background(BackdropScrimDark),
         contentAlignment = Alignment.Center
     ) {
         GbaCard(
@@ -384,7 +408,7 @@ fun ExplanationModal(
                 .widthIn(max = 580.dp)
                 .testTag("explanation_modal"),
             borderColor = WarmAmber,
-            backgroundColor = CreamBackground
+            backgroundColor = MaterialTheme.colorScheme.surface
         ) {
             Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
             Row(
@@ -395,7 +419,7 @@ fun ExplanationModal(
                 Text(
                     text = header,
                     style = MaterialTheme.typography.titleLarge,
-                    color = WarmAmber,
+                    color = if (isDark) StarYellow else WarmAmber,
                     modifier = Modifier.weight(1f)
                 )
                 IconButton(
@@ -403,13 +427,13 @@ fun ExplanationModal(
                     modifier = Modifier
                         .size(52.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFFDBEAFE))
+                        .background(MaterialTheme.colorScheme.primaryContainer)
                         .testTag("explanation_tts_button")
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.VolumeUp,
                         contentDescription = "Ascolta spiegazione",
-                        tint = DeepBlueAccent
+                        tint = MaterialTheme.colorScheme.primary
                     )
                 }
             }
@@ -418,21 +442,21 @@ fun ExplanationModal(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(10.dp))
-                    .background(Color(0xFFFEF3C7))
+                    .background(MaterialTheme.colorScheme.secondaryContainer)
                     .border(1.5.dp, WarmAmber, RoundedCornerShape(10.dp))
                     .padding(horizontal = 14.dp, vertical = 10.dp)
             ) {
                 Text(
                     text = "Risposta giusta: $correctAnswerDisplay",
                     style = MaterialTheme.typography.titleMedium,
-                    color = Color(0xFF78350F)
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
                 )
             }
             Spacer(Modifier.height(12.dp))
             Text(
                 text = TextFormatter.toAnnotatedString(explanation),
-                style = MaterialTheme.typography.bodyLarge.copy(fontSize = 21.sp, lineHeight = 30.sp),
-                color = InkPrimary
+                style = MaterialTheme.typography.bodyLarge.copy(fontSize = 20.sp, lineHeight = 30.sp),
+                color = MaterialTheme.colorScheme.onSurface
             )
             Spacer(Modifier.height(18.dp))
             Button(
@@ -445,7 +469,10 @@ fun ExplanationModal(
                     .fillMaxWidth()
                     .heightIn(min = 56.dp)
                     .testTag("explanation_continue_button"),
-                colors = ButtonDefaults.buttonColors(containerColor = DeepBlueAccent)
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                )
             ) {
                 Text(
                     text = if (unlocked) "Ho capito!" else "Leggi con calma...",
@@ -462,12 +489,28 @@ fun ResultSummaryModal(
     result: MinigameResult,
     packTitle: String,
     medalName: String,
+    reducedMotion: Boolean = false,
     onContinue: () -> Unit
 ) {
+    val starsAnim = remember(result.starsEarned) { Animatable(0f) }
+    LaunchedEffect(result.starsEarned, reducedMotion) {
+        if (reducedMotion) {
+            starsAnim.snapTo(result.starsEarned.toFloat())
+        } else {
+            starsAnim.snapTo(0f)
+            starsAnim.animateTo(
+                targetValue = result.starsEarned.toFloat(),
+                animationSpec = tween(durationMillis = 750)
+            )
+        }
+    }
+    val displayedStars = starsAnim.value.toInt()
+
+    val isDark = LocalDarkTheme.current
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.6f)),
+            .background(BackdropScrimDark),
         contentAlignment = Alignment.Center
     ) {
         GbaCard(
@@ -475,7 +518,7 @@ fun ResultSummaryModal(
                 .padding(20.dp)
                 .widthIn(max = 580.dp)
                 .testTag("result_summary_modal"),
-            borderColor = if (result.victory) EmeraldSuccess else WarmAmber
+            borderColor = if (result.medalUnlocked) StarYellow else if (result.victory) EmeraldSuccess else WarmAmber
         ) {
             Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
             Text(
@@ -484,15 +527,18 @@ fun ResultSummaryModal(
                     result.victory -> "Sfida Completata!"
                     else -> "Ottimo Allenamento!"
                 },
-                fontFamily = SilkscreenFontFamily,
-                fontSize = 20.sp,
-                color = if (result.victory) EmeraldSuccess else WarmAmber
+                style = MaterialTheme.typography.headlineSmall,
+                color = when {
+                    result.medalUnlocked -> if (isDark) StarYellow else Color(0xFFB45309)
+                    result.victory -> if (isDark) Color(0xFF34D399) else EmeraldSuccess
+                    else -> if (isDark) StarYellow else WarmAmber
+                }
             )
             Spacer(Modifier.height(4.dp))
             Text(
                 text = packTitle,
                 style = MaterialTheme.typography.titleMedium,
-                color = InkSecondary
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(Modifier.height(14.dp))
 
@@ -503,46 +549,48 @@ fun ResultSummaryModal(
                 Surface(
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(10.dp),
-                    color = CreamSurface
+                    color = MaterialTheme.colorScheme.surfaceVariant
                 ) {
                     Column(
                         modifier = Modifier.padding(12.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text("Al primo colpo", style = MaterialTheme.typography.labelMedium, color = InkSecondary)
+                        Text("Al primo colpo", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Text(
                             text = "${result.correctFirstTry} / ${result.totalQuestions}",
                             style = MaterialTheme.typography.headlineSmall,
-                            color = DeepBlueAccent
+                            color = MaterialTheme.colorScheme.primary
                         )
                     }
                 }
                 Surface(
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(10.dp),
-                    color = Color(0xFFFEF3C7)
+                    color = MaterialTheme.colorScheme.secondaryContainer,
+                    border = BorderStroke(1.5.dp, StarYellow)
                 ) {
                     Column(
                         modifier = Modifier.padding(12.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Star, contentDescription = null, tint = SoftGold, modifier = Modifier.size(20.dp))
+                            Icon(Icons.Default.Star, contentDescription = null, tint = StarYellow, modifier = Modifier.size(22.dp))
                             Spacer(Modifier.width(4.dp))
                             Text(
-                                text = "+${result.starsEarned}",
-                                style = MaterialTheme.typography.headlineSmall,
-                                color = Color(0xFF92400E)
+                                text = "+$displayedStars",
+                                fontFamily = SilkscreenFontFamily,
+                                fontSize = 20.sp,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer
                             )
                         }
                         if (result.priorityBonusApplied) {
                             Text(
                                 text = "x1.5 Verifica!",
                                 style = MaterialTheme.typography.labelMedium,
-                                color = WarmAmber
+                                color = if (isDark) StarYellow else WarmAmber
                             )
                         } else {
-                            Text("Stelle vinte", style = MaterialTheme.typography.labelMedium, color = Color(0xFF92400E))
+                            Text("Stelle vinte", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSecondaryContainer)
                         }
                     }
                 }
@@ -554,7 +602,7 @@ fun ResultSummaryModal(
             Text(
                 text = "Padronanza: $beforePct% -> $afterPct%",
                 style = MaterialTheme.typography.labelLarge,
-                color = InkPrimary
+                color = MaterialTheme.colorScheme.onSurface
             )
             Spacer(Modifier.height(6.dp))
             LinearProgressIndicator(
@@ -564,7 +612,7 @@ fun ResultSummaryModal(
                     .height(12.dp)
                     .clip(RoundedCornerShape(6.dp)),
                 color = EmeraldSuccess,
-                trackColor = Color(0xFFE2E8F0)
+                trackColor = MaterialTheme.colorScheme.surfaceVariant
             )
 
             if (result.medalUnlocked) {
@@ -573,17 +621,17 @@ fun ResultSummaryModal(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(10.dp))
-                        .background(Color(0xFFFEF3C7))
-                        .border(2.dp, SoftGold, RoundedCornerShape(10.dp))
+                        .background(MaterialTheme.colorScheme.secondaryContainer)
+                        .border(2.dp, StarYellow, RoundedCornerShape(10.dp))
                         .padding(12.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Icon(Icons.Default.WorkspacePremium, contentDescription = null, tint = SoftGold, modifier = Modifier.size(32.dp))
+                    Icon(Icons.Default.WorkspacePremium, contentDescription = null, tint = StarYellow, modifier = Modifier.size(32.dp))
                     Text(
                         text = "Nuova medaglia in bacheca: $medalName!",
                         style = MaterialTheme.typography.titleMedium,
-                        color = Color(0xFF78350F)
+                        color = MaterialTheme.colorScheme.onSecondaryContainer
                     )
                 }
             }
@@ -594,7 +642,7 @@ fun ResultSummaryModal(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(10.dp))
-                        .background(Color(0xFFD1FAE5))
+                        .background(MaterialTheme.colorScheme.tertiaryContainer)
                         .border(2.dp, EmeraldSuccess, RoundedCornerShape(10.dp))
                         .padding(12.dp)
                         .testTag("micro_break_card")
@@ -602,7 +650,7 @@ fun ResultSummaryModal(
                     Text(
                         text = "Hai fatto 2 sfide di fila, grande! Prenditi 2 minuti di pausa per muoverti e bere un bicchiere d'acqua, poi torna quando vuoi.",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color(0xFF064E3B)
+                        color = MaterialTheme.colorScheme.onTertiaryContainer
                     )
                 }
             }
@@ -619,6 +667,10 @@ fun ResultSummaryModal(
             }
             }
         }
+        PixelConfettiOverlay(
+            active = result.victory || result.medalUnlocked,
+            reducedMotion = reducedMotion
+        )
     }
 }
 
@@ -633,35 +685,81 @@ fun PackPickerModal(
     onSelectPack: (pack: PackData, isBoss: Boolean) -> Unit,
     onDismiss: () -> Unit
 ) {
+    val bannerSubject = packs.firstOrNull()?.subject ?: ""
+    val bannerRes = subjectBannerDrawable(bannerSubject)
+    val bannerTint = GameBalance.subjectColor(bannerSubject)
+
+    val isDark = LocalDarkTheme.current
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.56f)),
+            .background(BackdropScrimDark),
         contentAlignment = Alignment.Center
     ) {
         GbaCard(
             modifier = Modifier
                 .padding(20.dp)
-                .widthIn(max = 680.dp)
+                .widthIn(max = 640.dp)
                 .heightIn(max = 620.dp)
-                .testTag("pack_picker_modal")
+                .testTag("pack_picker_modal"),
+            borderColor = bannerTint
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(92.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .border(2.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(10.dp))
             ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(title, fontFamily = SilkscreenFontFamily, fontSize = 18.sp, color = DeepBlueAccent)
-                    Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = InkSecondary)
-                }
-                IconButton(
-                    onClick = onDismiss,
+                Image(
+                    painter = painterResource(id = bannerRes),
+                    contentDescription = title,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+                Box(
                     modifier = Modifier
-                        .size(48.dp)
-                        .testTag("pack_picker_close")
+                        .fillMaxSize()
+                        .background(
+                            Brush.horizontalGradient(
+                                colors = listOf(Color(0xE00F172A), Color(0xAC0F172A), Color(0x550F172A))
+                            )
+                        )
+                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 14.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Icon(Icons.Default.Close, contentDescription = "Chiudi")
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = title,
+                            style = MaterialTheme.typography.titleLarge,
+                            color = StarYellow,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Spacer(Modifier.height(3.dp))
+                        Text(
+                            text = subtitle,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = IceWhiteText,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                    IconButton(
+                        onClick = onDismiss,
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.92f))
+                            .testTag("pack_picker_close")
+                    ) {
+                        Icon(Icons.Default.Close, contentDescription = "Chiudi", tint = MaterialTheme.colorScheme.onSurface)
+                    }
                 }
             }
             Spacer(Modifier.height(12.dp))
@@ -678,8 +776,8 @@ fun PackPickerModal(
 
                     Surface(
                         shape = RoundedCornerShape(12.dp),
-                        color = CreamSurface,
-                        border = BorderStroke(2.dp, if (pack.priority) WarmAmber else Color(0xFFCBD5E1))
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        border = BorderStroke(2.dp, if (pack.priority) WarmAmber else MaterialTheme.colorScheme.outlineVariant)
                     ) {
                         Column(modifier = Modifier.padding(14.dp)) {
                             Row(
@@ -695,7 +793,7 @@ fun PackPickerModal(
                                     Text(
                                         text = GameBalance.subjectLabel(pack.subject),
                                         style = MaterialTheme.typography.labelMedium,
-                                        color = Color.White
+                                        color = IceWhiteText
                                     )
                                 }
                                 if (pack.priority) {
@@ -708,7 +806,7 @@ fun PackPickerModal(
                                         Text(
                                             text = "VERIFICA! (x1.5)",
                                             style = MaterialTheme.typography.labelMedium,
-                                            color = Color.White
+                                            color = IceWhiteText
                                         )
                                     }
                                 }
@@ -717,7 +815,7 @@ fun PackPickerModal(
                                     Icon(
                                         imageVector = Icons.Default.EmojiEvents,
                                         contentDescription = "Medaglia conquistata",
-                                        tint = SoftGold,
+                                        tint = StarYellow,
                                         modifier = Modifier.size(24.dp)
                                     )
                                 }
@@ -726,7 +824,7 @@ fun PackPickerModal(
                             Text(
                                 text = pack.title,
                                 style = MaterialTheme.typography.titleLarge,
-                                color = InkPrimary
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                             val focusedTopics = focusTopicsProvider(pack.packId)
                             if (focusedTopics.isNotEmpty()) {
@@ -734,7 +832,7 @@ fun PackPickerModal(
                                 Text(
                                     text = "Focus argomenti: ${focusedTopics.joinToString(", ")}",
                                     style = MaterialTheme.typography.labelMedium,
-                                    color = DeepBlueAccent,
+                                    color = MaterialTheme.colorScheme.primary,
                                     maxLines = 2,
                                     overflow = TextOverflow.Ellipsis
                                 )
@@ -751,12 +849,12 @@ fun PackPickerModal(
                                         .height(10.dp)
                                         .clip(RoundedCornerShape(5.dp)),
                                     color = subjColor,
-                                    trackColor = Color(0xFFE2E8F0)
+                                    trackColor = if (isDark) DarkCardBg else Color(0xFFE2E8F0)
                                 )
                                 Text(
                                     text = "$masteryPct%",
                                     style = MaterialTheme.typography.labelLarge,
-                                    color = InkPrimary
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                             }
                             Spacer(Modifier.height(10.dp))
@@ -770,7 +868,10 @@ fun PackPickerModal(
                                         .weight(1f)
                                         .heightIn(min = 52.dp)
                                         .testTag("train_pack_${pack.packId}"),
-                                    colors = ButtonDefaults.buttonColors(containerColor = DeepBlueAccent)
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.primary,
+                                        contentColor = MaterialTheme.colorScheme.onPrimary
+                                    )
                                 ) {
                                     Text("Allenati", style = MaterialTheme.typography.labelLarge)
                                 }
@@ -782,10 +883,10 @@ fun PackPickerModal(
                                         .heightIn(min = 52.dp)
                                         .testTag("boss_pack_${pack.packId}"),
                                     colors = ButtonDefaults.buttonColors(
-                                        containerColor = SoftGold,
+                                        containerColor = StarYellow,
                                         contentColor = Color(0xFF451A03),
-                                        disabledContainerColor = Color(0xFFE2E8F0),
-                                        disabledContentColor = InkSecondary
+                                        disabledContainerColor = if (isDark) Color(0xFF334155) else Color(0xFFE2E8F0),
+                                        disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 ) {
                                     if (!bossUnlocked) {
@@ -864,7 +965,7 @@ fun PinModal(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.62f)),
+            .background(BackdropScrimDark),
         contentAlignment = Alignment.Center
     ) {
         GbaCard(
@@ -877,7 +978,7 @@ fun PinModal(
             Text(
                 text = titleText,
                 style = MaterialTheme.typography.titleLarge,
-                color = DeepBlueAccent,
+                color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center
             )
@@ -886,7 +987,7 @@ fun PinModal(
                 Text(
                     text = "PIN iniziale: 1234 (modificabile nelle Impostazioni)",
                     style = MaterialTheme.typography.labelMedium,
-                    color = InkSecondary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -904,8 +1005,8 @@ fun PinModal(
                         modifier = Modifier
                             .size(22.dp)
                             .clip(CircleShape)
-                            .background(if (filled) DeepBlueAccent else Color.Transparent)
-                            .border(2.5.dp, DeepBlueAccent, CircleShape)
+                            .background(if (filled) MaterialTheme.colorScheme.primary else Color.Transparent)
+                            .border(2.5.dp, MaterialTheme.colorScheme.primary, CircleShape)
                     )
                 }
             }
@@ -964,10 +1065,10 @@ fun PinModal(
                                         .height(58.dp)
                                         .testTag("pin_key_$key"),
                                     colors = ButtonDefaults.buttonColors(
-                                        containerColor = CreamSurface,
-                                        contentColor = InkPrimary
+                                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                        contentColor = MaterialTheme.colorScheme.onSurface
                                     ),
-                                    border = BorderStroke(2.dp, GameBalance.GBA_FRAME_DARK)
+                                    border = BorderStroke(2.dp, MaterialTheme.colorScheme.outline)
                                 ) {
                                     Text(key, fontSize = 22.sp, fontWeight = FontWeight.Bold)
                                 }
@@ -1036,7 +1137,7 @@ fun RetroNumpad(
                 .fillMaxWidth()
                 .scale(pulseScale)
                 .clip(RoundedCornerShape(10.dp))
-                .background(Color.White)
+                .background(MaterialTheme.colorScheme.surface)
                 .border(2.5.dp, boxBorder, RoundedCornerShape(10.dp))
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -1045,14 +1146,14 @@ fun RetroNumpad(
             Text(
                 text = value.ifEmpty { "Scrivi qui..." },
                 style = MaterialTheme.typography.headlineSmall,
-                color = if (value.isEmpty()) InkSecondary.copy(alpha = 0.5f) else InkPrimary,
+                color = if (value.isEmpty()) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f) else MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.testTag("numpad_display")
             )
             if (unit.isNotBlank()) {
                 Text(
                     text = unit,
                     style = MaterialTheme.typography.titleMedium,
-                    color = DeepBlueAccent
+                    color = MaterialTheme.colorScheme.primary
                 )
             }
         }
@@ -1087,10 +1188,10 @@ fun RetroNumpad(
                         contentPadding = PaddingValues(0.dp),
                         shape = RoundedCornerShape(10.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isAction) Color(0xFFFEF3C7) else CreamSurface,
-                            contentColor = InkPrimary
+                            containerColor = if (isAction) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceVariant,
+                            contentColor = if (isAction) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurface
                         ),
-                        border = BorderStroke(2.dp, GameBalance.GBA_FRAME_DARK)
+                        border = BorderStroke(2.dp, MaterialTheme.colorScheme.outline)
                     ) {
                         if (key == "BS") {
                             Icon(Icons.AutoMirrored.Filled.Backspace, contentDescription = "Cancella")
@@ -1114,8 +1215,11 @@ fun RetroNumpad(
                     .height(keyHeight)
                     .testTag("numpad_key_0"),
                 shape = RoundedCornerShape(10.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = CreamSurface, contentColor = InkPrimary),
-                border = BorderStroke(2.dp, GameBalance.GBA_FRAME_DARK)
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    contentColor = MaterialTheme.colorScheme.onSurface
+                ),
+                border = BorderStroke(2.dp, MaterialTheme.colorScheme.outline)
             ) {
                 Text("0", fontSize = 22.sp, fontWeight = FontWeight.Bold)
             }
@@ -1127,7 +1231,7 @@ fun RetroNumpad(
                     .height(keyHeight)
                     .testTag("numpad_key_OK"),
                 shape = RoundedCornerShape(10.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = EmeraldSuccess, contentColor = Color.White),
+                colors = ButtonDefaults.buttonColors(containerColor = EmeraldSuccess, contentColor = IceWhiteText),
                 border = BorderStroke(2.dp, Color(0xFF064E3B))
             ) {
                 Icon(Icons.Default.Check, contentDescription = null)
@@ -1141,37 +1245,67 @@ fun RetroNumpad(
 @Composable
 fun VirtualDpad(
     onStep: (dx: Int, dy: Int) -> Unit,
+    isTablet: Boolean = false,
+    reducedMotion: Boolean = false,
     modifier: Modifier = Modifier
 ) {
-    val btnSize = 52.dp
+    val btnSize = if (isTablet) 56.dp else 52.dp
+    val gap = if (isTablet) 6.dp else 5.dp
+    val upInteraction = remember { MutableInteractionSource() }
+    val leftInteraction = remember { MutableInteractionSource() }
+    val rightInteraction = remember { MutableInteractionSource() }
+    val downInteraction = remember { MutableInteractionSource() }
+    val upPressed by upInteraction.collectIsPressedAsState()
+    val leftPressed by leftInteraction.collectIsPressedAsState()
+    val rightPressed by rightInteraction.collectIsPressedAsState()
+    val downPressed by downInteraction.collectIsPressedAsState()
+    val anyPressed = upPressed || leftPressed || rightPressed || downPressed
+    val dpadAlpha by animateFloatAsState(
+        targetValue = if (anyPressed) 1f else 0.75f,
+        animationSpec = tween(durationMillis = if (reducedMotion) 40 else 140),
+        label = "dpad_alpha"
+    )
+
     Column(
-        modifier = modifier.testTag("virtual_dpad"),
+        modifier = modifier
+            .alpha(dpadAlpha)
+            .testTag("virtual_dpad"),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp)
+        verticalArrangement = Arrangement.spacedBy(gap)
     ) {
         DpadButton(
             icon = Icons.Default.KeyboardArrowUp,
             description = "Su",
             size = btnSize,
+            interactionSource = upInteraction,
+            pressed = upPressed,
+            reducedMotion = reducedMotion,
             onClick = { onStep(0, -1) }
         )
-        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(gap)) {
             DpadButton(
                 icon = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
                 description = "Sinistra",
                 size = btnSize,
+                interactionSource = leftInteraction,
+                pressed = leftPressed,
+                reducedMotion = reducedMotion,
                 onClick = { onStep(-1, 0) }
             )
             Box(
                 modifier = Modifier
                     .size(btnSize)
                     .clip(CircleShape)
-                    .background(Color(0x881E293B))
+                    .background(Color(0x990F172A))
+                    .border(1.5.dp, DarkBorderSlate.copy(alpha = 0.7f), CircleShape)
             )
             DpadButton(
                 icon = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                 description = "Destra",
                 size = btnSize,
+                interactionSource = rightInteraction,
+                pressed = rightPressed,
+                reducedMotion = reducedMotion,
                 onClick = { onStep(1, 0) }
             )
         }
@@ -1179,6 +1313,9 @@ fun VirtualDpad(
             icon = Icons.Default.KeyboardArrowDown,
             description = "Giù",
             size = btnSize,
+            interactionSource = downInteraction,
+            pressed = downPressed,
+            reducedMotion = reducedMotion,
             onClick = { onStep(0, 1) }
         )
     }
@@ -1189,22 +1326,35 @@ private fun DpadButton(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     description: String,
     size: Dp,
+    interactionSource: MutableInteractionSource,
+    pressed: Boolean,
+    reducedMotion: Boolean,
     onClick: () -> Unit
 ) {
+    val pressScale by animateFloatAsState(
+        targetValue = if (pressed && !reducedMotion) 0.94f else 1f,
+        animationSpec = tween(durationMillis = 80),
+        label = "dpad_btn_scale"
+    )
     Surface(
         modifier = Modifier
             .size(size)
-            .clip(RoundedCornerShape(12.dp))
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(12.dp),
-        color = Color(0xCC1E293B),
-        border = BorderStroke(2.dp, Color(0xAAFAF8F2))
+            .scale(pressScale)
+            .clip(RoundedCornerShape(14.dp))
+            .clickable(
+                interactionSource = interactionSource,
+                indication = androidx.compose.material3.ripple(),
+                onClick = onClick
+            ),
+        shape = RoundedCornerShape(14.dp),
+        color = if (pressed) Color(0xEE1E293B) else Color(0xC70F172A),
+        border = BorderStroke(2.dp, if (pressed) SkyHighlight else DarkBorderSlate)
     ) {
         Box(contentAlignment = Alignment.Center) {
             Icon(
                 imageVector = icon,
                 contentDescription = description,
-                tint = Color.White,
+                tint = if (pressed) SkyHighlight else IceWhiteText,
                 modifier = Modifier.size(32.dp)
             )
         }

@@ -7,6 +7,8 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -22,6 +24,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -57,6 +60,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
@@ -80,16 +84,18 @@ import com.example.ui.components.ExplanationModal
 import com.example.ui.components.GbaCard
 import com.example.ui.components.PixelSprite
 import com.example.ui.components.ProgressStepper
+import com.example.ui.components.FloatingJuicePopup
 import com.example.ui.components.ResultSummaryModal
 import com.example.ui.components.RetroHpBar
 import com.example.ui.components.StepDotState
-import com.example.ui.theme.CreamBackground
-import com.example.ui.theme.CreamSurface
+import com.example.ui.theme.DarkCardBg
 import com.example.ui.theme.DeepBlueAccent
 import com.example.ui.theme.EmeraldSuccess
-import com.example.ui.theme.InkPrimary
-import com.example.ui.theme.InkSecondary
+import com.example.ui.theme.HudNightBg
+import com.example.ui.theme.IceWhiteText
+import com.example.ui.theme.LocalDarkTheme
 import com.example.ui.theme.SilkscreenFontFamily
+import com.example.ui.theme.SkyHighlight
 import com.example.ui.theme.SoftGold
 import com.example.ui.theme.WarmAmber
 import com.example.viewmodel.ScuolaRetroViewModel
@@ -185,6 +191,10 @@ fun YardBattleScreen(
     var correctFirstTry by remember { mutableIntStateOf(0) }
     var helpsUsedTotal by remember { mutableIntStateOf(0) }
     var rawAnswerStars by remember { mutableIntStateOf(0) }
+    var battleCombo by remember { mutableIntStateOf(0) }
+    var juicePopupText by remember { mutableStateOf("") }
+    var juicePopupColor by remember { mutableStateOf(EmeraldSuccess) }
+    var juicePopupTrigger by remember { mutableIntStateOf(0) }
     var explanationHeader by remember { mutableStateOf("") }
     var finalResult by remember { mutableStateOf<MinigameResult?>(null) }
     var showExitConfirm by remember { mutableStateOf(false) }
@@ -330,8 +340,13 @@ fun YardBattleScreen(
                 if (!entry.isRetry) {
                     correctFirstTry++
                 }
-                rawAnswerStars += GameBalance.STARS_PER_CORRECT +
+                val gained = GameBalance.STARS_PER_CORRECT +
                     if (!entry.isRetry && !usedHelpThisQuestion) GameBalance.STARS_FIRST_TRY_BONUS else 0
+                rawAnswerStars += gained
+                battleCombo++
+                juicePopupText = if (battleCombo >= 3) "COMBO x$battleCombo! +$gained ★" else "+$gained ★!"
+                juicePopupColor = if (battleCombo >= 3) SoftGold else EmeraldSuccess
+                juicePopupTrigger++
 
                 viewModel.audioManager.playSfx(if (activeMoveIsSpecial) SfxType.ATTACK_SUPER else SfxType.ATTACK_HIT)
                 battleBanner = "Colpo riuscito! -$dmg HP!"
@@ -348,6 +363,7 @@ fun YardBattleScreen(
                 isInputLocked = false
                 advanceOrFinish()
             } else {
+                battleCombo = 0
                 val counter = if (config.isBoss) GameBalance.BOSS_COUNTER_DAMAGE else GameBalance.ENEMY_COUNTER_DAMAGE
                 playerHp = (playerHp - counter).coerceAtLeast(0)
                 viewModel.audioManager.playSfx(SfxType.ANSWER_WRONG)
@@ -395,12 +411,13 @@ fun YardBattleScreen(
     val hasBaseMoves = queue.any { it.question.difficulty == 1 }
     val hasSpecialMoves = queue.any { it.question.difficulty >= 2 }
 
+    val isDark = LocalDarkTheme.current
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
-                    colors = listOf(Color(0xFFBAE6FD), Color(0xFF86EFAC))
+                    colors = if (isDark) listOf(HudNightBg, DarkCardBg) else listOf(Color(0xFFBAE6FD), Color(0xFF86EFAC))
                 )
             )
             .safeDrawingPadding()
@@ -427,7 +444,10 @@ fun YardBattleScreen(
                     modifier = Modifier
                         .heightIn(min = 48.dp)
                         .testTag("battle_exit_button"),
-                    colors = ButtonDefaults.outlinedButtonColors(containerColor = CreamBackground)
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        contentColor = MaterialTheme.colorScheme.onSurface
+                    )
                 ) {
                     Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = "Esci")
                     Spacer(Modifier.width(6.dp))
@@ -582,15 +602,20 @@ fun YardBattleScreen(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 PixelSprite(
-                                    bitmap = PixelArtAssets.getCharacterSprite("avatar_${profile?.avatarId ?: 0}", Facing.RIGHT, if (isEnemyHit) 1 else 0),
+                                    bitmap = PixelArtAssets.getCharacterSprite(
+                                        id = "avatar_${profile?.avatarId ?: 0}",
+                                        facing = Facing.RIGHT,
+                                        stepFrame = if (isEnemyHit) 1 else 0,
+                                        hatId = profile?.equippedHat.orEmpty()
+                                    ),
                                     contentDescription = profile?.name ?: "Tu",
                                     modifier = Modifier.size(if (isShortLandscape) 42.dp else if (isCompactHeight) 54.dp else 70.dp)
                                 )
                                 Surface(
                                     modifier = Modifier.weight(1f),
                                     shape = RoundedCornerShape(10.dp),
-                                    color = CreamBackground.copy(alpha = 0.92f),
-                                    border = BorderStroke(2.dp, GameBalance.GBA_FRAME_DARK)
+                                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.94f),
+                                    border = BorderStroke(2.dp, MaterialTheme.colorScheme.outline)
                                 ) {
                                     Column(modifier = Modifier.padding(horizontal = 8.dp, vertical = if (isShortLandscape) 3.dp else 5.dp)) {
                                         Row(
@@ -601,7 +626,7 @@ fun YardBattleScreen(
                                             Text(
                                                 text = profile?.name ?: "Tu",
                                                 style = if (isShortLandscape) MaterialTheme.typography.labelLarge else MaterialTheme.typography.titleMedium,
-                                                color = InkPrimary,
+                                                color = MaterialTheme.colorScheme.onSurface,
                                                 maxLines = 1,
                                                 overflow = TextOverflow.Ellipsis,
                                                 modifier = Modifier.weight(1f)
@@ -610,7 +635,7 @@ fun YardBattleScreen(
                                                 Text(
                                                     text = "$playerHp/${GameBalance.PLAYER_MAX_HP}",
                                                     style = MaterialTheme.typography.labelSmall,
-                                                    color = InkSecondary
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                                 )
                                             }
                                         }
@@ -620,7 +645,7 @@ fun YardBattleScreen(
                                             modifier = Modifier.fillMaxWidth()
                                         )
                                         if (!isShortLandscape) {
-                                            Text("HP $playerHp / ${GameBalance.PLAYER_MAX_HP}", style = MaterialTheme.typography.labelMedium, color = InkSecondary)
+                                            Text("HP $playerHp / ${GameBalance.PLAYER_MAX_HP}", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                     }
                                 }
@@ -639,8 +664,8 @@ fun YardBattleScreen(
                                 Surface(
                                     modifier = Modifier.weight(1f),
                                     shape = RoundedCornerShape(10.dp),
-                                    color = CreamBackground.copy(alpha = 0.92f),
-                                    border = BorderStroke(2.dp, if (config.isBoss) SoftGold else GameBalance.GBA_FRAME_DARK)
+                                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.94f),
+                                    border = BorderStroke(2.dp, if (config.isBoss) SoftGold else MaterialTheme.colorScheme.outline)
                                 ) {
                                     Column(
                                         modifier = Modifier.padding(horizontal = 8.dp, vertical = if (isShortLandscape) 3.dp else 5.dp),
@@ -655,13 +680,13 @@ fun YardBattleScreen(
                                                 Text(
                                                     text = "$enemyHp/$enemyMaxHp",
                                                     style = MaterialTheme.typography.labelSmall,
-                                                    color = InkSecondary
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                                 )
                                             }
                                             Text(
                                                 text = enemyDisplayName,
                                                 style = if (isShortLandscape) MaterialTheme.typography.labelLarge else MaterialTheme.typography.titleMedium,
-                                                color = InkPrimary,
+                                                color = MaterialTheme.colorScheme.onSurface,
                                                 maxLines = 1,
                                                 overflow = TextOverflow.Ellipsis,
                                                 modifier = if (isShortLandscape) Modifier.weight(1f).padding(start = 6.dp) else Modifier
@@ -673,7 +698,7 @@ fun YardBattleScreen(
                                             modifier = Modifier.fillMaxWidth()
                                         )
                                         if (!isShortLandscape) {
-                                            Text("HP $enemyHp / $enemyMaxHp", style = MaterialTheme.typography.labelMedium, color = InkSecondary)
+                                            Text("HP $enemyHp / $enemyMaxHp", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                     }
                                 }
@@ -688,13 +713,13 @@ fun YardBattleScreen(
                             Spacer(Modifier.height(if (isShortLandscape) 3.dp else 5.dp))
                             Surface(
                                 shape = RoundedCornerShape(8.dp),
-                                color = CreamBackground.copy(alpha = 0.92f),
-                                border = BorderStroke(1.5.dp, DeepBlueAccent.copy(alpha = 0.55f))
+                                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.94f),
+                                border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.65f))
                             ) {
                                 Text(
                                     text = battleBanner,
                                     style = if (isShortLandscape) MaterialTheme.typography.labelMedium else MaterialTheme.typography.labelLarge,
-                                    color = DeepBlueAccent,
+                                    color = MaterialTheme.colorScheme.primary,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis,
                                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 2.dp)
@@ -705,12 +730,13 @@ fun YardBattleScreen(
                 }
             }
 
-            // Bottom Interactive Card (Choose Move OR Question + Answers)
+            // Bottom Interactive Card (Focus Mode centered max 680dp on wide tablets)
             GbaCard(
                 modifier = Modifier
+                    .widthIn(max = 680.dp)
                     .fillMaxWidth()
+                    .align(Alignment.CenterHorizontally)
                     .weight(1f),
-                backgroundColor = CreamBackground,
                 contentPadding = androidx.compose.foundation.layout.PaddingValues(
                     horizontal = if (isShortLandscape) 10.dp else 16.dp,
                     vertical = if (isShortLandscape) 6.dp else 14.dp
@@ -730,12 +756,12 @@ fun YardBattleScreen(
                             Text(
                                 text = "Quale mossa vuoi usare?",
                                 style = MaterialTheme.typography.headlineSmall,
-                                color = InkPrimary
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
                                 text = "L'Attacco Base propone domande facili (20 danni). La Mossa Speciale propone sfide più intense (36 danni)!",
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = InkSecondary
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Spacer(Modifier.height(4.dp))
                             Row(
@@ -796,13 +822,13 @@ fun YardBattleScreen(
                                     modifier = Modifier
                                         .size(48.dp)
                                         .clip(CircleShape)
-                                        .background(Color(0xFFDBEAFE))
+                                        .background(MaterialTheme.colorScheme.primaryContainer)
                                         .testTag("battle_tts_button")
                                 ) {
                                     Icon(
                                         Icons.AutoMirrored.Filled.VolumeUp,
                                         contentDescription = "Ascolta domanda",
-                                        tint = DeepBlueAccent
+                                        tint = MaterialTheme.colorScheme.onPrimaryContainer
                                     )
                                 }
                                 if (hintText.isNotBlank()) {
@@ -820,13 +846,13 @@ fun YardBattleScreen(
                                             .testTag("battle_hint_button"),
                                         contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = if (isShortLandscape) 10.dp else 14.dp),
                                         colors = ButtonDefaults.outlinedButtonColors(
-                                            containerColor = GameBalance.HINT_BG_COLOR
+                                            containerColor = MaterialTheme.colorScheme.primaryContainer
                                         ),
-                                        border = BorderStroke(2.dp, GameBalance.HINT_BORDER_COLOR)
+                                        border = BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
                                     ) {
-                                        Icon(Icons.Default.Lightbulb, contentDescription = null, tint = GameBalance.HINT_BORDER_COLOR)
+                                        Icon(Icons.Default.Lightbulb, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                                         Spacer(Modifier.width(4.dp))
-                                        Text("Indizio", color = DeepBlueAccent, style = MaterialTheme.typography.labelLarge)
+                                        Text("Indizio", color = MaterialTheme.colorScheme.onPrimaryContainer, style = MaterialTheme.typography.labelLarge)
                                     }
                                 }
                                 if (show5050Button) {
@@ -849,13 +875,13 @@ fun YardBattleScreen(
                                             .testTag("battle_5050_button"),
                                         contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = if (isShortLandscape) 10.dp else 14.dp),
                                         colors = ButtonDefaults.outlinedButtonColors(
-                                            containerColor = Color(0xFFFEF3C7)
+                                            containerColor = MaterialTheme.colorScheme.secondaryContainer
                                         ),
                                         border = BorderStroke(2.dp, SoftGold)
                                     ) {
-                                        Icon(Icons.Default.Filter2, contentDescription = null, tint = Color(0xFF92400E))
+                                        Icon(Icons.Default.Filter2, contentDescription = null, tint = MaterialTheme.colorScheme.onSecondaryContainer)
                                         Spacer(Modifier.width(4.dp))
-                                        Text("50/50", color = Color(0xFF92400E), style = MaterialTheme.typography.labelLarge)
+                                        Text("50/50", color = MaterialTheme.colorScheme.onSecondaryContainer, style = MaterialTheme.typography.labelLarge)
                                     }
                                 }
                             }
@@ -873,7 +899,7 @@ fun YardBattleScreen(
                                             fontSize = 16.sp,
                                             lineHeight = 20.sp
                                         ),
-                                        color = InkPrimary,
+                                        color = MaterialTheme.colorScheme.onSurface,
                                         maxLines = 2,
                                         overflow = TextOverflow.Ellipsis,
                                         modifier = Modifier
@@ -886,10 +912,10 @@ fun YardBattleScreen(
                                 Text(
                                     text = TextFormatter.toAnnotatedString(q.prompt),
                                     style = MaterialTheme.typography.headlineSmall.copy(
-                                        fontSize = if (isCompactWidth) 20.sp else 22.sp,
-                                        lineHeight = if (isCompactWidth) 26.sp else 29.sp
+                                        fontSize = if (isCompactWidth) 19.sp else 20.sp,
+                                        lineHeight = if (isCompactWidth) 26.sp else 30.sp
                                     ),
-                                    color = InkPrimary,
+                                    color = MaterialTheme.colorScheme.onSurface,
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .testTag("battle_question_prompt")
@@ -912,8 +938,8 @@ fun YardBattleScreen(
                                         .height(6.dp)
                                         .clip(RoundedCornerShape(3.dp))
                                         .testTag("reading_pause_bar"),
-                                    color = DeepBlueAccent,
-                                    trackColor = Color(0xFFE2E8F0)
+                                    color = MaterialTheme.colorScheme.primary,
+                                    trackColor = MaterialTheme.colorScheme.outlineVariant
                                 )
                             }
 
@@ -923,15 +949,15 @@ fun YardBattleScreen(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clip(RoundedCornerShape(10.dp))
-                                        .background(GameBalance.HINT_BG_COLOR)
-                                        .border(1.5.dp, GameBalance.HINT_BORDER_COLOR, RoundedCornerShape(10.dp))
+                                        .background(MaterialTheme.colorScheme.primaryContainer)
+                                        .border(1.5.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(10.dp))
                                         .padding(horizontal = 10.dp, vertical = if (isShortLandscape) 5.dp else 8.dp)
                                         .testTag("battle_hint_banner")
                                 ) {
                                     Text(
                                         text = TextFormatter.toAnnotatedString("Indizio: $hintText"),
                                         style = MaterialTheme.typography.bodyMedium,
-                                        color = DeepBlueAccent
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer
                                     )
                                 }
                             }
@@ -952,45 +978,53 @@ fun YardBattleScreen(
                                         enabled = answersEnabled,
                                         modifier = Modifier
                                             .weight(1f)
-                                            .heightIn(min = if (isShortLandscape) 58.dp else 84.dp)
+                                            .heightIn(min = if (isShortLandscape) 58.dp else 72.dp)
                                             .testTag("answer_true_button"),
                                         shape = RoundedCornerShape(12.dp),
-                                        colors = ButtonDefaults.buttonColors(containerColor = EmeraldSuccess)
+                                        colors = ButtonDefaults.buttonColors(containerColor = EmeraldSuccess, contentColor = IceWhiteText)
                                     ) {
-                                        Text("VERO", style = MaterialTheme.typography.titleLarge, color = Color.White)
+                                        Text("VERO", style = MaterialTheme.typography.titleLarge, color = IceWhiteText)
                                     }
                                     Button(
                                         onClick = { submitAnswer(!q.correctBool) },
                                         enabled = answersEnabled,
                                         modifier = Modifier
                                             .weight(1f)
-                                            .heightIn(min = if (isShortLandscape) 58.dp else 84.dp)
+                                            .heightIn(min = if (isShortLandscape) 58.dp else 72.dp)
                                             .testTag("answer_false_button"),
                                         shape = RoundedCornerShape(12.dp),
-                                        colors = ButtonDefaults.buttonColors(containerColor = WarmAmber)
+                                        colors = ButtonDefaults.buttonColors(containerColor = WarmAmber, contentColor = IceWhiteText)
                                     ) {
-                                        Text("FALSO", style = MaterialTheme.typography.titleLarge, color = Color.White)
+                                        Text("FALSO", style = MaterialTheme.typography.titleLarge, color = IceWhiteText)
                                     }
                                 }
                             } else if (shuffledOptions != null) {
                                 val opts = shuffledOptions!!.options
                                 val correctIdx = shuffledOptions!!.correctDisplayIndex
-                                Column(verticalArrangement = Arrangement.spacedBy(if (isShortLandscape) 6.dp else 10.dp)) {
+                                Column(verticalArrangement = Arrangement.spacedBy(if (isShortLandscape) 6.dp else 12.dp)) {
                                     for (rowIdx in 0 until 2) {
                                         Row(
                                             modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.spacedBy(if (isShortLandscape) 8.dp else 10.dp)
+                                            horizontalArrangement = Arrangement.spacedBy(if (isShortLandscape) 8.dp else 12.dp)
                                         ) {
                                             for (colIdx in 0 until 2) {
                                                 val idx = rowIdx * 2 + colIdx
                                                 if (idx < opts.size) {
                                                     val eliminated = idx in eliminatedIndices
+                                                    val btnSource = remember { MutableInteractionSource() }
+                                                    val btnPressed by btnSource.collectIsPressedAsState()
+                                                    val btnScale by animateFloatAsState(
+                                                        targetValue = if (btnPressed && !prefs.reducedMotion) 0.96f else 1f,
+                                                        label = "opt_scale_$idx"
+                                                    )
                                                     Button(
                                                         onClick = { submitAnswer(idx == correctIdx) },
                                                         enabled = answersEnabled && !eliminated,
+                                                        interactionSource = btnSource,
                                                         modifier = Modifier
                                                             .weight(1f)
-                                                            .heightIn(min = if (isShortLandscape) 50.dp else 72.dp)
+                                                            .scale(btnScale)
+                                                            .heightIn(min = if (isShortLandscape) 52.dp else 64.dp)
                                                             .alpha(if (eliminated) 0.25f else answersAlpha)
                                                             .testTag("answer_option_$idx"),
                                                         contentPadding = androidx.compose.foundation.layout.PaddingValues(
@@ -999,17 +1033,20 @@ fun YardBattleScreen(
                                                         ),
                                                         shape = RoundedCornerShape(12.dp),
                                                         colors = ButtonDefaults.buttonColors(
-                                                            containerColor = CreamSurface,
-                                                            contentColor = InkPrimary
+                                                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                                            contentColor = MaterialTheme.colorScheme.onSurface
                                                         ),
-                                                        border = BorderStroke(2.dp, GameBalance.GBA_FRAME_DARK)
+                                                        border = BorderStroke(
+                                                            width = if (btnPressed) 2.5.dp else 2.dp,
+                                                            color = if (btnPressed) SkyHighlight else MaterialTheme.colorScheme.outline
+                                                        )
                                                     ) {
                                                         Text(
                                                             text = opts[idx],
                                                             style = MaterialTheme.typography.bodyLarge.copy(
                                                                 fontWeight = FontWeight.Bold,
-                                                                fontSize = if (isShortLandscape) 15.sp else 18.sp,
-                                                                lineHeight = if (isShortLandscape) 18.sp else 22.sp
+                                                                fontSize = if (isShortLandscape) 15.sp else 17.sp,
+                                                                lineHeight = if (isShortLandscape) 19.sp else 23.sp
                                                             ),
                                                             maxLines = 2,
                                                             overflow = TextOverflow.Ellipsis,
@@ -1042,11 +1079,22 @@ fun YardBattleScreen(
             )
         }
 
+        FloatingJuicePopup(
+            text = juicePopupText,
+            accentColor = juicePopupColor,
+            triggerId = juicePopupTrigger,
+            reducedMotion = prefs.reducedMotion,
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .padding(top = 86.dp)
+        )
+
         if (phase == BattlePhase.SUMMARY && finalResult != null) {
             ResultSummaryModal(
                 result = finalResult!!,
                 packTitle = pack.title,
                 medalName = pack.medalName,
+                reducedMotion = prefs.reducedMotion,
                 onContinue = { viewModel.returnFromMinigame(config) }
             )
         }

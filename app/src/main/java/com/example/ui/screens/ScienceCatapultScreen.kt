@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -87,6 +88,7 @@ import com.example.ui.components.DialogBoxModal
 import com.example.ui.components.ExplanationModal
 import com.example.ui.components.GbaCard
 import com.example.ui.components.ProgressStepper
+import com.example.ui.components.FloatingJuicePopup
 import com.example.ui.components.ResultSummaryModal
 import com.example.ui.components.StepDotState
 import com.example.ui.theme.CreamBackground
@@ -241,6 +243,9 @@ fun ScienceCatapultScreen(
     var correctFirstTry by remember { mutableIntStateOf(0) }
     var helpsUsedTotal by remember { mutableIntStateOf(0) }
     var rawAnswerStars by remember { mutableIntStateOf(0) }
+    var juicePopupText by remember { mutableStateOf("") }
+    var juicePopupColor by remember { mutableStateOf(EmeraldSuccess) }
+    var juicePopupTrigger by remember { mutableIntStateOf(0) }
     var explanationHeader by remember { mutableStateOf("") }
     var finalResult by remember { mutableStateOf<MinigameResult?>(null) }
     var showExitConfirm by remember { mutableStateOf(false) }
@@ -417,10 +422,14 @@ fun ScienceCatapultScreen(
                 stepStates[entry.originalIndex] = StepDotState.COMPLETED
                 combo++
                 if (!entry.isRetry) correctFirstTry++
-                rawAnswerStars += GameBalance.STARS_PER_CORRECT +
+                val gained = GameBalance.STARS_PER_CORRECT +
                     if (!entry.isRetry && !usedHelpThisQuestion) GameBalance.STARS_FIRST_TRY_BONUS else 0
+                rawAnswerStars += gained
 
                 val superShot = combo >= GameBalance.GYM_COMBO_SUPER_THRESHOLD
+                juicePopupText = if (superShot) "COMBO x$combo! +$gained ★" else "+$gained ★!"
+                juicePopupColor = if (superShot) SoftGold else EmeraldSuccess
+                juicePopupTrigger++
                 spawnTowerDebris(hitX, hitY, EmeraldSuccess, count = if (superShot) 24 else 16)
                 viewModel.audioManager.playSfx(SfxType.TOWER_CRASH)
                 viewModel.audioManager.playSfx(if (superShot) SfxType.ATTACK_SUPER else SfxType.ANSWER_CORRECT)
@@ -665,10 +674,12 @@ fun ScienceCatapultScreen(
                 val controlsEnabled = !readingPauseActive && !isInputLocked
                 val towers = remember(choices.options.size) { buildTowers(choices.options.size) }
 
-                // Compact Question Card
+                // Compact Question Card (Focus Mode centered max 680dp)
                 GbaCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    backgroundColor = CreamBackground,
+                    modifier = Modifier
+                        .widthIn(max = 680.dp)
+                        .fillMaxWidth()
+                        .align(Alignment.CenterHorizontally),
                     contentPadding = PaddingValues(
                         horizontal = 12.dp,
                         vertical = if (isShortLandscape) 6.dp else 10.dp
@@ -680,13 +691,13 @@ fun ScienceCatapultScreen(
                             modifier = Modifier
                                 .size(48.dp)
                                 .clip(CircleShape)
-                                .background(Color(0xFFDBEAFE))
+                                .background(MaterialTheme.colorScheme.primaryContainer)
                                 .testTag("catapult_tts_button")
                         ) {
                             Icon(
                                 Icons.AutoMirrored.Filled.VolumeUp,
                                 contentDescription = "Ascolta domanda",
-                                tint = DeepBlueAccent
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer
                             )
                         }
                         if (hintText.isNotBlank()) {
@@ -703,12 +714,12 @@ fun ScienceCatapultScreen(
                                     .height(48.dp)
                                     .testTag("catapult_hint_button"),
                                 contentPadding = PaddingValues(horizontal = if (isShortLandscape) 10.dp else 14.dp),
-                                colors = ButtonDefaults.outlinedButtonColors(containerColor = GameBalance.HINT_BG_COLOR),
-                                border = BorderStroke(2.dp, GameBalance.HINT_BORDER_COLOR)
+                                colors = ButtonDefaults.outlinedButtonColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+                                border = BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
                             ) {
-                                Icon(Icons.Default.Lightbulb, contentDescription = null, tint = GameBalance.HINT_BORDER_COLOR)
+                                Icon(Icons.Default.Lightbulb, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                                 Spacer(Modifier.width(4.dp))
-                                Text("Indizio", color = DeepBlueAccent, style = MaterialTheme.typography.labelLarge)
+                                Text("Indizio", color = MaterialTheme.colorScheme.onPrimaryContainer, style = MaterialTheme.typography.labelLarge)
                             }
                         }
                         if (show5050) {
@@ -741,12 +752,12 @@ fun ScienceCatapultScreen(
                                     .alpha(if (readingPauseActive) 0.65f else 1f)
                                     .testTag("catapult_5050_button"),
                                 contentPadding = PaddingValues(horizontal = if (isShortLandscape) 10.dp else 14.dp),
-                                colors = ButtonDefaults.outlinedButtonColors(containerColor = Color(0xFFFEF3C7)),
+                                colors = ButtonDefaults.outlinedButtonColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
                                 border = BorderStroke(2.dp, SoftGold)
                             ) {
-                                Icon(Icons.Default.Filter2, contentDescription = null, tint = Color(0xFF92400E))
+                                Icon(Icons.Default.Filter2, contentDescription = null, tint = MaterialTheme.colorScheme.onSecondaryContainer)
                                 Spacer(Modifier.width(4.dp))
-                                Text("50/50", color = Color(0xFF92400E), style = MaterialTheme.typography.labelLarge)
+                                Text("50/50", color = MaterialTheme.colorScheme.onSecondaryContainer, style = MaterialTheme.typography.labelLarge)
                             }
                         }
                     }
@@ -764,7 +775,7 @@ fun ScienceCatapultScreen(
                                         fontSize = 18.sp,
                                         lineHeight = 22.sp
                                     ),
-                                    color = InkPrimary,
+                                    color = MaterialTheme.colorScheme.onSurface,
                                     maxLines = 2,
                                     overflow = TextOverflow.Ellipsis,
                                     modifier = Modifier
@@ -777,10 +788,10 @@ fun ScienceCatapultScreen(
                             Text(
                                 text = TextFormatter.toAnnotatedString(q.prompt),
                                 style = MaterialTheme.typography.headlineSmall.copy(
-                                    fontSize = if (isWide) 22.sp else 19.sp,
+                                    fontSize = if (isWide) 20.sp else 19.sp,
                                     lineHeight = if (isWide) 28.sp else 25.sp
                                 ),
-                                color = InkPrimary,
+                                color = MaterialTheme.colorScheme.onSurface,
                                 modifier = Modifier.testTag("catapult_question_prompt")
                             )
 
@@ -794,7 +805,7 @@ fun ScienceCatapultScreen(
                                 Text(
                                     text = statusBanner,
                                     style = MaterialTheme.typography.labelMedium,
-                                    color = DeepBlueAccent,
+                                    color = MaterialTheme.colorScheme.primary,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
                                 )
@@ -808,8 +819,8 @@ fun ScienceCatapultScreen(
                                     .fillMaxWidth()
                                     .height(6.dp)
                                     .clip(RoundedCornerShape(3.dp)),
-                                color = DeepBlueAccent,
-                                trackColor = Color(0xFFE2E8F0)
+                                color = MaterialTheme.colorScheme.primary,
+                                trackColor = MaterialTheme.colorScheme.outlineVariant
                             )
                         }
 
@@ -818,15 +829,15 @@ fun ScienceCatapultScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(10.dp))
-                                    .background(GameBalance.HINT_BG_COLOR)
-                                    .border(1.5.dp, GameBalance.HINT_BORDER_COLOR, RoundedCornerShape(10.dp))
+                                    .background(MaterialTheme.colorScheme.primaryContainer)
+                                    .border(1.5.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(10.dp))
                                     .padding(horizontal = 12.dp, vertical = 6.dp)
                                     .testTag("catapult_hint_banner")
                             ) {
                                 Text(
                                     text = TextFormatter.toAnnotatedString("Indizio: $hintText"),
                                     style = MaterialTheme.typography.bodyMedium,
-                                    color = DeepBlueAccent
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer
                                 )
                             }
                         }
@@ -1247,11 +1258,22 @@ fun ScienceCatapultScreen(
             )
         }
 
+        FloatingJuicePopup(
+            text = juicePopupText,
+            accentColor = juicePopupColor,
+            triggerId = juicePopupTrigger,
+            reducedMotion = prefs.reducedMotion,
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .padding(top = 86.dp)
+        )
+
         if (phase == CatapultPhase.SUMMARY && finalResult != null) {
             ResultSummaryModal(
                 result = finalResult!!,
                 packTitle = pack.title,
                 medalName = pack.medalName,
+                reducedMotion = prefs.reducedMotion,
                 onContinue = { viewModel.returnFromMinigame(config) }
             )
         }

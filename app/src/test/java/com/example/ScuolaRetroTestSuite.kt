@@ -12,7 +12,9 @@ import com.example.core.PackValidator
 import com.example.core.QuestionData
 import com.example.core.SaveManager
 import com.example.core.TextFormatter
+import com.example.pixelart.Facing
 import com.example.pixelart.GridPos
+import com.example.pixelart.PixelArtAssets
 import com.example.pixelart.SchoolMaps
 import org.json.JSONArray
 import org.json.JSONObject
@@ -508,6 +510,92 @@ class ScuolaRetroTestSuite {
             val path = SchoolMaps.findPath4Dir(hallway, start, portal.pos, allowPartialPath = true)
             assertTrue("Portal $portalId must be reachable", path.isNotEmpty())
             assertEquals("Path must reach $portalId", portal.pos, path.last())
+        }
+    }
+
+    // Group 11: Daily Missions, Mastery Ranks, Avatar Hats & Rare Pets, Atrium Interactive Props & NPCs
+    @Test
+    fun test11_dailyMissionsMasteryRanksHatsAndAtriumProps() {
+        saveManager.createProfile("Matteo", 0)
+        val utc = TimeZone.getTimeZone("UTC")
+        val nowUnix = 1794830400L // fixed timestamp
+
+        // Verify Mastery Rank thresholds
+        assertEquals("Curioso", LearningEngine.rankForMastery(10f).title)
+        assertEquals("Apprendista", LearningEngine.rankForMastery(40f).title)
+        assertEquals("Esploratore", LearningEngine.rankForMastery(70f).title)
+        assertEquals("Maestro di Pixel", LearningEngine.rankForMastery(90f).title)
+        assertEquals(3, LearningEngine.rankForMastery(90f).starsLevel)
+
+        // Complete 1 session with 4 correct answers -> unlocks "_first_challenge" (+25 ★) and "_sharp_answers" (+35 ★)
+        learningEngine.completeMinigameSession(
+            packId = "storia_egizi",
+            minigameId = "yard_battle",
+            isBoss = false,
+            victory = true,
+            correctFirstTry = 4,
+            totalQuestions = 4,
+            helpsUsed = 0,
+            rawAnswerStars = 40,
+            masteryBefore = 0f,
+            nowUnix = nowUnix
+        )
+        val missionsBefore = learningEngine.getDailyMissions(nowUnix, utc)
+        assertEquals(3, missionsBefore.size)
+        val firstMission = missionsBefore.first { it.missionKey.endsWith("_first_challenge") }
+        assertTrue("First daily mission should be completed after 1 session", firstMission.isCompleted)
+        assertFalse("First daily mission should not be claimed yet", firstMission.claimed)
+
+        val starsBeforeClaim = saveManager.activeProfile!!.stars
+        val reward = learningEngine.claimDailyMission(firstMission.missionKey, nowUnix, utc)
+        assertEquals(25, reward)
+        assertEquals(starsBeforeClaim + 25, saveManager.activeProfile!!.stars)
+
+        // Double-claiming same mission must return 0
+        assertEquals(0, learningEngine.claimDailyMission(firstMission.missionKey, nowUnix, utc))
+
+        // Equip wearable hat and verify persistence across SaveManager reload
+        saveManager.updateActiveProfile {
+            it.copy(
+                ownedItems = (it.ownedItems + "hat_wizard").distinct(),
+                equippedHat = "hat_wizard"
+            )
+        }
+        val reloaded = SaveManager(sandboxDir).apply { loadAll() }
+        assertEquals("hat_wizard", reloaded.activeProfile!!.equippedHat)
+        assertTrue(reloaded.activeProfile!!.claimedMissionKeys.contains(firstMission.missionKey))
+
+        // Verify PixelArtAssets sprites for wearable hats, new NPCs, and new rare pets render cleanly
+        assertNotNull(PixelArtAssets.getCharacterSprite("avatar_0", Facing.DOWN, 0, hatId = "hat_wizard"))
+        assertNotNull(PixelArtAssets.getCharacterSprite("npc_janitor", Facing.DOWN, 0))
+        assertNotNull(PixelArtAssets.getCharacterSprite("npc_classmate", Facing.DOWN, 0))
+        assertNotNull(PixelArtAssets.getHatIcon("hat_crown"))
+        assertNotNull(PixelArtAssets.getCompanionSprite("pet_fox", 0))
+        assertNotNull(PixelArtAssets.getCompanionSprite("pet_dragon", 1))
+
+        // Subject mastery map covers all 6 subjects
+        val masteryMap = learningEngine.getSubjectMasteryMap()
+        assertEquals(6, masteryMap.size)
+        assertNotNull(learningEngine.getOverallExplorerRank())
+
+        // Verify Atrium interactive props & friendly NPCs are reachable via A* without blocking any door
+        val hallway = SchoolMaps.schoolHallway
+        val start = hallway.spawns["from_yard"]!!
+        listOf("prop_trophy_case", "prop_missions_left", "prop_missions_right").forEach { propId ->
+            val prop = hallway.props.first { it.id == propId }
+            val path = SchoolMaps.findPath4Dir(hallway, start, prop.pos, allowPartialPath = true)
+            assertTrue("Atrium prop $propId must be reachable adjacent", path.isNotEmpty())
+            val end = path.last()
+            val dist = kotlin.math.abs(end.x - prop.pos.x) + kotlin.math.abs(end.y - prop.pos.y)
+            assertTrue("Should reach adjacent to $propId (dist=$dist)", dist <= 1)
+        }
+        listOf("npc_janitor", "npc_classmate").forEach { npcId ->
+            val npc = hallway.npcs.first { it.id == npcId }
+            val path = SchoolMaps.findPath4Dir(hallway, start, npc.pos, allowPartialPath = true)
+            assertTrue("Atrium NPC $npcId must be reachable", path.isNotEmpty())
+            val end = path.last()
+            val dist = kotlin.math.abs(end.x - npc.pos.x) + kotlin.math.abs(end.y - npc.pos.y)
+            assertEquals("Should stop right next to $npcId", 1, dist)
         }
     }
 

@@ -151,7 +151,8 @@ data class StudyPreferences(
     val enable5050: Boolean = false,
     val showVirtualDpad: Boolean = true,
     val showGuidancePill: Boolean = true,
-    val autoTtsQuestions: Boolean = false
+    val autoTtsQuestions: Boolean = false,
+    val darkMode: Boolean = true
 )
 
 data class GitHubConfig(
@@ -208,12 +209,42 @@ data class ProfileData(
     val avatarId: Int = 0,
     val stars: Int = 0,
     val equippedCompanion: String = "",
+    val equippedHat: String = "",
     val equippedFrame: String = "frame_classic",
     val ownedItems: List<String> = listOf("frame_classic"),
     val lockerStickers: List<String> = listOf("", "", "", "", "", ""),
     val medals: List<String> = emptyList(),
+    val claimedMissionKeys: List<String> = emptyList(),
     val leitner: Map<String, LeitnerRecord> = emptyMap(),
     val recentSessions: List<SessionRecord> = emptyList()
+)
+
+data class DailyMissionItem(
+    val missionKey: String,
+    val title: String,
+    val description: String,
+    val progress: Int,
+    val target: Int,
+    val rewardStars: Int,
+    val claimed: Boolean
+) {
+    val isCompleted: Boolean get() = progress >= target
+    val isClaimable: Boolean get() = isCompleted && !claimed
+}
+
+data class MasteryRankInfo(
+    val title: String,
+    val starsLevel: Int, // 0..3
+    val minPercent: Int
+)
+
+data class SubjectMasterySummary(
+    val subject: String,
+    val averageMasteryPct: Float,
+    val rank: MasteryRankInfo,
+    val packCount: Int,
+    val medalsEarned: Int,
+    val hasPriority: Boolean
 )
 
 data class ProfileSummary(

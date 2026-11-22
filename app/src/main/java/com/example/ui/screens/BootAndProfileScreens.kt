@@ -54,11 +54,10 @@ import com.example.pixelart.Facing
 import com.example.pixelart.PixelArtAssets
 import com.example.ui.components.GbaCard
 import com.example.ui.components.PixelSprite
-import com.example.ui.theme.CreamSurface
-import com.example.ui.theme.DeepBlueAccent
 import com.example.ui.theme.EmeraldSuccess
-import com.example.ui.theme.InkPrimary
-import com.example.ui.theme.InkSecondary
+import com.example.ui.theme.HudNightBg
+import com.example.ui.theme.IceWhiteText
+import com.example.ui.theme.LocalDarkTheme
 import com.example.ui.theme.SilkscreenFontFamily
 import com.example.ui.theme.SoftGold
 import kotlinx.coroutines.delay
@@ -123,14 +122,14 @@ fun BootScreen() {
                     text = "MAESTRI DI PIXEL",
                     fontFamily = SilkscreenFontFamily,
                     fontSize = 22.sp,
-                    color = DeepBlueAccent,
+                    color = MaterialTheme.colorScheme.primary,
                     textAlign = TextAlign.Center
                 )
                 Spacer(Modifier.height(4.dp))
                 Text(
                     text = "Preparazione della scuola...",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = InkSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(Modifier.height(12.dp))
                 LinearProgressIndicator(
@@ -164,12 +163,13 @@ fun ProfileSelectScreen(
     val canStart = cleanName.length in 1..16
     val avatarNames = listOf("Blu", "Rosa", "Verde", "Viola")
 
+    val isDark = LocalDarkTheme.current
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
-                    colors = listOf(Color(0xFF0EA5E9), Color(0xFF38BDF8), Color(0xFF7BC96F))
+                    colors = if (isDark) listOf(HudNightBg, Color(0xFF1E3A5F)) else listOf(Color(0xFF0EA5E9), Color(0xFF38BDF8), Color(0xFF7BC96F))
                 )
             )
             .safeDrawingPadding()
@@ -217,14 +217,14 @@ fun ProfileSelectScreen(
                                 text = "MAESTRI DI PIXEL",
                                 fontFamily = SilkscreenFontFamily,
                                 fontSize = 18.sp,
-                                color = DeepBlueAccent,
+                                color = MaterialTheme.colorScheme.primary,
                                 textAlign = TextAlign.Center
                             )
                             Spacer(Modifier.height(4.dp))
                             Text(
                                 text = "Scrivi il tuo nome, scegli l'avatar ed esplora tutte le 6 aule e sfide della scuola!",
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = InkSecondary,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 textAlign = TextAlign.Center
                             )
                         }
@@ -262,7 +262,7 @@ fun ProfileSelectScreen(
                         text = "Benvenuto in Maestri di Pixel!",
                         fontFamily = SilkscreenFontFamily,
                         fontSize = 18.sp,
-                        color = DeepBlueAccent,
+                        color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.fillMaxWidth(),
                         textAlign = TextAlign.Center
                     )
@@ -270,7 +270,7 @@ fun ProfileSelectScreen(
                     Text(
                         text = "Scrivi il tuo nome e scegli il tuo personaggio per esplorare la scuola.",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = InkSecondary,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.fillMaxWidth(),
                         textAlign = TextAlign.Center
                     )
@@ -318,7 +318,7 @@ private fun ProfileFormContent(
     Text(
         text = "Scegli il tuo avatar:",
         style = MaterialTheme.typography.titleMedium,
-        color = InkPrimary
+        color = MaterialTheme.colorScheme.onSurface
     )
     Spacer(Modifier.height(8.dp))
 
@@ -336,10 +336,10 @@ private fun ProfileFormContent(
                     .clickable { onSelectAvatar(id) }
                     .testTag("avatar_option_$id"),
                 shape = RoundedCornerShape(12.dp),
-                color = if (isSelected) Color(0xFFDBEAFE) else CreamSurface,
+                color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
                 border = BorderStroke(
                     width = if (isSelected) 3.dp else 2.dp,
-                    color = if (isSelected) DeepBlueAccent else Color(0xFFCBD5E1)
+                    color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
                 )
             ) {
                 Column(
@@ -355,7 +355,7 @@ private fun ProfileFormContent(
                     Text(
                         text = avatarNames[id],
                         style = MaterialTheme.typography.labelLarge,
-                        color = if (isSelected) DeepBlueAccent else InkPrimary
+                        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
@@ -370,12 +370,12 @@ private fun ProfileFormContent(
             .fillMaxWidth()
             .heightIn(min = 52.dp)
             .testTag("profile_start_button"),
-        colors = ButtonDefaults.buttonColors(containerColor = EmeraldSuccess)
+        colors = ButtonDefaults.buttonColors(containerColor = EmeraldSuccess, contentColor = IceWhiteText)
     ) {
         Text(
             text = "Inizia l'avventura!",
             style = MaterialTheme.typography.titleLarge,
-            color = Color.White
+            color = IceWhiteText
         )
     }
 }

@@ -74,12 +74,10 @@ import com.example.core.PackManager
 import com.example.core.ValidationResult
 import com.example.ui.components.ConfirmModal
 import com.example.ui.components.GbaCard
-import com.example.ui.theme.CreamBackground
-import com.example.ui.theme.CreamSurface
 import com.example.ui.theme.DeepBlueAccent
 import com.example.ui.theme.EmeraldSuccess
-import com.example.ui.theme.InkPrimary
-import com.example.ui.theme.InkSecondary
+import com.example.ui.theme.HudNightBg
+import com.example.ui.theme.IceWhiteText
 import com.example.ui.theme.SilkscreenFontFamily
 import com.example.ui.theme.WarmAmber
 import com.example.viewmodel.AppUiState
@@ -98,7 +96,7 @@ fun ParentAreaScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF0F172A))
+            .background(HudNightBg)
             .safeDrawingPadding()
             .imePadding()
             .testTag("parent_area_screen")
@@ -119,7 +117,7 @@ fun ParentAreaScreen(
                     modifier = Modifier
                         .heightIn(min = 48.dp)
                         .testTag("parent_back_button"),
-                    colors = ButtonDefaults.buttonColors(containerColor = DeepBlueAccent)
+                    colors = ButtonDefaults.buttonColors(containerColor = DeepBlueAccent, contentColor = IceWhiteText)
                 ) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Torna a Scuola")
                     Spacer(Modifier.width(6.dp))
@@ -130,7 +128,7 @@ fun ParentAreaScreen(
                     text = "AREA GENITORI",
                     fontFamily = SilkscreenFontFamily,
                     fontSize = 16.sp,
-                    color = Color.White,
+                    color = IceWhiteText,
                     maxLines = 1,
                     overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f)
@@ -153,8 +151,8 @@ fun ParentAreaScreen(
             ) {
                 TabRow(
                     selectedTabIndex = selectedTab,
-                    containerColor = CreamSurface,
-                    contentColor = DeepBlueAccent
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    contentColor = MaterialTheme.colorScheme.primary
                 ) {
                     tabs.forEachIndexed { idx, label ->
                         Tab(
@@ -190,22 +188,22 @@ private fun ParentProgressTab(
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         item {
-            Text("Padronanza per Argomento", style = MaterialTheme.typography.titleLarge, color = DeepBlueAccent)
+            Text("Padronanza per Argomento", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
         }
         items(uiState.activePacks, key = { it.packId }) { pack ->
             val masteryPct = viewModel.learningEngine.getPackMasteryPercent(pack).toInt().coerceIn(0, 100)
             Surface(
                 shape = RoundedCornerShape(10.dp),
-                color = CreamSurface,
-                border = BorderStroke(1.5.dp, Color(0xFFCBD5E1))
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.outlineVariant)
             ) {
                 Column(modifier = Modifier.padding(12.dp)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text(pack.title, style = MaterialTheme.typography.titleMedium, color = InkPrimary)
-                        Text("$masteryPct%", style = MaterialTheme.typography.titleMedium, color = DeepBlueAccent)
+                        Text(pack.title, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
+                        Text("$masteryPct%", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
                     }
                     Spacer(Modifier.height(6.dp))
                     LinearProgressIndicator(
@@ -215,7 +213,7 @@ private fun ParentProgressTab(
                             .height(10.dp)
                             .clip(RoundedCornerShape(5.dp)),
                         color = GameBalance.subjectColor(pack.subject),
-                        trackColor = Color(0xFFE2E8F0)
+                        trackColor = MaterialTheme.colorScheme.outlineVariant
                     )
                 }
             }
@@ -228,23 +226,23 @@ private fun ParentProgressTab(
                 Text(
                     "Nessuna domanda da ripassare al momento: ottimo lavoro!",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = InkSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
         items(uiState.weakQuestions, key = { "${it.packTitle}:${it.questionId}" }) { weak ->
             Surface(
                 shape = RoundedCornerShape(10.dp),
-                color = Color(0xFFFEF3C7),
+                color = MaterialTheme.colorScheme.secondaryContainer,
                 border = BorderStroke(1.5.dp, WarmAmber)
             ) {
                 Column(modifier = Modifier.padding(12.dp)) {
-                    Text(weak.packTitle, style = MaterialTheme.typography.labelMedium, color = Color(0xFF92400E))
-                    Text(weak.prompt, style = MaterialTheme.typography.bodyMedium, color = InkPrimary, fontWeight = FontWeight.Bold)
+                    Text(weak.packTitle, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSecondaryContainer)
+                    Text(weak.prompt, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
                     Text(
                         "Risposta esatta: ${weak.correctAnswerText} · Errori: ${weak.wrongTotal} · Livello ${weak.box}/3",
                         style = MaterialTheme.typography.labelMedium,
-                        color = InkSecondary
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -252,15 +250,15 @@ private fun ParentProgressTab(
 
         item {
             Spacer(Modifier.height(4.dp))
-            Text("Ultime 10 sfide", style = MaterialTheme.typography.titleLarge, color = DeepBlueAccent)
+            Text("Ultime 10 sfide", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
             if (sessions.isEmpty()) {
-                Text("Nessuna sfida ancora completata.", style = MaterialTheme.typography.bodyMedium, color = InkSecondary)
+                Text("Nessuna sfida ancora completata.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
         items(sessions) { s ->
             Surface(
                 shape = RoundedCornerShape(10.dp),
-                color = CreamSurface
+                color = MaterialTheme.colorScheme.surfaceVariant
             ) {
                 Row(
                     modifier = Modifier
@@ -273,12 +271,12 @@ private fun ParentProgressTab(
                         Text(
                             text = if (s.isBoss) "Boss: ${s.packTitle}" else s.packTitle,
                             style = MaterialTheme.typography.titleMedium,
-                            color = InkPrimary
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
                             text = "Al primo colpo: ${s.correctFirstTry}/${s.totalQuestions} · +${s.starsEarned} stelle",
                             style = MaterialTheme.typography.labelMedium,
-                            color = InkSecondary
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                     Text(
@@ -325,15 +323,15 @@ private fun ParentPacksSyncTab(
             val sync = uiState.config.syncState
             Surface(
                 shape = RoundedCornerShape(12.dp),
-                color = CreamSurface,
-                border = BorderStroke(1.5.dp, Color(0xFFCBD5E1))
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.outlineVariant)
             ) {
                 Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Stato Sincronizzazione GitHub", style = MaterialTheme.typography.titleMedium, color = DeepBlueAccent)
+                    Text("Stato Sincronizzazione GitHub", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
                     Text(
                         text = sync.lastSyncMessage.ifBlank { "Nessuna sincronizzazione eseguita finora." },
                         style = MaterialTheme.typography.bodyMedium,
-                        color = InkPrimary
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -364,11 +362,11 @@ private fun ParentPacksSyncTab(
         item {
             Surface(
                 shape = RoundedCornerShape(12.dp),
-                color = CreamSurface,
-                border = BorderStroke(1.5.dp, Color(0xFFCBD5E1))
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.outlineVariant)
             ) {
                 Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text("Importazione Locale Pacchetti JSON", style = MaterialTheme.typography.titleMedium, color = DeepBlueAccent)
+                    Text("Importazione Locale Pacchetti JSON", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -392,7 +390,7 @@ private fun ParentPacksSyncTab(
                                 .weight(1f)
                                 .heightIn(min = 52.dp)
                                 .testTag("import_clipboard_button"),
-                            colors = ButtonDefaults.buttonColors(containerColor = EmeraldSuccess)
+                            colors = ButtonDefaults.buttonColors(containerColor = EmeraldSuccess, contentColor = IceWhiteText)
                         ) {
                             Icon(Icons.Default.ContentPaste, contentDescription = null)
                             Spacer(Modifier.width(6.dp))
@@ -425,7 +423,7 @@ private fun ParentPacksSyncTab(
                             }
                         }
                         fb.warnings.forEach { w ->
-                            Text("Avviso: $w", style = MaterialTheme.typography.labelMedium, color = InkSecondary)
+                            Text("Avviso: $w", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                 }
@@ -435,11 +433,11 @@ private fun ParentPacksSyncTab(
         // Installed packs list with priority toggle, focus topics & local delete
         item {
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text("Pacchetti & Focus Argomenti", style = MaterialTheme.typography.titleLarge, color = DeepBlueAccent)
+                Text("Pacchetti & Focus Argomenti", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
                 Text(
                     "Scegli uno o più argomenti per far concentrare le sfide solo su ciò che serve ora (oppure lascia 'Tutti').",
                     style = MaterialTheme.typography.labelMedium,
-                    color = InkSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -452,8 +450,8 @@ private fun ParentPacksSyncTab(
             }
             Surface(
                 shape = RoundedCornerShape(10.dp),
-                color = CreamSurface,
-                border = BorderStroke(1.5.dp, if (pack.priority) WarmAmber else Color(0xFFCBD5E1))
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                border = BorderStroke(1.5.dp, if (pack.priority) WarmAmber else MaterialTheme.colorScheme.outlineVariant)
             ) {
                 Column(
                     modifier = Modifier
@@ -467,11 +465,11 @@ private fun ParentPacksSyncTab(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
-                            Text(pack.title, style = MaterialTheme.typography.titleMedium, color = InkPrimary)
+                            Text(pack.title, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
                             Text(
                                 text = "${GameBalance.subjectLabel(pack.subject)} · v${pack.version} · $activeQuestionCount/${pack.playableQuestions.size} domande attive · ${pack.source}",
                                 style = MaterialTheme.typography.labelMedium,
-                                color = InkSecondary
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -509,10 +507,10 @@ private fun ParentPacksSyncTab(
                                 contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
                                 shape = RoundedCornerShape(20.dp),
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (allSelected) DeepBlueAccent else Color.White,
-                                    contentColor = if (allSelected) Color.White else InkPrimary
+                                    containerColor = if (allSelected) DeepBlueAccent else MaterialTheme.colorScheme.surface,
+                                    contentColor = if (allSelected) IceWhiteText else MaterialTheme.colorScheme.onSurface
                                 ),
-                                border = BorderStroke(1.5.dp, if (allSelected) DeepBlueAccent else Color(0xFF94A3B8))
+                                border = BorderStroke(1.5.dp, if (allSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant)
                             ) {
                                 Text("Tutti (${pack.playableQuestions.size})", style = MaterialTheme.typography.labelMedium)
                             }
@@ -528,10 +526,10 @@ private fun ParentPacksSyncTab(
                                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
                                     shape = RoundedCornerShape(20.dp),
                                     colors = ButtonDefaults.buttonColors(
-                                        containerColor = if (isSelected) subjCol else Color.White,
-                                        contentColor = if (isSelected) Color.White else InkPrimary
+                                        containerColor = if (isSelected) subjCol else MaterialTheme.colorScheme.surface,
+                                        contentColor = if (isSelected) IceWhiteText else MaterialTheme.colorScheme.onSurface
                                     ),
-                                    border = BorderStroke(1.5.dp, if (isSelected) subjCol else Color(0xFF94A3B8))
+                                    border = BorderStroke(1.5.dp, if (isSelected) subjCol else MaterialTheme.colorScheme.outlineVariant)
                                 ) {
                                     Text("$topic ($countForTopic)", style = MaterialTheme.typography.labelMedium)
                                 }
@@ -566,7 +564,7 @@ private fun ParentSettingsTab(
         // Highlighted 1-tap Studio Sereno Preset
         Surface(
             shape = RoundedCornerShape(14.dp),
-            color = Color(0xFFD1FAE5),
+            color = MaterialTheme.colorScheme.tertiaryContainer,
             border = BorderStroke(2.5.dp, EmeraldSuccess)
         ) {
             Row(
@@ -580,12 +578,12 @@ private fun ParentSettingsTab(
                     Text(
                         text = "Attiva Profilo Studio Sereno",
                         style = MaterialTheme.typography.titleLarge,
-                        color = Color(0xFF064E3B)
+                        color = MaterialTheme.colorScheme.onTertiaryContainer
                     )
                     Text(
                         text = "Sfide brevi, senza timer, lettura vocale e pausa di lettura",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color(0xFF065F46)
+                        color = MaterialTheme.colorScheme.onTertiaryContainer
                     )
                 }
                 Spacer(Modifier.width(12.dp))
@@ -594,7 +592,7 @@ private fun ParentSettingsTab(
                     modifier = Modifier
                         .heightIn(min = 52.dp)
                         .testTag("studio_sereno_button"),
-                    colors = ButtonDefaults.buttonColors(containerColor = EmeraldSuccess)
+                    colors = ButtonDefaults.buttonColors(containerColor = EmeraldSuccess, contentColor = IceWhiteText)
                 ) {
                     Icon(Icons.Default.Spa, contentDescription = null)
                     Spacer(Modifier.width(6.dp))
@@ -603,8 +601,16 @@ private fun ParentSettingsTab(
             }
         }
 
-        // Individual Study Options
-        Text("Opzioni di Studio", style = MaterialTheme.typography.titleLarge, color = DeepBlueAccent)
+        // Individual Study & Visual Comfort Options
+        Text("Aspetto e Opzioni di Studio", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
+
+        SettingToggleRow(
+            title = "Tema Scuro Riposante (Consigliato su tablet)",
+            subtitle = "Sfondo scuro ad alto contrasto senza abbagliamento; disattivalo per il tema chiaro crema",
+            checked = prefs.darkMode,
+            testTag = "toggle_dark_mode",
+            onCheckedChange = { v -> viewModel.updateStudyPreferences { it.copy(darkMode = v) } }
+        )
 
         SettingToggleRow(
             title = "Attiva aiuto 50/50 nelle domande a scelta multipla",
@@ -615,7 +621,7 @@ private fun ParentSettingsTab(
         )
 
         // Session length selector: Breve (4) / Standard (6) / Estesa (8)
-        Text("Lunghezza sfida", style = MaterialTheme.typography.titleMedium, color = InkPrimary)
+        Text("Lunghezza sfida", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             listOf(4 to "Breve (4)", 6 to "Standard (6)", 8 to "Estesa (8)").forEach { (len, label) ->
                 val selected = prefs.sessionLength == len
@@ -626,8 +632,8 @@ private fun ParentSettingsTab(
                         .heightIn(min = 48.dp)
                         .testTag("session_len_$len"),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (selected) DeepBlueAccent else CreamSurface,
-                        contentColor = if (selected) Color.White else InkPrimary
+                        containerColor = if (selected) DeepBlueAccent else MaterialTheme.colorScheme.surfaceVariant,
+                        contentColor = if (selected) IceWhiteText else MaterialTheme.colorScheme.onSurface
                     )
                 ) {
                     Text(label)
@@ -636,7 +642,7 @@ private fun ParentSettingsTab(
         }
 
         // Reading pause selector: Spenta (0s) / Breve (1s) / Media (2s)
-        Text("Pausa di lettura prima di rispondere", style = MaterialTheme.typography.titleMedium, color = InkPrimary)
+        Text("Pausa di lettura prima di rispondere", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             listOf(0f to "Spenta (0s)", 1f to "Breve (1s)", 2f to "Media (2s)").forEach { (sec, label) ->
                 val selected = kotlin.math.abs(prefs.readingPauseSec - sec) < 0.05f
@@ -647,8 +653,8 @@ private fun ParentSettingsTab(
                         .heightIn(min = 48.dp)
                         .testTag("reading_pause_${sec.toInt()}"),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (selected) DeepBlueAccent else CreamSurface,
-                        contentColor = if (selected) Color.White else InkPrimary
+                        containerColor = if (selected) DeepBlueAccent else MaterialTheme.colorScheme.surfaceVariant,
+                        contentColor = if (selected) IceWhiteText else MaterialTheme.colorScheme.onSurface
                     )
                 ) {
                     Text(label)
@@ -692,14 +698,14 @@ private fun ParentSettingsTab(
             onCheckedChange = { v -> viewModel.updateStudyPreferences { it.copy(showVirtualDpad = v) } }
         )
 
-        HorizontalDivider()
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
         // Locked GitHub Repository Status (configured at build level, not editable on device)
-        Text("Repository Pacchetti GitHub", style = MaterialTheme.typography.titleLarge, color = DeepBlueAccent)
+        Text("Repository Pacchetti GitHub", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
         Surface(
             shape = RoundedCornerShape(12.dp),
-            color = CreamSurface,
-            border = BorderStroke(2.dp, Color(0xFFCBD5E1))
+            color = MaterialTheme.colorScheme.surfaceVariant,
+            border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.outlineVariant)
         ) {
             Column(
                 modifier = Modifier
@@ -711,17 +717,17 @@ private fun ParentSettingsTab(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(Icons.Default.Lock, contentDescription = "Configurazione bloccata", tint = DeepBlueAccent)
+                    Icon(Icons.Default.Lock, contentDescription = "Configurazione bloccata", tint = MaterialTheme.colorScheme.primary)
                     Text(
                         text = "${PackManager.LOCKED_GITHUB_OWNER}/${PackManager.LOCKED_GITHUB_REPO}",
                         style = MaterialTheme.typography.titleMedium,
-                        color = InkPrimary
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
                 Text(
                     text = "Branch: ${PackManager.LOCKED_GITHUB_BRANCH} · Cartella: ${PackManager.LOCKED_GITHUB_BASE_PATH} (bloccato a livello di app)",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = InkSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
                     text = if (hasPatConfigured) {
@@ -730,7 +736,7 @@ private fun ParentSettingsTab(
                         "Autenticazione: Accesso pubblico (imposta GITHUB_PACKS_PAT nei Secrets se il repo è privato)"
                     },
                     style = MaterialTheme.typography.labelLarge,
-                    color = if (hasPatConfigured) EmeraldSuccess else InkSecondary
+                    color = if (hasPatConfigured) EmeraldSuccess else MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Button(
                     onClick = {
@@ -748,35 +754,35 @@ private fun ParentSettingsTab(
                     Text(if (uiState.isSyncing) "Connessione in corso..." else "Testa connessione")
                 }
                 ghTestMessage?.let { msg ->
-                    Text(msg, style = MaterialTheme.typography.bodyMedium, color = DeepBlueAccent)
+                    Text(msg, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
                 }
             }
         }
 
-        HorizontalDivider()
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
         // Audio Sliders
-        Text("Volume Audio", style = MaterialTheme.typography.titleLarge, color = DeepBlueAccent)
-        Text("Musica: ${(uiState.config.audio.musicVolume * 100).toInt()}%", style = MaterialTheme.typography.labelLarge)
+        Text("Volume Audio", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
+        Text("Musica: ${(uiState.config.audio.musicVolume * 100).toInt()}%", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurface)
         Slider(
             value = uiState.config.audio.musicVolume,
             onValueChange = { viewModel.setAudioVolumes(it, uiState.config.audio.sfxVolume) }
         )
-        Text("Effetti sonori: ${(uiState.config.audio.sfxVolume * 100).toInt()}%", style = MaterialTheme.typography.labelLarge)
+        Text("Effetti sonori: ${(uiState.config.audio.sfxVolume * 100).toInt()}%", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurface)
         Slider(
             value = uiState.config.audio.sfxVolume,
             onValueChange = { viewModel.setAudioVolumes(uiState.config.audio.musicVolume, it) }
         )
 
-        HorizontalDivider()
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
         // Profile Management & PIN Change & Double-Confirmed Reset
-        Text("Gestione Profili e Sicurezza", style = MaterialTheme.typography.titleLarge, color = DeepBlueAccent)
+        Text("Gestione Profili e Sicurezza", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
         uiState.profiles.forEach { prof ->
             val isActive = prof.profileId == uiState.activeProfile?.profileId
             Surface(
                 shape = RoundedCornerShape(10.dp),
-                color = if (isActive) Color(0xFFDBEAFE) else CreamSurface
+                color = if (isActive) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
             ) {
                 Row(
                     modifier = Modifier
@@ -785,7 +791,11 @@ private fun ParentSettingsTab(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("${prof.name} (${prof.stars} stelle)", style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        text = "${prof.name} (${prof.stars} stelle)",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = if (isActive) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
+                    )
                     if (!isActive) {
                         Button(onClick = { viewModel.switchProfile(prof.profileId) }) {
                             Text("Attiva")
@@ -888,7 +898,8 @@ private fun SettingToggleRow(
 ) {
     Surface(
         shape = RoundedCornerShape(10.dp),
-        color = CreamSurface
+        color = MaterialTheme.colorScheme.surfaceVariant,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
         Row(
             modifier = Modifier
@@ -898,8 +909,8 @@ private fun SettingToggleRow(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
-                Text(title, style = MaterialTheme.typography.titleMedium, color = InkPrimary)
-                Text(subtitle, style = MaterialTheme.typography.labelMedium, color = InkSecondary)
+                Text(title, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
+                Text(subtitle, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             Switch(
                 checked = checked,

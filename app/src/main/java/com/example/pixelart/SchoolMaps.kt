@@ -23,6 +23,14 @@ data class HubPortal(
     val action: PortalAction
 )
 
+data class HubInteractiveProp(
+    val id: String,
+    val label: String,
+    val subtitle: String,
+    val pos: GridPos,
+    val action: PortalAction
+)
+
 sealed interface PortalAction {
     data class GoToHub(val targetHubId: String, val targetSpawnId: String) : PortalAction
     data object OpenHistoryPicker : PortalAction
@@ -32,6 +40,8 @@ sealed interface PortalAction {
     data object OpenGeoPicker : PortalAction
     data object OpenEnglishPicker : PortalAction
     data object OpenLocker : PortalAction
+    data object OpenTrophyHall : PortalAction
+    data object OpenDailyMissions : PortalAction
     data class WipDoor(val roomName: String) : PortalAction
 }
 
@@ -42,7 +52,8 @@ data class SchoolMapData(
     val tiles: Array<Array<TileKind>>,
     val spawns: Map<String, GridPos>,
     val npcs: List<HubNpc>,
-    val portals: List<HubPortal>
+    val portals: List<HubPortal>,
+    val props: List<HubInteractiveProp> = emptyList()
 ) {
     fun tileAt(x: Int, y: Int): TileKind {
         if (x !in 0 until width || y !in 0 until height) return TileKind.TREE_BUSH
@@ -58,6 +69,7 @@ data class SchoolMapData(
 
     fun findNpcAt(pos: GridPos): HubNpc? = npcs.firstOrNull { it.pos == pos }
     fun findPortalAt(pos: GridPos): HubPortal? = portals.firstOrNull { it.pos == pos }
+    fun findPropAt(pos: GridPos): HubInteractiveProp? = props.firstOrNull { it.pos == pos }
 }
 
 object SchoolMaps {
@@ -239,13 +251,13 @@ object SchoolMaps {
 
         // North Wall props strictly BETWEEN the 3 wide-spaced North doors (x = 5, 13, 21)
         grid[1][2] = TileKind.WINDOW_INT
-        grid[1][9] = TileKind.NOTICE_BOARD
-        grid[1][17] = TileKind.NOTICE_BOARD
+        grid[1][9] = TileKind.WINDOW_INT
+        grid[1][17] = TileKind.WINDOW_INT
         grid[1][23] = TileKind.WINDOW_INT
 
         grid[2][2] = TileKind.LOCKER_PROP
-        grid[2][9] = TileKind.LOCKER_PROP
-        grid[2][17] = TileKind.LOCKER_PROP
+        grid[2][9] = TileKind.NOTICE_BOARD
+        grid[2][17] = TileKind.NOTICE_BOARD
         grid[2][23] = TileKind.LOCKER_PROP
 
         // Mid-West Wing (Palestra · Matematica) alcove: x = 1..5, y = 5..7
@@ -377,14 +389,60 @@ object SchoolMaps {
             "default" to GridPos(13, 10)
         )
 
+        val hallwayNpcs = listOf(
+            HubNpc(
+                id = "npc_janitor",
+                name = "Bidello Pippo",
+                label = "Bidello Pippo",
+                spriteId = "npc_janitor",
+                subjectFilter = "janitor",
+                pos = GridPos(8, 4),
+                returnSpawnId = "default"
+            ),
+            HubNpc(
+                id = "npc_classmate",
+                name = "Gaia",
+                label = "Compagna Gaia",
+                spriteId = "npc_classmate",
+                subjectFilter = "classmate",
+                pos = GridPos(18, 4),
+                returnSpawnId = "default"
+            )
+        )
+
+        val hallwayProps = listOf(
+            HubInteractiveProp(
+                id = "prop_trophy_case",
+                label = "Teca Trofei",
+                subtitle = "Medaglie",
+                pos = GridPos(13, 6),
+                action = PortalAction.OpenTrophyHall
+            ),
+            HubInteractiveProp(
+                id = "prop_missions_left",
+                label = "Missioni",
+                subtitle = "Premi Oggi",
+                pos = GridPos(9, 2),
+                action = PortalAction.OpenDailyMissions
+            ),
+            HubInteractiveProp(
+                id = "prop_missions_right",
+                label = "Missioni",
+                subtitle = "Premi Oggi",
+                pos = GridPos(17, 2),
+                action = PortalAction.OpenDailyMissions
+            )
+        )
+
         return SchoolMapData(
             id = "school_hallway",
             width = w,
             height = h,
             tiles = grid,
             spawns = spawns,
-            npcs = emptyList(),
-            portals = portals
+            npcs = hallwayNpcs,
+            portals = portals,
+            props = hallwayProps
         )
     }
 

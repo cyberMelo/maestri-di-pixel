@@ -75,6 +75,7 @@ import com.example.pixelart.Facing
 import com.example.pixelart.PixelArtAssets
 import com.example.ui.components.ConfirmModal
 import com.example.ui.components.ExplanationModal
+import com.example.ui.components.FloatingJuicePopup
 import com.example.ui.components.GbaCard
 import com.example.ui.components.PixelSprite
 import com.example.ui.components.ProgressStepper
@@ -149,6 +150,10 @@ fun GeoBalloonScreen(
     var helpsUsed by remember { mutableIntStateOf(0) }
     var rawAnswerStars by remember { mutableIntStateOf(0) }
     var milesFlown by remember { mutableIntStateOf(0) }
+    var geoCombo by remember { mutableIntStateOf(0) }
+    var juicePopupText by remember { mutableStateOf("") }
+    var juicePopupColor by remember { mutableStateOf(EmeraldSuccess) }
+    var juicePopupTrigger by remember { mutableIntStateOf(0) }
 
     var inputLocked by remember { mutableStateOf(false) }
     var readingPauseActive by remember { mutableStateOf(false) }
@@ -304,14 +309,19 @@ fun GeoBalloonScreen(
             if (opt.isCorrect) {
                 viewModel.audioManager.playSfx(SfxType.ANSWER_CORRECT)
                 milesFlown += 100
+                geoCombo++
                 feedbackGood = true
                 feedbackBanner = "Rotta perfetta! +100 km di volo!"
-                if (!isRetry) {
+                val gained = if (!isRetry) {
                     correctFirstTry++
-                    rawAnswerStars += GameBalance.STARS_PER_CORRECT + GameBalance.STARS_FIRST_TRY_BONUS
+                    GameBalance.STARS_PER_CORRECT + GameBalance.STARS_FIRST_TRY_BONUS
                 } else {
-                    rawAnswerStars += GameBalance.STARS_PER_CORRECT
+                    GameBalance.STARS_PER_CORRECT
                 }
+                rawAnswerStars += gained
+                juicePopupText = if (geoCombo >= 2) "COMBO x$geoCombo! +$gained ★" else "+$gained ★!"
+                juicePopupColor = if (geoCombo >= 3) Color(0xFFD97706) else EmeraldSuccess
+                juicePopupTrigger++
                 stepStates = stepStates.mapIndexed { idx, st ->
                     if (idx == item.stepIdx) StepDotState.COMPLETED else st
                 }
@@ -319,6 +329,7 @@ fun GeoBalloonScreen(
                 advanceOrFinish()
             } else {
                 viewModel.audioManager.playSfx(SfxType.ANSWER_WRONG)
+                geoCombo = 0
                 feedbackGood = false
                 feedbackBanner = "Vento contrario! Controlliamo la mappa!"
                 val canRetry = item.retryCount < GameBalance.MAX_RETRIES_PER_QUESTION
@@ -766,11 +777,22 @@ fun GeoBalloonScreen(
             )
         }
 
+        FloatingJuicePopup(
+            text = juicePopupText,
+            accentColor = juicePopupColor,
+            triggerId = juicePopupTrigger,
+            reducedMotion = prefs.reducedMotion,
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .padding(top = 86.dp)
+        )
+
         finalResult?.let { res ->
             ResultSummaryModal(
                 result = res,
                 packTitle = pack.title,
                 medalName = pack.medalName,
+                reducedMotion = prefs.reducedMotion,
                 onContinue = { viewModel.returnFromMinigame(config) }
             )
         }

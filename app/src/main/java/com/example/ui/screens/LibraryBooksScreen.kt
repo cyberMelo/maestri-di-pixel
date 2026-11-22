@@ -74,6 +74,7 @@ import com.example.pixelart.Facing
 import com.example.pixelart.PixelArtAssets
 import com.example.ui.components.ConfirmModal
 import com.example.ui.components.ExplanationModal
+import com.example.ui.components.FloatingJuicePopup
 import com.example.ui.components.GbaCard
 import com.example.ui.components.PixelSprite
 import com.example.ui.components.ProgressStepper
@@ -154,6 +155,10 @@ fun LibraryBooksScreen(
     var helpsUsed by remember { mutableIntStateOf(0) }
     var rawAnswerStars by remember { mutableIntStateOf(0) }
     var booksCaught by remember { mutableIntStateOf(0) }
+    var bookCombo by remember { mutableIntStateOf(0) }
+    var juicePopupText by remember { mutableStateOf("") }
+    var juicePopupColor by remember { mutableStateOf(EmeraldSuccess) }
+    var juicePopupTrigger by remember { mutableIntStateOf(0) }
 
     var inputLocked by remember { mutableStateOf(false) }
     var readingPauseActive by remember { mutableStateOf(false) }
@@ -310,12 +315,17 @@ fun LibraryBooksScreen(
             if (slot.isCorrect) {
                 viewModel.audioManager.playSfx(SfxType.ANSWER_CORRECT)
                 booksCaught++
-                if (!isRetry) {
+                bookCombo++
+                val gained = if (!isRetry) {
                     correctFirstTry++
-                    rawAnswerStars += GameBalance.STARS_PER_CORRECT + GameBalance.STARS_FIRST_TRY_BONUS
+                    GameBalance.STARS_PER_CORRECT + GameBalance.STARS_FIRST_TRY_BONUS
                 } else {
-                    rawAnswerStars += GameBalance.STARS_PER_CORRECT
+                    GameBalance.STARS_PER_CORRECT
                 }
+                rawAnswerStars += gained
+                juicePopupText = if (bookCombo >= 2) "COMBO x$bookCombo! +$gained ★" else "+$gained ★!"
+                juicePopupColor = if (bookCombo >= 3) Color(0xFFD97706) else EmeraldSuccess
+                juicePopupTrigger++
                 feedbackBanner = "Libro catturato! Risposta esatta!"
                 stepStates = stepStates.mapIndexed { idx, st ->
                     if (idx == item.stepIdx) StepDotState.COMPLETED else st
@@ -324,6 +334,7 @@ fun LibraryBooksScreen(
                 advanceOrFinish()
             } else {
                 viewModel.audioManager.playSfx(SfxType.ANSWER_WRONG)
+                bookCombo = 0
                 feedbackBanner = "Ops! Quel libro era un altro argomento!"
                 val canRetry = item.retryCount < GameBalance.MAX_RETRIES_PER_QUESTION
                 if (canRetry) {
@@ -791,11 +802,22 @@ fun LibraryBooksScreen(
             )
         }
 
+        FloatingJuicePopup(
+            text = juicePopupText,
+            accentColor = juicePopupColor,
+            triggerId = juicePopupTrigger,
+            reducedMotion = prefs.reducedMotion,
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .padding(top = 86.dp)
+        )
+
         finalResult?.let { res ->
             ResultSummaryModal(
                 result = res,
                 packTitle = pack.title,
                 medalName = pack.medalName,
+                reducedMotion = prefs.reducedMotion,
                 onContinue = { viewModel.returnFromMinigame(config) }
             )
         }

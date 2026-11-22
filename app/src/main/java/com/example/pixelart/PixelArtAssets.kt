@@ -74,10 +74,15 @@ object PixelArtAssets {
 
     private val spriteCache = mutableMapOf<String, ImageBitmap>()
 
-    fun getCharacterSprite(id: String, facing: Facing, stepFrame: Int): ImageBitmap {
+    fun getCharacterSprite(id: String, facing: Facing, stepFrame: Int, hatId: String = ""): ImageBitmap {
         val frame = stepFrame.mod(3) // 0=idle, 1=left, 2=right
-        val key = "char_${id}_${facing.row}_$frame"
-        return spriteCache.getOrPut(key) { generateCharacter(id, facing, frame) }
+        val key = "char_${id}_${facing.row}_${frame}_$hatId"
+        return spriteCache.getOrPut(key) { generateCharacter(id, facing, frame, hatId) }
+    }
+
+    fun getHatIcon(id: String): ImageBitmap {
+        val key = "hat_icon_$id"
+        return spriteCache.getOrPut(key) { generateHatIcon(id) }
     }
 
     fun getCompanionSprite(id: String, frame: Int): ImageBitmap {
@@ -468,7 +473,7 @@ object PixelArtAssets {
         val skin: Int
     )
 
-    private fun generateCharacter(id: String, facing: Facing, frame: Int): ImageBitmap = makeBitmap(16) { px, rect ->
+    private fun generateCharacter(id: String, facing: Facing, frame: Int, hatId: String = ""): ImageBitmap = makeBitmap(16) { px, rect ->
         val (hair, hairHi, shirt, shirtShade, accent, skin) = when (id) {
             "avatar_0" -> CharPalette(hex(0xFF5C3A21), hex(0xFF855635), hex(0xFF2563EB), hex(0xFF1D4ED8), hex(0xFFFBBF24), hex(0xFFFED7AA))
             "avatar_1" -> CharPalette(hex(0xFF92400E), hex(0xFFC26421), hex(0xFFDB2777), hex(0xFFBE185D), hex(0xFFFEF08A), hex(0xFFFDBA74))
@@ -481,6 +486,8 @@ object PixelArtAssets {
             "npc_geo" -> CharPalette(hex(0xFF78350F), hex(0xFFB45309), hex(0xFF0284C7), hex(0xFF0369A1), hex(0xFFFDE047), hex(0xFFFDBA74))
             "npc_english" -> CharPalette(hex(0xFFD97706), hex(0xFFFBBF24), hex(0xFF1D4ED8), hex(0xFF1E3A8A), hex(0xFFEF4444), hex(0xFFFEE2E2))
             "npc_boss" -> CharPalette(hex(0xFF312E81), hex(0xFF4F46E5), hex(0xFF7C3AED), hex(0xFF5B21B6), hex(0xFFFBBF24), hex(0xFFFED7AA))
+            "npc_janitor" -> CharPalette(hex(0xFF64748B), hex(0xFF94A3B8), hex(0xFF1D4ED8), hex(0xFF1E3A8A), hex(0xFF93C5FD), hex(0xFFFDBA74))
+            "npc_classmate" -> CharPalette(hex(0xFF7C2D12), hex(0xFFC2410C), hex(0xFF0D9488), hex(0xFF0F766E), hex(0xFFFDE047), hex(0xFFFED7AA))
             else -> CharPalette(hex(0xFF334155), hex(0xFF64748B), hex(0xFF0284C7), hex(0xFF0369A1), hex(0xFFFBBF24), hex(0xFFFED7AA))
         }
         val outline = hex(0xFF0F172A)
@@ -526,7 +533,7 @@ object PixelArtAssets {
             }
         }
 
-        // Role accessories
+        // Role accessories & wearable avatar hats
         if (id == "npc_boss") {
             // Golden 3-point crown
             rect(5, 0, 6, 2, hex(0xFFFBBF24))
@@ -534,6 +541,36 @@ object PixelArtAssets {
         } else if (id == "npc_math") {
             // Athletic headband
             rect(4, 2, 8, 1, hex(0xFFFEF08A))
+        } else if (id == "npc_janitor") {
+            // Friendly janitor blue cap
+            rect(4, 0, 8, 2, hex(0xFF1D4ED8))
+            rect(3, 2, 10, 1, hex(0xFF1E3A8A))
+            px(7, 1, hex(0xFFFDE047)); px(8, 1, hex(0xFFFDE047))
+        } else if (hatId.isNotBlank()) {
+            when (hatId) {
+                "hat_cap" -> {
+                    rect(4, 0, 8, 2, hex(0xFFDC2626))
+                    rect(5, 0, 4, 1, hex(0xFFEF4444))
+                    rect(3, 2, 10, 1, hex(0xFFB91C1C))
+                    px(7, 1, hex(0xFFFFFFFF)); px(8, 1, hex(0xFFFFFFFF))
+                }
+                "hat_wizard" -> {
+                    rect(7, 0, 2, 1, hex(0xFF7C3AED))
+                    rect(5, 1, 6, 1, hex(0xFF6D28D9))
+                    rect(3, 2, 10, 1, hex(0xFF4C1D95))
+                    px(7, 1, hex(0xFFFDE047)); px(8, 1, hex(0xFFFDE047))
+                }
+                "hat_astro" -> {
+                    rect(3, 0, 10, 3, hex(0xFFF8FAFC))
+                    rect(4, 1, 8, 2, hex(0xFF38BDF8))
+                    px(5, 1, hex(0xFFE0F2FE)); px(6, 1, hex(0xFFE0F2FE))
+                }
+                "hat_crown" -> {
+                    rect(4, 0, 8, 2, hex(0xFFF59E0B))
+                    px(4, 0, hex(0xFFFEF08A)); px(6, 0, hex(0xFF0F172A)); px(9, 0, hex(0xFF0F172A)); px(11, 0, hex(0xFFFEF08A))
+                    px(7, 1, hex(0xFFEF4444)); px(8, 1, hex(0xFFEF4444))
+                }
+            }
         }
 
         // Torso with 16-bit shoulder highlight & bottom shadow
@@ -587,6 +624,28 @@ object PixelArtAssets {
                 px(6, 7 + bob, outline); px(9, 7 + bob, outline)
                 rect(7, 9 + bob, 2, 1, outline)
             }
+            "pet_fox" -> {
+                // Cute orange pixel fox with fluffy white-tipped tail
+                rect(12, 8 + bob, 3, 4, hex(0xFFEA580C))
+                rect(13, 8 + bob, 2, 2, hex(0xFFFFFFFF))
+                rect(3, 4 + bob, 9, 9, outline)
+                rect(4, 5 + bob, 7, 7, hex(0xFFEA580C))
+                rect(4, 3 + bob, 2, 2, hex(0xFF9A3412)); rect(9, 3 + bob, 2, 2, hex(0xFF9A3412))
+                rect(5, 8 + bob, 5, 4, hex(0xFFFEF3C7))
+                px(5, 7 + bob, outline); px(9, 7 + bob, outline)
+                px(7, 9 + bob, outline)
+            }
+            "pet_dragon" -> {
+                // Emerald pixel dragon with golden horns & wings
+                rect(1, 6 + bob, 3, 4, hex(0xFF15803D)); rect(12, 6 + bob, 3, 4, hex(0xFF15803D))
+                rect(4, 2 + bob, 2, 2, hex(0xFFFBBF24)); rect(10, 2 + bob, 2, 2, hex(0xFFFBBF24))
+                rect(3, 3 + bob, 10, 10, outline)
+                rect(4, 4 + bob, 8, 8, hex(0xFF16A34A))
+                rect(5, 8 + bob, 6, 4, hex(0xFFFEF08A))
+                px(5, 6 + bob, hex(0xFFFEF08A)); px(6, 6 + bob, outline)
+                px(10, 6 + bob, hex(0xFFFEF08A)); px(9, 6 + bob, outline)
+                px(7, 8 + bob, hex(0xFFEF4444)); px(8, 8 + bob, hex(0xFFEF4444))
+            }
             else -> { // pet_robot
                 rect(7, 1 + bob, 2, 2, hex(0xFF38BDF8)); px(7, 1 + bob, hex(0xFFE0F2FE))
                 rect(3, 3 + bob, 10, 10, outline)
@@ -595,6 +654,43 @@ object PixelArtAssets {
                 rect(5, 5 + bob, 6, 4, outline)
                 rect(6, 6 + bob, 2, 2, hex(0xFF38BDF8)); rect(9, 6 + bob, 2, 2, hex(0xFF38BDF8))
                 rect(6, 10 + bob, 4, 1, hex(0xFF4ADE80))
+            }
+        }
+    }
+
+    private fun generateHatIcon(id: String): ImageBitmap = makeBitmap(16) { px, rect ->
+        val outline = hex(0xFF0F172A)
+        when (id) {
+            "hat_cap" -> {
+                rect(3, 5, 10, 6, outline)
+                rect(4, 6, 8, 4, hex(0xFFDC2626))
+                rect(5, 6, 4, 2, hex(0xFFEF4444))
+                rect(2, 10, 12, 2, hex(0xFFB91C1C))
+                rect(7, 7, 2, 2, hex(0xFFFFFFFF))
+            }
+            "hat_wizard" -> {
+                rect(7, 2, 2, 3, hex(0xFF7C3AED))
+                rect(5, 5, 6, 3, hex(0xFF6D28D9))
+                rect(4, 8, 8, 3, hex(0xFF5B21B6))
+                rect(2, 11, 12, 2, hex(0xFF4C1D95))
+                rect(7, 6, 2, 2, hex(0xFFFDE047))
+                rect(4, 10, 8, 1, hex(0xFFF59E0B))
+            }
+            "hat_astro" -> {
+                rect(2, 3, 12, 10, outline)
+                rect(3, 4, 10, 8, hex(0xFFF8FAFC))
+                rect(4, 5, 8, 5, hex(0xFF0284C7))
+                rect(5, 6, 6, 3, hex(0xFF38BDF8))
+                rect(5, 6, 2, 1, hex(0xFFE0F2FE))
+            }
+            else -> { // hat_crown
+                rect(2, 4, 12, 8, outline)
+                rect(3, 5, 2, 6, hex(0xFFF59E0B))
+                rect(7, 4, 2, 7, hex(0xFFFBBF24))
+                rect(11, 5, 2, 6, hex(0xFFF59E0B))
+                rect(3, 8, 10, 3, hex(0xFFF59E0B))
+                rect(4, 9, 8, 1, hex(0xFFFEF08A))
+                px(7, 8, hex(0xFFEF4444)); px(8, 8, hex(0xFFEF4444))
             }
         }
     }

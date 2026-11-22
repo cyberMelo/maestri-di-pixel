@@ -163,7 +163,8 @@ class SaveManager(private val rootDir: File) {
                 enable5050 = studyObj.optBoolean("enable_50_50", false),
                 showVirtualDpad = studyObj.optBoolean("show_virtual_dpad", true),
                 showGuidancePill = studyObj.optBoolean("show_guidance_pill", true),
-                autoTtsQuestions = studyObj.optBoolean("auto_tts_questions", false)
+                autoTtsQuestions = studyObj.optBoolean("auto_tts_questions", false),
+                darkMode = studyObj.optBoolean("dark_mode", true)
             ),
             priorityOverrides = prioMap,
             focusTopics = focusMap,
@@ -227,10 +228,12 @@ class SaveManager(private val rootDir: File) {
             avatarId = safeAvatar,
             stars = 0,
             equippedCompanion = "",
+            equippedHat = "",
             equippedFrame = "frame_classic",
             ownedItems = listOf("frame_classic"),
             lockerStickers = listOf("", "", "", "", "", ""),
             medals = emptyList(),
+            claimedMissionKeys = emptyList(),
             leitner = emptyMap(),
             recentSessions = emptyList()
         )
@@ -275,10 +278,12 @@ class SaveManager(private val rootDir: File) {
             avatarId = current.avatarId,
             stars = 0,
             equippedCompanion = "",
+            equippedHat = "",
             equippedFrame = "frame_classic",
             ownedItems = listOf("frame_classic"),
             lockerStickers = listOf("", "", "", "", "", ""),
             medals = emptyList(),
+            claimedMissionKeys = emptyList(),
             leitner = emptyMap(),
             recentSessions = emptyList()
         )
@@ -329,6 +334,7 @@ class SaveManager(private val rootDir: File) {
             put("show_virtual_dpad", cfg.studyPreferences.showVirtualDpad)
             put("show_guidance_pill", cfg.studyPreferences.showGuidancePill)
             put("auto_tts_questions", cfg.studyPreferences.autoTtsQuestions)
+            put("dark_mode", cfg.studyPreferences.darkMode)
         })
 
         val prioObj = JSONObject()
@@ -374,11 +380,13 @@ class SaveManager(private val rootDir: File) {
         root.put("avatar_id", p.avatarId)
         root.put("stars", p.stars)
         root.put("equipped_companion", p.equippedCompanion)
+        root.put("equipped_hat", p.equippedHat)
         root.put("equipped_frame", p.equippedFrame)
 
         root.put("owned_items", JSONArray().apply { p.ownedItems.forEach { put(it) } })
         root.put("locker_stickers", JSONArray().apply { p.lockerStickers.forEach { put(it) } })
         root.put("medals", JSONArray().apply { p.medals.forEach { put(it) } })
+        root.put("claimed_mission_keys", JSONArray().apply { p.claimedMissionKeys.takeLast(30).forEach { put(it) } })
 
         val leitnerObj = JSONObject()
         p.leitner.forEach { (qId, rec) ->
@@ -472,6 +480,15 @@ class SaveManager(private val rootDir: File) {
             }
         }
 
+        val claimedMissions = mutableListOf<String>()
+        val cmArr = obj.optJSONArray("claimed_mission_keys")
+        if (cmArr != null) {
+            for (i in 0 until cmArr.length()) {
+                val key = cmArr.optString(i, "")
+                if (key.isNotBlank()) claimedMissions.add(key)
+            }
+        }
+
         return ProfileData(
             schemaVersion = 1,
             profileId = obj.optString("profile_id", fallbackId).ifBlank { fallbackId },
@@ -479,10 +496,12 @@ class SaveManager(private val rootDir: File) {
             avatarId = obj.optInt("avatar_id", 0).coerceIn(0, 3),
             stars = obj.optInt("stars", 0).coerceAtLeast(0),
             equippedCompanion = obj.optString("equipped_companion", ""),
+            equippedHat = obj.optString("equipped_hat", ""),
             equippedFrame = obj.optString("equipped_frame", "frame_classic").ifBlank { "frame_classic" },
             ownedItems = owned.distinct(),
             lockerStickers = stickers.take(6),
             medals = medals.distinct(),
+            claimedMissionKeys = claimedMissions.distinct().takeLast(30),
             leitner = leitnerMap,
             recentSessions = sessions.takeLast(GameBalance.MAX_RECENT_SESSIONS)
         )
