@@ -63,6 +63,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -394,6 +395,8 @@ fun HubScreen(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
+                // Il Canvas disegna una riga di margine fuori vista: senza ritaglio coprirebbe la barra HUD
+                .clipToBounds()
                 .background(if (isDark) HudNightBg else Color(0xFF1E293B))
         ) {
             val density = LocalDensity.current
