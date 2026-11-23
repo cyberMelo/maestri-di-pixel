@@ -1415,6 +1415,7 @@ fun GymRhythmScreen(
                 packTitle = pack.title,
                 medalName = pack.medalName,
                 reducedMotion = prefs.reducedMotion,
+                collection = { RocketFuelPanel(collected = stageCorrect.coerceAtMost(initialDeck.size), total = initialDeck.size) },
                 onContinue = { viewModel.returnFromMinigame(config) }
             )
         }

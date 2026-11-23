@@ -673,6 +673,7 @@ fun EnglishMatchScreen(
                 packTitle = pack.title,
                 medalName = pack.medalName,
                 reducedMotion = prefs.reducedMotion,
+                collection = { ChalkboardPanel(title = "Parole imparate oggi", words = learnedWords) },
                 onContinue = { viewModel.returnFromMinigame(config) }
             )
         }

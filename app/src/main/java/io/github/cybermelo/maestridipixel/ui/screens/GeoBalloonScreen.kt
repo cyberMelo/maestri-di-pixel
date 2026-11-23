@@ -1,5 +1,7 @@
 package io.github.cybermelo.maestridipixel.ui.screens
 
+import kotlin.math.roundToInt
+import io.github.cybermelo.maestridipixel.ui.components.drawPanorama
 import io.github.cybermelo.maestridipixel.ui.components.stageHeight
 import io.github.cybermelo.maestridipixel.ui.components.JourneyPanel
 import io.github.cybermelo.maestridipixel.ui.components.TeacherMood
@@ -596,31 +598,11 @@ fun GeoBalloonScreen(
                     drawCircle(Color(0x44FEF08A), radius = 38f, center = Offset(w * 0.12f, h * 0.16f))
                     drawCircle(Color(0xFFFDE047), radius = 22f, center = Offset(w * 0.12f, h * 0.16f))
 
-                    // Parallax snow-capped pixel Alps silhouettes along bottom
-                    val mountainShift = (skyScroll * 28f) % (w * 0.4f).coerceAtLeast(1f)
-                    for (m in -1..4) {
-                        val baseX = m * (w * 0.28f) - mountainShift
-                        val peakH = h * (0.28f + (m.mod(2)) * 0.08f)
-                        val mPath = Path().apply {
-                            moveTo(baseX, h)
-                            lineTo(baseX + w * 0.15f, h - peakH)
-                            lineTo(baseX + w * 0.30f, h)
-                            close()
-                        }
-                        drawPath(mPath, color = Color(0xFF0F766E).copy(alpha = 0.55f))
-                        // Snow cap
-                        val snowPath = Path().apply {
-                            moveTo(baseX + w * 0.15f, h - peakH)
-                            lineTo(baseX + w * 0.11f, h - peakH * 0.72f)
-                            lineTo(baseX + w * 0.19f, h - peakH * 0.72f)
-                            close()
-                        }
-                        drawPath(snowPath, color = Color(0xFFF8FAFC).copy(alpha = 0.78f))
+                    // Alpi, colline con cipressi e mare in pixel art, che scorrono con il volo
+                    PixelArtAssets.getRoomBackground("arena_geo")?.let { pano ->
+                        val s = ((h * 0.5f) / pano.height).roundToInt().coerceAtLeast(1)
+                        drawPanorama(pano, s, top = h - pano.height * s, scrollPx = skyScroll * 28f)
                     }
-
-                    // Sparkling Mediterranean wave band at very bottom
-                    drawRect(Color(0xFF0369A1), Offset(0f, h - 14f), Size(w, 14f))
-                    drawRect(Color(0xFF7DD3FC), Offset(0f, h - 14f), Size(w, 3f))
 
                     // Draw numbered Cloud-Gates on right half
                     val laneCount = cloudOptions.size.coerceAtLeast(2)
@@ -815,6 +797,7 @@ fun GeoBalloonScreen(
                 packTitle = pack.title,
                 medalName = pack.medalName,
                 reducedMotion = prefs.reducedMotion,
+                collection = { JourneyPanel(collected = stageCorrect.coerceAtMost(initialQuestions.size), total = initialQuestions.size) },
                 onContinue = { viewModel.returnFromMinigame(config) }
             )
         }

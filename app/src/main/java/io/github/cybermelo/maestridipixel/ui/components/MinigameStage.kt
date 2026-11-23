@@ -482,3 +482,33 @@ private fun StageCard(title: String, modifier: Modifier, content: @Composable Bo
 
 /** Altezza consigliata del palco: ~30% dello schermo, mai sotto 150 dp né sopra [max]. */
 fun stageHeight(screenHeight: Dp, max: Dp = 260.dp): Dp = (screenHeight * 0.30f).coerceIn(150.dp, max)
+
+/**
+ * Disegna un panorama delle aree di gioco (sprites/rooms/arena_*.png) ingrandito di [scale],
+ * ripetuto in orizzontale (e in verticale con [repeatY]) e spostato di [scrollPx] per la parallasse.
+ */
+fun DrawScope.drawPanorama(
+    image: androidx.compose.ui.graphics.ImageBitmap,
+    scale: Int,
+    top: Float,
+    scrollPx: Float = 0f,
+    repeatY: Boolean = false
+) {
+    val tileW = image.width * scale
+    val tileH = image.height * scale
+    val startX = -(((scrollPx % tileW) + tileW) % tileW)
+    var y = top
+    do {
+        var x = startX
+        while (x < size.width) {
+            drawImage(
+                image = image,
+                dstOffset = IntOffset(x.roundToInt(), y.roundToInt()),
+                dstSize = IntSize(tileW, tileH),
+                filterQuality = FilterQuality.None
+            )
+            x += tileW
+        }
+        y += tileH
+    } while (repeatY && y < size.height)
+}

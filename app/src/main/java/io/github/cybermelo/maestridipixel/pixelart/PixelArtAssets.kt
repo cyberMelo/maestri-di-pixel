@@ -3,6 +3,7 @@ package io.github.cybermelo.maestridipixel.pixelart
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 
 /** Tipo di piastrella della griglia logica; [symbol] è il carattere usato in resources/maps/<id>.txt. */
@@ -175,10 +176,26 @@ object PixelArtAssets {
         }
     }
 
+    /**
+     * Mascotte 32x32 (due fotogrammi di camminata): dai fogli LPC in sprites/pets quando ci sono
+     * (gatto, cane, volpe, uccellino), altrimenti il disegno a 16 px raddoppiato (drago, robot).
+     */
     fun getCompanionSprite(id: String, frame: Int): ImageBitmap {
         val f = frame.mod(2)
         val key = "pet_${id}_$f"
-        return spriteCache.getOrPut(key) { generateCompanion(id, f) }
+        return spriteCache.getOrPut(key) {
+            val out = Bitmap.createBitmap(TILE_PX, TILE_PX, Bitmap.Config.ARGB_8888)
+            val canvas = android.graphics.Canvas(out)
+            val dst = android.graphics.Rect(0, 0, TILE_PX, TILE_PX)
+            val lpc = sheet("pets/$id.png")
+            if (lpc != null) {
+                canvas.drawBitmap(lpc, android.graphics.Rect(f * TILE_PX, 0, (f + 1) * TILE_PX, TILE_PX), dst, null)
+            } else {
+                val small = generateCompanion(id, f).asAndroidBitmap()
+                canvas.drawBitmap(small, null, dst, android.graphics.Paint().apply { isFilterBitmap = false })
+            }
+            out.asImageBitmap()
+        }
     }
 
     fun getStickerIcon(id: String): ImageBitmap {

@@ -435,7 +435,7 @@ private fun MyLockerTab(
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(58.dp)
+                            .size(124.dp)
                             .clip(RoundedCornerShape(10.dp))
                             .background(MaterialTheme.colorScheme.primaryContainer)
                             .border(2.dp, frameCol, RoundedCornerShape(10.dp)),
@@ -449,13 +449,13 @@ private fun MyLockerTab(
                                 hatId = profile.equippedHat
                             ),
                             contentDescription = "Anteprima avatar",
-                            modifier = Modifier.size(46.dp)
+                            modifier = Modifier.size(116.dp)
                         )
                     }
                     if (profile.equippedCompanion.isNotBlank()) {
                         Box(
                             modifier = Modifier
-                                .size(50.dp)
+                                .size(84.dp)
                                 .clip(RoundedCornerShape(10.dp))
                                 .background(MaterialTheme.colorScheme.secondaryContainer)
                                 .border(2.dp, SoftGold, RoundedCornerShape(10.dp)),
@@ -464,7 +464,7 @@ private fun MyLockerTab(
                             PixelSprite(
                                 bitmap = PixelArtAssets.getCompanionSprite(profile.equippedCompanion, 0),
                                 contentDescription = "Mascotte attiva",
-                                modifier = Modifier.size(38.dp)
+                                modifier = Modifier.size(77.dp)
                             )
                         }
                     }

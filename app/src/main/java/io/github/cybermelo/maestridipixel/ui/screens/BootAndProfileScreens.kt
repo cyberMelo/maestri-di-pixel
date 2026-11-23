@@ -349,7 +349,7 @@ private fun ProfileFormContent(
                     PixelSprite(
                         bitmap = PixelArtAssets.getCharacterSprite("avatar_$id", Facing.DOWN, frame),
                         contentDescription = "Avatar ${avatarNames[id]}",
-                        modifier = Modifier.size(if (compact) 46.dp else 52.dp)
+                        modifier = Modifier.size(if (compact) 77.dp else 116.dp)
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(

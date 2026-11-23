@@ -1,5 +1,7 @@
 package io.github.cybermelo.maestridipixel.ui.screens
 
+import kotlin.math.roundToInt
+import io.github.cybermelo.maestridipixel.ui.components.drawPanorama
 import io.github.cybermelo.maestridipixel.ui.components.stageHeight
 import io.github.cybermelo.maestridipixel.ui.components.BookshelfPanel
 import io.github.cybermelo.maestridipixel.ui.components.TeacherMood
@@ -594,34 +596,14 @@ fun LibraryBooksScreen(
                     val w = size.width
                     val h = size.height
 
-                    // Warm sunlit oak library backdrop
-                    drawRect(
-                        brush = Brush.verticalGradient(
-                            listOf(Color(0xFF3B1D5E), Color(0xFF581C87), Color(0xFF451A03))
-                        )
-                    )
-
-                    // Background wooden bookshelves
-                    val shelfCount = 3
-                    for (s in 0 until shelfCount) {
-                        val sy = h * (0.24f + s * 0.28f)
-                        drawRect(Color(0xFF78350F), Offset(0f, sy), Size(w, 8f))
-                        drawRect(Color(0xFFB45309), Offset(0f, sy), Size(w, 3f))
-                        // Decorative background book spines
-                        val spineColors = listOf(Color(0xFF9333EA), Color(0xFF2563EB), Color(0xFF059669), Color(0xFFD97706), Color(0xFFDC2626))
-                        var bx = 14f
-                        var bIdx = s * 7
-                        while (bx < w - 20f) {
-                            val bw = 12f + (bIdx % 3) * 4f
-                            val bh = 20f + (bIdx % 4) * 5f
-                            drawRect(
-                                color = spineColors[bIdx % spineColors.size].copy(alpha = 0.28f),
-                                topLeft = Offset(bx, sy - bh),
-                                size = Size(bw, bh)
-                            )
-                            bx += bw + 6f
-                            bIdx++
-                        }
+                    // Parete di librerie LPC, velata perché i libri in volo risaltino
+                    val shelves = PixelArtAssets.getRoomBackground("arena_library")
+                    if (shelves != null) {
+                        val s = ((h * 0.34f) / shelves.height * 3f).roundToInt().coerceIn(1, 3)
+                        drawPanorama(shelves, s, top = 0f, repeatY = true)
+                        drawRect(Color(0x8C2E1065))
+                    } else {
+                        drawRect(Color(0xFF3B1D5E))
                     }
 
                     // Floating golden dust motes
@@ -840,6 +822,7 @@ fun LibraryBooksScreen(
                 packTitle = pack.title,
                 medalName = pack.medalName,
                 reducedMotion = prefs.reducedMotion,
+                collection = { BookshelfPanel(collected = stageCorrect.coerceAtMost(initialQuestions.size), total = initialQuestions.size) },
                 onContinue = { viewModel.returnFromMinigame(config) }
             )
         }

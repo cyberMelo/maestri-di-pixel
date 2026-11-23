@@ -406,6 +406,83 @@ def bake_room(sh: Sheets, room_id: str) -> Image.Image:
     return img
 
 
+PANO_W = 960  # panorami delle aree di gioco: si ripetono in orizzontale senza giunture
+
+
+def bake_arena_meadow(sh: Sheets) -> Image.Image:
+    """Prato della Catapulta: alberi LPC con la base sulla riga 128 (linea del terreno), erba sotto."""
+    img = Image.new("RGBA", (PANO_W, 7 * T))
+    rnd = random.Random(11)
+    grass = [sh.tile("terrain", 22, 3)] * 5 + [sh.tile("terrain", c, 5) for c in (21, 22, 23)]
+    flowers = [sh.tile("flowers", c, r) for c, r in ((1, 0), (1, 2), (5, 1), (7, 1))]
+    for y in range(4, 7):
+        for x in range(PANO_W // T):
+            tile = rnd.choice(flowers) if (y == 4 and rnd.random() < 0.12) else rnd.choice(grass)
+            img.alpha_composite(tile, (x * T, y * T))
+    trees = [make_tree(sh, 12), make_tree(sh, 15)]
+    for i, x in enumerate(range(0, PANO_W, 120)):
+        tree = trees[(i * 3) % 5 == 0]
+        top = 4 * T - tree.height + 10
+        left = x + 40 - tree.width // 2
+        # Gli alberi a cavallo del bordo ricompaiono dall'altro lato: ripetizione senza giunture
+        for dx in (0, -PANO_W, PANO_W):
+            if -tree.width < left + dx < PANO_W:
+                img.alpha_composite(tree, (left + dx, top))
+    return img
+
+
+def bake_arena_library(sh: Sheets) -> Image.Image:
+    """Parete di librerie per la Biblioteca: si ripete in orizzontale e in verticale."""
+    img = Image.new("RGBA", (PANO_W, 6 * T), (74, 44, 30, 255))
+    shelf = sh.tile("house", 1, 6, 1, 2)
+    for row in range(3):
+        for x in range(PANO_W // T):
+            img.alpha_composite(shelf, (x * T, row * 2 * T))
+    return img
+
+
+def bake_arena_geo() -> Image.Image:
+    """Panorama della Mongolfiera: Alpi innevate su due piani, colline con cipressi e mare.
+    Disegnato a metà risoluzione e ingrandito x2, per pixel coerenti con le piastrelle."""
+    import math
+    w, h = PANO_W // 2, 112
+    img = Image.new("RGBA", (w, h))
+    d = ImageDraw.Draw(img)
+
+    def ridge(base, amps, phase):
+        # Somma di seni con frequenze intere: periodica su w, quindi ripetibile senza giunture
+        return [int(base - sum(a * abs(math.sin(math.pi * k * x / w + phase * k)) for k, a in amps)) for x in range(w)]
+
+    far = ridge(70, [(2, 22), (5, 9), (11, 4)], 0.3)
+    near = ridge(84, [(3, 14), (7, 6), (13, 3)], 1.1)
+    hills = ridge(96, [(4, 5), (9, 2)], 0.7)
+    for x in range(w):
+        y0 = far[x] // 2 * 2
+        d.line([(x, y0), (x, h)], fill=(122, 146, 186, 255))
+        if y0 < 46:
+            d.line([(x, y0), (x, min(h, y0 + 2 + (46 - y0) // 2))], fill=(240, 246, 252, 255))
+        y1 = near[x] // 2 * 2
+        d.line([(x, y1), (x, h)], fill=(84, 120, 150, 255))
+        if y1 < 62:
+            d.line([(x, y1), (x, y1 + 2)], fill=(226, 236, 246, 255))
+        y2 = hills[x]
+        d.line([(x, y2), (x, h)], fill=(74, 150, 74, 255))
+        d.point((x, y2), fill=(110, 186, 96, 255))
+    # Cipressi sulle colline (posizioni periodiche)
+    for i, cx in enumerate(range(6, w, 23)):
+        base = hills[cx % w]
+        th = 12 + (i * 7) % 6
+        for yy in range(th):
+            half = max(1, int(2.5 * math.sin(math.pi * (yy + 1) / (th + 1))))
+            d.line([((cx - half) % w, base - yy), ((cx + half) % w, base - yy)], fill=(24, 82, 48, 255))
+        d.line([(cx, base - th + 2), (cx, base - 2)], fill=(40, 110, 64, 255))
+    # Mare con onde
+    d.rectangle((0, h - 10, w, h), fill=(30, 110, 180, 255))
+    for x in range(0, w, 6):
+        d.line([(x, h - 10 + (x // 6) % 3), (x + 3, h - 10 + (x // 6) % 3)], fill=(150, 210, 250, 255))
+    return img.resize((PANO_W, h * 2), Image.NEAREST)
+
+
 def write_credits(src: Path, out: Path):
     """Raccoglie le attribuzioni dei pacchetti usati: le licenze CC-BY-SA / GPL / OGA-BY le richiedono."""
     parts = ["Sfondi del Cortile e dell'Atrio composti da tools/art/build_maps.py con piastrelle LPC.",
@@ -433,6 +510,10 @@ def main():
     for room_id in ("english", "library", "lab"):
         bake_room(sh, room_id).save(rooms / f"{room_id}.png", optimize=True)
         print("aula", room_id)
+    for name, img in (("arena_meadow", bake_arena_meadow(sh)), ("arena_library", bake_arena_library(sh)),
+                      ("arena_geo", bake_arena_geo())):
+        img.save(rooms / f"{name}.png", optimize=True)
+        print("area di gioco", name)
     write_credits(src, res / "sprites" / "CREDITS-maps.txt")
 
 

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "items": [
-    {"id": "pet_owl", "category": "companion", "name": "Gufo Saggio", "price": 80, "icon": "pet_owl"},
+    {"id": "pet_owl", "category": "companion", "name": "Passerotto Saggio", "price": 80, "icon": "pet_owl"},
     {"id": "pet_cat", "category": "companion", "name": "Micio Pixel", "price": 100, "icon": "pet_cat"},
     {"id": "pet_dog", "category": "companion", "name": "Cagnolino Lampo", "price": 120, "icon": "pet_dog"},
     {"id": "pet_fox", "category": "companion", "name": "Volpina Sprint", "price": 140, "icon": "pet_fox"},

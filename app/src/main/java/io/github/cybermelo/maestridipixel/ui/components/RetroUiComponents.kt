@@ -279,7 +279,7 @@ fun DialogBoxModal(
                 if (speakerSpriteId != null) {
                     Box(
                         modifier = Modifier
-                            .size(64.dp)
+                            .size(84.dp)
                             .clip(RoundedCornerShape(10.dp))
                             .background(MaterialTheme.colorScheme.surfaceVariant)
                             .border(2.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(10.dp)),
@@ -288,7 +288,7 @@ fun DialogBoxModal(
                         PixelSprite(
                             bitmap = PixelArtAssets.getCharacterSprite(speakerSpriteId, Facing.DOWN, 0),
                             contentDescription = title,
-                            modifier = Modifier.size(48.dp)
+                            modifier = Modifier.size(77.dp)
                         )
                     }
                 }
@@ -491,6 +491,7 @@ fun ResultSummaryModal(
     packTitle: String,
     medalName: String,
     reducedMotion: Boolean = false,
+    collection: (@Composable () -> Unit)? = null,
     onContinue: () -> Unit
 ) {
     val starsAnim = remember(result.starsEarned) { Animatable(0f) }
@@ -542,6 +543,11 @@ fun ResultSummaryModal(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(Modifier.height(14.dp))
+            // La collezione costruita in questa sessione (lavagna, scaffale, piantina...)
+            if (collection != null) {
+                Box(modifier = Modifier.fillMaxWidth().height(170.dp)) { collection() }
+                Spacer(Modifier.height(14.dp))
+            }
 
             Row(
                 modifier = Modifier.fillMaxWidth(),

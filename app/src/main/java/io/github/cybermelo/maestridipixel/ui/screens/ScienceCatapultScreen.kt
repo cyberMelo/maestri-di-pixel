@@ -1,5 +1,8 @@
 package io.github.cybermelo.maestridipixel.ui.screens
 
+import kotlin.math.roundToInt
+import io.github.cybermelo.maestridipixel.pixelart.PixelArtAssets
+import io.github.cybermelo.maestridipixel.ui.components.drawPanorama
 import io.github.cybermelo.maestridipixel.ui.components.stageHeight
 import io.github.cybermelo.maestridipixel.ui.components.PlantGrowthPanel
 import io.github.cybermelo.maestridipixel.ui.components.TeacherMood
@@ -999,23 +1002,17 @@ fun ScienceCatapultScreen(
                             drawRoundRect(Color.White.copy(alpha = 0.92f), Offset(cx - 16f, cy - 10f), Size(34f, 14f), CornerRadius(7f, 7f))
                         }
 
-                        // Distant rolling pixel hills + tiny school laboratory observatory silhouette
+                        // Prato con alberi LPC: la riga 128 del panorama è la linea del terreno
                         val gY = GROUND_Y * h
-                        drawCircle(Color(0xFF86EFAC), radius = w * 0.28f, center = Offset(w * 0.20f, gY + w * 0.12f))
-                        drawCircle(Color(0xFF4ADE80), radius = w * 0.34f, center = Offset(w * 0.74f, gY + w * 0.15f))
-                        // Cozy lab dome silhouette on horizon
-                        val labX = w * 0.34f
-                        val labBaseY = gY - h * 0.02f
-                        drawRect(Color(0xFF94A3B8).copy(alpha = 0.65f), Offset(labX - 18f, labBaseY - 22f), Size(36f, 22f))
-                        drawCircle(Color(0xFFE2E8F0).copy(alpha = 0.72f), radius = 14f, center = Offset(labX, labBaseY - 22f))
-                        drawRect(Color(0xFF38BDF8).copy(alpha = 0.75f), Offset(labX - 6f, labBaseY - 14f), Size(12f, 8f))
-
-                        // Grass & layered soil ground strip with tiny wildflowers
-                        drawRect(Color(0xFF22C55E), Offset(0f, gY), Size(w, h * 0.042f))
-                        drawRect(Color(0xFF16A34A), Offset(0f, gY + h * 0.032f), Size(w, h * 0.015f))
-                        drawRect(Color(0xFF92400E), Offset(0f, gY + h * 0.045f), Size(w, h - gY))
-                        for (fx in listOf(0.08f, 0.27f, 0.44f, 0.68f, 0.91f)) {
-                            drawCircle(Color(0xFFFEF08A), radius = 3f, center = Offset(w * fx, gY + 3f))
+                        val meadow = PixelArtAssets.getRoomBackground("arena_meadow")
+                        if (meadow != null) {
+                            val s = ((h * 0.18f) / 128f).toInt().coerceAtLeast(1) // alberi bassi: non coprono fionda e bersagli
+                            val top = gY - 128f * s
+                            drawPanorama(meadow, s, top = top)
+                            val bottom = top + meadow.height * s
+                            if (bottom < h) drawRect(Color(0xFF92400E), Offset(0f, bottom), Size(w, h - bottom))
+                        } else {
+                            drawRect(Color(0xFF22C55E), Offset(0f, gY), Size(w, h - gY))
                         }
 
                         // Slingshot Back Fork with wood highlight
@@ -1294,6 +1291,7 @@ fun ScienceCatapultScreen(
                 packTitle = pack.title,
                 medalName = pack.medalName,
                 reducedMotion = prefs.reducedMotion,
+                collection = { PlantGrowthPanel(collected = stageCorrect.coerceAtMost(initialDeck.size), total = initialDeck.size) },
                 onContinue = { viewModel.returnFromMinigame(config) }
             )
         }

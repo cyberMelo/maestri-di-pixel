@@ -29,12 +29,22 @@
 | Sfida nel Cortile (Storia) | Palestra Spaziale (Matematica) |
 | :---: | :---: |
 | ![Sfida nel Cortile](docs/screenshots/battaglia.jpg) | ![Palestra Spaziale](docs/screenshots/palestra.jpg) |
-| *Battaglia a turni sullo sfondo del cortile, con indizi e lettura ad alta voce.* | *Arcade per tabelline e calcoli, con tastierino opzionale.* |
+| *Battaglia a turni sullo sfondo del cortile, con indizi e lettura ad alta voce.* | *Coach Pitagora, alieni delle tabelline e il razzo che fa il pieno.* |
 
-| Biblioteca Magica (Italiano) |
+| Aula di Inglese | Biblioteca Magica (Italiano) |
+| :---: | :---: |
+| ![Aula di Inglese](docs/screenshots/inglese.jpg) | ![Biblioteca Magica](docs/screenshots/biblioteca.jpg) |
+| *Teacher Emma, flashcard che si girano e la lavagna delle parole imparate.* | *Libri in volo tra le librerie; lo scaffale si riempie a ogni risposta giusta.* |
+
+| Catapulta (Scienze) | Mongolfiera (Geografia) |
+| :---: | :---: |
+| ![Catapulta di Scienze](docs/screenshots/catapulta.jpg) | ![Mongolfiera](docs/screenshots/mongolfiera.jpg) |
+| *Maestra Flora nel laboratorio e una piantina che cresce con le risposte giuste.* | *Volo sopra Alpi e mare, con la rotta da Milano a Palermo.* |
+
+| Fine sessione |
 | :---: |
-| ![Biblioteca Magica](docs/screenshots/biblioteca.jpg) |
-| *Caccia al libro giusto tra gli scaffali per ortografia e grammatica.* |
+| ![Riepilogo di fine sessione](docs/screenshots/riepilogo.jpg) |
+| *Stelle vinte, padronanza e la collezione costruita durante la sfida.* |
 
 ---
 
