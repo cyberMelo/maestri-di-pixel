@@ -599,6 +599,54 @@ class ScuolaRetroTestSuite {
         }
     }
 
+    // Group 12: ID domanda unici tra pacchetti diversi (i progressi Leitner sono indicizzati per ID)
+    @Test
+    fun test12_questionIdsMustBeUniqueAcrossPacks() {
+        fun packJson(packId: String, firstQuestionId: String): String {
+            val questions = JSONArray()
+            for (i in 0 until 5) {
+                questions.put(
+                    JSONObject()
+                        .put("id", if (i == 0) firstQuestionId else "${packId}_q$i")
+                        .put("type", "true_false")
+                        .put("difficulty", 1)
+                        .put("prompt", "Domanda di prova numero $i?")
+                        .put("correct_bool", true)
+                        .put("explanation", "Spiegazione di prova.")
+                )
+            }
+            return JSONObject()
+                .put("schema_version", 1).put("pack_id", packId).put("subject", "storia")
+                .put("grade", 4).put("title", "Pacchetto $packId").put("version", 1)
+                .put("boss_name", "Boss").put("boss_title", "Titolo")
+                .put("medal_name", "Medaglia").put("medal_icon", "medal_history")
+                .put("questions", questions)
+                .toString()
+        }
+
+        // Import locale con ID già usato da un pacchetto incluso: rifiutato e non salvato
+        val clash = packManager.importPackFromJsonText(packJson("storia_prova", "sto_egizi_001"), "prova.json")
+        assertFalse(clash.isValid)
+        assertTrue(clash.errors.any { it.contains("sto_egizi_001") && it.contains("storia_egizi") })
+        assertFalse(File(packManager.localDir, "storia_prova.json").exists())
+
+        // Ricaricare lo stesso pack_id (es. versione aggiornata) non è una collisione
+        assertTrue(packManager.importPackFromJsonText(packJson("storia_egizi", "sto_egizi_001"), "egizi.json").isValid)
+
+        // File in conflitto già presente su disco: scartato al caricamento con avviso
+        File(packManager.localDir, "storia_zzz.json").writeText(packJson("storia_zzz", "sto_egizi_001"))
+        packManager.reloadPacks()
+        assertTrue(packManager.getPack("storia_zzz") == null)
+        assertNotNull(packManager.getPack("storia_egizi"))
+        assertTrue(packManager.loadWarnings.any { it.startsWith("storia_zzz") })
+
+        // URL della cartella remota per leggere le impronte (SHA) dei file
+        assertEquals(
+            "https://api.github.com/repos/user/repo/contents/packs?ref=main",
+            PackManager.buildGithubContentsUrl("user", "repo", "main", "packs", "")
+        )
+    }
+
     private fun locateProjectRoot(): File {
         var dir = File(System.getProperty("user.dir") ?: ".").absoluteFile
         repeat(4) {

@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Validatore CLI per i pacchetti JSON di Maestri di Pixel (schema_version = 1)."""
+"""Validatore CLI per i pacchetti JSON di Maestri di Pixel (schema_version = 1).
+
+Uso:
+  python3 validate_pack.py packs/nuovo_capitolo.json   # controlla un solo pacchetto
+  python3 validate_pack.py --all [cartella_packs]      # controlla manifest + tutti i pacchetti insieme
+"""
 import json
 import re
 import sys
@@ -10,6 +15,7 @@ ALLOWED_TYPES = {"multiple_choice", "true_false", "numeric_input", "classificati
 ALLOWED_TEMPLATES = {"multiplication_table", "mental_add_sub", "unit_conversion"}
 PACK_ID_RE = re.compile(r"^[a-z0-9_]{3,48}$")
 Q_ID_RE = re.compile(r"^[a-z0-9_]{3,64}$")
+MANIFEST_FILE_RE = re.compile(r"^[a-zA-Z0-9_\-/]+\.json$")
 
 
 def strip_markers(text: str) -> str:
@@ -20,18 +26,17 @@ def is_whole_int(val) -> bool:
     return isinstance(val, int) and not isinstance(val, bool)
 
 
-def validate_pack(path: Path) -> int:
+def check_pack(path: Path):
+    """Restituisce (errori, avvisi, dati, id_domande, domande_giocabili, generatori)."""
     errors = []
     warnings = []
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
     except Exception as exc:
-        print(f"[ERRORE] Impossibile leggere o analizzare JSON: {exc}")
-        return 1
+        return [f"Impossibile leggere o analizzare JSON: {exc}"], [], None, set(), 0, 0
 
     if not isinstance(data, dict):
-        print("[ERRORE] La radice del file JSON deve essere un oggetto.")
-        return 1
+        return ["La radice del file JSON deve essere un oggetto."], [], None, set(), 0, 0
 
     if data.get("schema_version") != 1:
         errors.append("schema_version deve essere 1.")
@@ -152,19 +157,126 @@ def validate_pack(path: Path) -> int:
     if subject != "matematica" and subject in ALLOWED_SUBJECTS and choice_or_tf < 5:
         warnings.append(f"Meno di 5 domande scelta multipla/Vero-Falso per il Cortile ({choice_or_tf}).")
 
+    return errors, warnings, data, seen_ids, playable, len(generators)
+
+
+def report(prefix: str, errors, warnings) -> None:
     for w in warnings:
-        print(f"[AVVISO] {w}")
+        print(f"[AVVISO] {prefix}{w}")
+    for e in errors:
+        print(f"[ERRORE] {prefix}{e}")
+
+
+def validate_pack(path: Path) -> int:
+    errors, warnings, _, _, playable, gen_count = check_pack(path)
+    report("", errors, warnings)
     if errors:
-        for e in errors:
-            print(f"[ERRORE] {e}")
+        return 1
+    print(f"[OK] Pacchetto valido ({playable} domande giocabili, {gen_count} generatori)")
+    return 0
+
+
+def check_manifest(manifest) -> list:
+    """Stesse regole di PackValidator.validateManifest nell'app."""
+    errors = []
+    if manifest.get("schema_version") != 1:
+        errors.append("schema_version deve essere 1.")
+    packs = manifest.get("packs")
+    if not isinstance(packs, list):
+        return errors + ["campo 'packs' mancante o non è un array."]
+    seen = set()
+    for i, e in enumerate(packs):
+        if not isinstance(e, dict):
+            errors.append(f"packs[{i}] non è un oggetto valido.")
+            continue
+        pid = e.get("pack_id", "")
+        if not isinstance(pid, str) or not PACK_ID_RE.match(pid):
+            errors.append(f"packs[{i}].pack_id '{pid}' non valido.")
+        elif pid in seen:
+            errors.append(f"pack_id duplicato '{pid}'.")
+        else:
+            seen.add(pid)
+        f = e.get("file", "")
+        if (not isinstance(f, str) or not f.strip() or f.startswith("/") or ".." in f
+                or "\\" in f or ":" in f or not MANIFEST_FILE_RE.match(f)):
+            errors.append(f"packs[{i}].file '{f}' non consentito.")
+        if e.get("subject") not in ALLOWED_SUBJECTS:
+            errors.append(f"packs[{i}].subject '{e.get('subject')}' non valido.")
+        if not (3 <= len(str(e.get("title", "")).strip()) <= 60):
+            errors.append(f"packs[{i}].title deve avere tra 3 e 60 caratteri.")
+        if not is_whole_int(e.get("version")) or e.get("version", 0) < 1:
+            errors.append(f"packs[{i}].version deve essere intero >= 1.")
+        for flag in ("priority", "archived"):
+            if flag in e and not isinstance(e[flag], bool):
+                errors.append(f"packs[{i}].{flag} deve essere booleano.")
+    return errors
+
+
+def validate_all(packs_dir: Path) -> int:
+    """Controlla manifest e pacchetti insieme, come li vedrà l'app dopo la sincronizzazione."""
+    try:
+        manifest = json.loads((packs_dir / "manifest.json").read_text(encoding="utf-8"))
+    except Exception as exc:
+        print(f"[ERRORE] manifest.json: impossibile leggerlo ({exc})")
+        return 1
+    if not isinstance(manifest, dict):
+        print("[ERRORE] manifest.json: la radice deve essere un oggetto.")
         return 1
 
-    print(f"[OK] Pacchetto valido ({playable} domande giocabili, {len(generators)} generatori)")
+    m_errors = check_manifest(manifest)
+    report("manifest.json: ", m_errors, [])
+    failed = bool(m_errors)
+
+    id_owner = {}
+    listed = set()
+    for entry in manifest.get("packs") or []:
+        if not isinstance(entry, dict):
+            continue
+        fname = str(entry.get("file", ""))
+        listed.add(fname)
+        path = packs_dir / fname
+        if not path.is_file():
+            print(f"[ERRORE] {fname}: elencato nel manifest ma il file non esiste.")
+            failed = True
+            continue
+        errors, warnings, data, ids, playable, gen_count = check_pack(path)
+        if data is not None:
+            if data.get("pack_id") != entry.get("pack_id"):
+                errors.append(f"pack_id '{data.get('pack_id')}' diverso dal manifest ('{entry.get('pack_id')}').")
+            if data.get("subject") != entry.get("subject"):
+                errors.append(f"subject '{data.get('subject')}' diverso dal manifest ('{entry.get('subject')}').")
+            if data.get("version") != entry.get("version"):
+                warnings.append(f"version {data.get('version')} diversa dal manifest ({entry.get('version')}).")
+            # I progressi sono salvati per ID domanda: un ID usato da due pacchetti mescolerebbe i progressi
+            for qid in sorted(ids):
+                other = id_owner.get(qid)
+                if other and other != entry.get("pack_id"):
+                    errors.append(f"ID domanda '{qid}' già usato dal pacchetto {other}.")
+                else:
+                    id_owner[qid] = entry.get("pack_id")
+        report(f"{fname}: ", errors, warnings)
+        if errors:
+            failed = True
+        else:
+            print(f"[OK] {fname} ({playable} domande giocabili, {gen_count} generatori)")
+
+    for path in sorted(packs_dir.glob("*.json")):
+        if path.name != "manifest.json" and path.name not in listed:
+            print(f"[AVVISO] {path.name}: non è elencato nel manifest, l'app lo ignorerà.")
+
+    if failed:
+        print("[ERRORE] Correggi gli errori prima di caricare i file su GitHub.")
+        return 1
+    print("[OK] Manifest e pacchetti pronti per GitHub.")
     return 0
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Uso: python3 validate_pack.py percorso/al/pacchetto.json")
+    args = sys.argv[1:]
+    if args and args[0] == "--all":
+        default_dir = Path(__file__).resolve().parent / "packs"
+        sys.exit(validate_all(Path(args[1]) if len(args) > 1 else default_dir))
+    if len(args) != 1:
+        print(__doc__)
         sys.exit(1)
-    sys.exit(validate_pack(Path(sys.argv[1])))
+    sys.exit(validate_pack(Path(args[0])))

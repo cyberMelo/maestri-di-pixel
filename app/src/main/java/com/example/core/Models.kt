@@ -155,14 +155,6 @@ data class StudyPreferences(
     val darkMode: Boolean = true
 )
 
-data class GitHubConfig(
-    val owner: String = "",
-    val repo: String = "",
-    val branch: String = "main",
-    val basePath: String = "packs",
-    val pat: String = ""
-)
-
 data class SyncState(
     val lastSyncUnix: Long = 0L,
     val lastSyncStatus: String = "never", // "never", "ok", "offline", "error", "not_configured"
@@ -178,7 +170,6 @@ data class AppConfig(
     val studyPreferences: StudyPreferences = StudyPreferences(),
     val priorityOverrides: Map<String, Boolean> = emptyMap(),
     val focusTopics: Map<String, List<String>> = emptyMap(),
-    val github: GitHubConfig = GitHubConfig(),
     val syncState: SyncState = SyncState()
 )
 

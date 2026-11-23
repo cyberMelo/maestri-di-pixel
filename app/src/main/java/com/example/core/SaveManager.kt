@@ -100,7 +100,6 @@ class SaveManager(private val rootDir: File) {
         val obj = readJsonWithRecovery(configFile, configToJson(AppConfig()))
         val audioObj = obj.optJSONObject("audio") ?: JSONObject()
         val studyObj = obj.optJSONObject("study_preferences") ?: JSONObject()
-        val ghObj = obj.optJSONObject("github") ?: JSONObject()
         val syncObj = obj.optJSONObject("sync_state") ?: JSONObject()
         val prioObj = obj.optJSONObject("priority_overrides") ?: JSONObject()
 
@@ -168,13 +167,6 @@ class SaveManager(private val rootDir: File) {
             ),
             priorityOverrides = prioMap,
             focusTopics = focusMap,
-            github = GitHubConfig(
-                owner = ghObj.optString("owner", ""),
-                repo = ghObj.optString("repo", ""),
-                branch = ghObj.optString("branch", "main").ifBlank { "main" },
-                basePath = ghObj.optString("base_path", "packs"),
-                pat = ghObj.optString("pat", "")
-            ),
             syncState = SyncState(
                 lastSyncUnix = syncObj.optLong("last_sync_unix", 0L),
                 lastSyncStatus = syncObj.optString("last_sync_status", "never"),
@@ -351,14 +343,6 @@ class SaveManager(private val rootDir: File) {
             }
         }
         root.put("focus_topics", focusObj)
-
-        root.put("github", JSONObject().apply {
-            put("owner", cfg.github.owner)
-            put("repo", cfg.github.repo)
-            put("branch", cfg.github.branch)
-            put("base_path", cfg.github.basePath)
-            put("pat", cfg.github.pat)
-        })
 
         val errArr = JSONArray()
         cfg.syncState.lastSyncErrors.forEach { errArr.put(it) }

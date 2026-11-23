@@ -5,6 +5,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
 import java.io.IOException
@@ -33,6 +34,13 @@ class PackManager(
     val isSyncing: Boolean get() = syncLock.get()
 
     private val allPacksMap = linkedMapOf<String, PackData>()
+
+    /** Impronte (SHA Git) dei file scaricati: un file viene riscaricato solo se su GitHub è cambiato. */
+    private val shaFile: File = File(cacheDir, "file_shas.json")
+
+    /** Avvisi dell'ultimo caricamento (es. pacchetti scartati per ID domanda già usati altrove). */
+    var loadWarnings: List<String> = emptyList()
+        private set
 
     init {
         cacheDir.mkdirs()
@@ -155,8 +163,43 @@ class PackManager(
             }
         }
 
+        val warnings = mutableListOf<String>()
+        val accepted = dropPacksWithForeignQuestionIds(loaded, warnings)
         allPacksMap.clear()
-        allPacksMap.putAll(loaded)
+        allPacksMap.putAll(accepted)
+        loadWarnings = warnings
+    }
+
+    /**
+     * I progressi Leitner sono salvati per ID domanda: se due pacchetti diversi usassero lo stesso ID
+     * i progressi si mescolerebbero. Il pacchetto caricato per secondo viene scartato con un avviso.
+     */
+    private fun dropPacksWithForeignQuestionIds(
+        packs: Map<String, PackData>,
+        warnings: MutableList<String>
+    ): LinkedHashMap<String, PackData> {
+        val owner = mutableMapOf<String, String>()
+        val accepted = linkedMapOf<String, PackData>()
+        for (pack in packs.values) {
+            val clash = findForeignIdClash(pack, owner)
+            if (clash != null) {
+                warnings.add(
+                    "${pack.packId}: scartato, l'ID domanda '${clash.first}' è già usato da ${clash.second}."
+                )
+                continue
+            }
+            pack.playableQuestions.forEach { owner[it.id] = pack.packId }
+            accepted[pack.packId] = pack
+        }
+        return accepted
+    }
+
+    private fun findForeignIdClash(pack: PackData, owner: Map<String, String>): Pair<String, String>? {
+        for (q in pack.playableQuestions) {
+            val other = owner[q.id]
+            if (other != null && other != pack.packId) return q.id to other
+        }
+        return null
     }
 
     fun importPackFromJsonText(rawJson: String, sourceLabel: String = "clipboard.json"): ValidationResult {
@@ -176,6 +219,15 @@ class PackManager(
         }
 
         val packId = obj.getString("pack_id")
+        val candidate = PackValidator.parsePack(obj = obj, source = "local", priority = false, archived = false)
+        val owners = allPacksMap.values
+            .filter { it.packId != packId }
+            .flatMap { p -> p.playableQuestions.map { it.id to p.packId } }
+            .toMap()
+        val clash = findForeignIdClash(candidate, owners)
+        if (clash != null) {
+            return validation.addError("ID domanda '${clash.first}' già usato dal pacchetto ${clash.second}: rinominalo.")
+        }
         val targetFile = File(localDir, "$packId.json")
         val ok = saveManager.writeJsonAtomic(targetFile, obj)
         if (!ok) {
@@ -283,6 +335,10 @@ class PackManager(
             }
 
             val entries = PackValidator.parseManifestEntries(manifestObj)
+            // Impronte dei file remoti (1 sola richiesta); se non disponibili si torna al confronto per versione
+            val remoteShas = fetchRemoteShas(owner, repo, branch, basePath, pat)
+            val storedShas = loadStoredShas()
+            val newShas = mutableMapOf<String, String>()
             clearDirectory(stagingDir)
 
             val errors = mutableListOf<String>()
@@ -293,12 +349,20 @@ class PackManager(
                 if (entry.archived) continue
                 val cachedPack = allPacksMap[entry.packId]
                 val cachedFile = resolveSafeChild(cacheDir, entry.file) ?: continue
-                val needsDownload = !cachedFile.exists() ||
-                    cachedPack == null ||
-                    cachedPack.source != "github" ||
-                    entry.version > cachedPack.version
+                val remoteSha = remoteShas?.get(entry.file)
+                val needsDownload = if (remoteSha != null) {
+                    !cachedFile.exists() || storedShas[entry.file] != remoteSha
+                } else {
+                    !cachedFile.exists() ||
+                        cachedPack == null ||
+                        cachedPack.source != "github" ||
+                        entry.version > cachedPack.version
+                }
 
-                if (!needsDownload) continue
+                if (!needsDownload) {
+                    storedShas[entry.file]?.let { newShas[entry.file] = it }
+                    continue
+                }
 
                 val packUrl = buildGithubContentsUrl(owner, repo, branch, basePath, entry.file)
                 val packResp = httpGetText(packUrl, pat)
@@ -324,6 +388,7 @@ class PackManager(
                 stagingTarget.parentFile?.mkdirs()
                 if (saveManager.writeJsonAtomic(stagingTarget, pObj)) {
                     stagedFiles.add(stagingTarget to cachedFile)
+                    remoteSha?.let { newShas[entry.file] = it }
                     downloadedCount++
                 }
             }
@@ -334,8 +399,10 @@ class PackManager(
                 saveManager.writeJsonAtomic(dst, obj)
             }
             saveManager.writeJsonAtomic(File(cacheDir, "manifest.json"), manifestObj)
+            saveManager.writeJsonAtomic(shaFile, JSONObject(newShas as Map<*, *>))
             clearDirectory(stagingDir)
             reloadPacks()
+            errors.addAll(loadWarnings)
 
             val msg = if (errors.isEmpty()) {
                 if (downloadedCount > 0) {
@@ -352,6 +419,41 @@ class PackManager(
         } finally {
             syncLock.set(false)
         }
+    }
+
+    /** Mappa nome file -> SHA Git dei file nella cartella remota, oppure null se non leggibile. */
+    private suspend fun fetchRemoteShas(
+        owner: String,
+        repo: String,
+        branch: String,
+        basePath: String,
+        pat: String
+    ): Map<String, String>? {
+        val url = buildGithubContentsUrl(owner, repo, branch, basePath, "")
+        val resp = httpGetText(url, pat, accept = "application/vnd.github+json")
+        if (!resp.ok) return null
+        return try {
+            val arr = JSONArray(resp.body)
+            buildMap {
+                for (i in 0 until arr.length()) {
+                    val item = arr.optJSONObject(i) ?: continue
+                    if (item.optString("type") != "file") continue
+                    val name = item.optString("name")
+                    val sha = item.optString("sha")
+                    if (name.isNotBlank() && sha.isNotBlank()) put(name, sha)
+                }
+            }
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    private fun loadStoredShas(): MutableMap<String, String> {
+        val result = mutableMapOf<String, String>()
+        if (!shaFile.exists()) return result
+        val obj = saveManager.readJsonWithRecovery(shaFile, JSONObject())
+        obj.keys().forEach { k -> obj.optString(k).takeIf { it.isNotBlank() }?.let { result[k] = it } }
+        return result
     }
 
     private fun persistSyncState(res: SyncResult) {
@@ -377,11 +479,15 @@ class PackManager(
         val errorMessage: String
     )
 
-    private suspend fun httpGetText(url: String, pat: String): HttpFetchResult = withContext(Dispatchers.IO) {
+    private suspend fun httpGetText(
+        url: String,
+        pat: String,
+        accept: String = "application/vnd.github.raw+json"
+    ): HttpFetchResult = withContext(Dispatchers.IO) {
         try {
             val reqBuilder = Request.Builder()
                 .url(url)
-                .header("Accept", "application/vnd.github.raw+json")
+                .header("Accept", accept)
                 .header("X-GitHub-Api-Version", "2022-11-28")
                 .header("User-Agent", "MaestriDiPixelApp/1.0")
                 .get()
@@ -477,7 +583,11 @@ class PackManager(
             val cleanBranch = branch.trim()
             val cleanBase = basePath.trim().trim('/')
             val cleanRel = relPath.trim().trim('/')
-            val combinedPath = if (cleanBase.isEmpty()) cleanRel else "$cleanBase/$cleanRel"
+            val combinedPath = when {
+                cleanBase.isEmpty() -> cleanRel
+                cleanRel.isEmpty() -> cleanBase
+                else -> "$cleanBase/$cleanRel"
+            }
             return "https://api.github.com/repos/$cleanOwner/$cleanRepo/contents/$combinedPath?ref=$cleanBranch"
         }
 

@@ -45,7 +45,7 @@
 
 ### Apprendimento efficace e non punitivo
 - **Ripetizione spaziata (Metodo Leitner)**: le domande vengono classificate automaticamente nei box 1–3 per riproporre con priorità i concetti da consolidare.
-- **Gestione serena dell'errore**: nessun "game over" punitivo; in caso di risposta sbagliata l'app mostra una spiegazione breve e incoraggiante e reinserisce la domanda più avanti nella sessione.
+- **Gestione serena dell'errore**: in caso di risposta sbagliata l'app mostra una spiegazione breve e incoraggiante e reinserisce la domanda più avanti nella sessione. Solo nella battaglia del Cortile troppi errori esauriscono i punti vita e chiudono la sfida, senza perdere stelle o progressi.
 - **Sintesi vocale (TTS) con Audio Ducking**: lettura ad alta voce di domande e spiegazioni con attenuazione automatica della musica di sottofondo.
 
 ### Design inclusivo (BES & ADHD) e Profilo "Studio Sereno"
@@ -61,22 +61,24 @@
 ### Area Genitori protetta da PIN
 Accessibile tenendo premuta per **2 secondi** l'icona ingranaggio nella barra superiore e inserendo il PIN (predefinito `1234`, modificabile dalle impostazioni):
 - **Progressi**: percentuale di padronanza per materia, elenco delle 5 domande più ostiche secondo il motore Leitner e storico delle ultime 10 sessioni.
-- **Pacchetti & Sync**: sincronizzazione da repository GitHub, importazione locale di pacchetti `.json` (da file o appunti), attivazione del flag **Verifica!** (badge prioritario e bonus stelle `x1.5`) e selezione fine degli argomenti per singola materia.
+- **Pacchetti & Sync**: stato e avvio manuale della sincronizzazione da GitHub (che parte comunque da sola a ogni avvio), importazione locale di pacchetti `.json` (da file o appunti), attivazione del flag **Verifica!** (badge prioritario e bonus stelle `x1.5`) e selezione fine degli argomenti per singola materia.
 - **Impostazioni**: gestione multi-profilo (ideale per fratelli sullo stesso tablet), tema Scuro/Chiaro, lunghezza sessione (4 / 6 / 8 domande), profili audio, Studio Sereno e reset con doppia conferma.
 
 ---
 
 ## Pacchetti didattici e Sincronizzazione GitHub
 
-L'app include già i pacchetti base per tutte e 6 le materie e funziona **100% offline**. Per aggiungere nuovi capitoli del sussidiario o preparazioni alle verifiche senza ricompilare l'app, è incluso il template pronto all'uso nella cartella [`github_packs_repo_template/`](github_packs_repo_template/):
+L'app include già i pacchetti base per tutte e 6 le materie e funziona **100% offline**. I nuovi capitoli del sussidiario arrivano dal repository [`cyberMelo/maestri-di-pixel-packs`](https://github.com/cyberMelo/maestri-di-pixel-packs), fisso nell'app (`PackManager.LOCKED_GITHUB_*`):
 
-1. Crea un repository GitHub (pubblico o privato) partendo dal contenuto di `github_packs_repo_template/`.
-2. Aggiungi o modifica i file JSON nella cartella `packs/` rispettando gli schemi ufficiali in `github_packs_repo_template/schemas/`.
-3. Valida ogni pacchetto prima del caricamento con lo script incluso:
-   ```bash
-   python3 github_packs_repo_template/validate_pack.py github_packs_repo_template/packs/<tuo_pacchetto>.json
-   ```
-4. Configura repository e (se privato) il Fine-grained Personal Access Token (permesso `Contents: Read-only`) direttamente in **Area Genitori → Impostazioni**, oppure tramite la variabile `GITHUB_PACKS_PAT` definita in `.env` (vedi `.env.example`).
+- **A ogni avvio** l'app sincronizza in background (se il repository è privato serve il token, vedi sotto); senza rete usa la cache e continua a funzionare.
+- **Scarica solo i file cambiati**, confrontando l'impronta (SHA Git) di ogni file con quella dell'ultimo download: basta caricare il file modificato su GitHub, non serve ricordarsi di alzare `version`.
+- **ID domanda unici tra tutti i pacchetti**: i progressi sono salvati per ID, quindi un pacchetto che riusa un ID di un altro pacchetto (anche di quelli inclusi nell'app) viene scartato e l'avviso compare in **Area Genitori → Pacchetti & Sync**.
+
+Prima di caricare, controlla manifest e pacchetti insieme con lo script incluso:
+```bash
+python3 validate_pack.py --all packs
+```
+Il template della cartella [`github_packs_repo_template/`](github_packs_repo_template/) è la copia di riferimento di schemi e script.
 
 Per la guida passo-passo completa consulta [`github_packs_repo_template/README.md`](github_packs_repo_template/README.md).
 
@@ -122,5 +124,5 @@ gradle :app:assembleDebug
 gradle :app:testDebugUnitTest
 ```
 
-### Configurazione opzionale del token GitHub
-Per pre-configurare un token di lettura in fase di build senza mai inserirlo nel codice sorgente, imposta `GITHUB_PACKS_PAT` nel file `.env` locale (basato su `.env.example`) oppure tramite il pannello Secrets dell'ambiente di build. Se il repository dei pacchetti è pubblico o il token viene inserito direttamente dall'Area Genitori sul tablet, non è necessaria alcuna configurazione aggiuntiva.
+### Token GitHub (necessario finché il repository dei pacchetti è privato)
+Imposta un Fine-grained PAT con permesso `Contents: Read-only` sul solo repository `maestri-di-pixel-packs` nella variabile `GITHUB_PACKS_PAT` del file `.env` locale (basato su `.env.example`): viene inserito nell'APK in fase di build, mai nel codice sorgente. Senza token, con il repository privato, la sincronizzazione fallisce con un avviso in Area Genitori e l'app continua a funzionare con i pacchetti inclusi.

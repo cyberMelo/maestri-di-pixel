@@ -1,61 +1,54 @@
-# Maestri di Pixel — Template Repository Privato Pacchetti Didattici
+# Maestri di Pixel — Pacchetti Didattici
 
-Questa cartella contiene la base pronta all'uso per creare il tuo **repository GitHub privato** (es. `maestri-di-pixel-packs`) da cui l'app **Maestri di Pixel** scarica automaticamente nuovi capitoli, verifiche settimanali e aggiornamenti sui tablet.
-
----
-
-## 1. Creare il repository privato su GitHub
-
-1. Accedi al tuo account GitHub e seleziona **New repository**.
-2. Scegli un nome (es. `maestri-di-pixel-packs`) e imposta la visibilità su **Private**.
-3. Carica all'interno del repository questa cartella `packs/` completa di `manifest.json` e dei pacchetti delle materie (`storia`, `matematica`, `scienze`, `italiano`, `geografia`, `inglese`).
+Repository dei pacchetti di domande che l'app **Maestri di Pixel** scarica sui tablet. Si aggiungono capitoli e verifiche man mano, senza ricompilare l'app.
 
 ---
 
-## 2. Generare un Fine-grained Personal Access Token (permessi minimi)
+## Come arrivano i pacchetti sul tablet
 
-Per la massima sicurezza, crea un token con **soli permessi di lettura** sul singolo repository dei pacchetti:
-
-1. Su GitHub vai su **Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token**.
-2. Dai un nome descrittivo (es. `MaestriDiPixelTablet`) e scegli la durata.
-3. In **Repository access**, seleziona **Only select repositories** e scegli **solo** `maestri-di-pixel-packs`.
-4. In **Permissions → Repository permissions**, imposta:
-   - **Contents:** **`Read-only`**
-   - Lascia tutti gli altri permessi su *No access*.
-5. Genera il token e copialo negli appunti (inizia con `github_pat_...`).
+- Il repository è **fisso nell'app** (`cyberMelo/maestri-di-pixel-packs`, branch `main`, cartella `packs/`): sul tablet non c'è niente da configurare.
+- Se il repository è **privato**, l'APK deve essere compilato con un token di sola lettura (vedi sotto); se è pubblico non serve niente.
+- **A ogni avvio** l'app sincronizza in background. Senza rete usa i pacchetti già scaricati e continua a funzionare.
+- **Vengono scaricati solo i file cambiati**: l'app confronta l'impronta (SHA Git) di ogni file con quella dell'ultimo download. Basta caricare il file modificato, non serve alzare `version`.
+- Per forzare subito un aggiornamento: **Area Genitori** (tieni premuto 2 secondi l'ingranaggio, PIN iniziale `1234`) → **Pacchetti & Sync** → **Sincronizza ora**. Lì compaiono anche esito e avvisi.
 
 ---
 
-## 3. Configurare i tablet in Area Genitori
+## Token di lettura (solo per repository privato)
 
-1. Apri **Maestri di Pixel** sul tablet e tieni premuto per **2 secondi** l'icona ingranaggio in alto a destra.
-2. Inserisci il PIN (iniziale `1234`, poi cambialo subito dalle Impostazioni).
-3. Vai nella scheda **Impostazioni → Repository GitHub Privato (Pacchetti)**:
-   - **Owner GitHub:** il tuo username GitHub
-   - **Repository:** `maestri-di-pixel-packs`
-   - **Branch:** `main`
-   - **Cartella:** `packs`
-   - **Token GitHub (PAT):** usa il pulsante **Incolla PAT**
-4. Tocca **Salva e testa connessione**: vedrai il numero di pacchetti trovati nel `manifest.json`.
-5. Nella scheda **Pacchetti & Sync**, tocca **Sincronizza ora**.
+1. Su GitHub: **Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token**.
+2. **Repository access → Only select repositories** → solo `maestri-di-pixel-packs`.
+3. **Permissions → Repository permissions → Contents: `Read-only`**, tutto il resto *No access*.
+4. Nel progetto dell'app, copia `.env.example` in `.env` e imposta `GITHUB_PACKS_PAT=github_pat_...`, poi ricompila l'APK. Il token finisce solo nell'APK, mai nel codice sorgente (`.env` è escluso da git).
+
+Alla scadenza del token la sincronizzazione mostra "Accesso negato" in Area Genitori: generane uno nuovo e ricompila.
 
 ---
 
-## 4. Flusso rapido settimanale per aggiungere un nuovo capitolo
+## Aggiungere un nuovo capitolo
 
-1. Trasforma 1–2 pagine del sussidiario in un file `.json` (`schema_version = 1`) usando lo schema ufficiale in `schemas/pack.schema.json` (e `schemas/manifest.schema.json` per l'indice).
-2. Verifica il file sul PC prima del caricamento usando lo script incluso (controlla anche unicità ID, duplicati case-insensitive e limiti al netto dei marcatori `**`):
+1. Trasforma 1–2 pagine del sussidiario in un file `.json` (`schema_version = 1`) seguendo `schemas/pack.schema.json`.
+2. **Usa ID domanda unici** con un prefisso legato al pacchetto (es. `sto_romani_001`). I progressi sono salvati per ID: se un ID è già usato da un altro pacchetto, anche da uno di quelli inclusi nell'app, l'app scarta il pacchetto e lo segnala in Area Genitori.
+3. Aggiungi la voce in `packs/manifest.json` (schema in `schemas/manifest.schema.json`). Metti `"priority": true` nella settimana della verifica per il badge `!` nell'Hub e il bonus stelle `x1.5`; `"archived": true` lo nasconde mantenendo le medaglie.
+4. Controlla tutto insieme prima di caricare:
    ```bash
-   python3 validate_pack.py packs/nuovo_capitolo.json
+   python3 validate_pack.py --all packs
    ```
-3. Carica il file nella cartella `packs/` su GitHub.
-4. Aggiungi la nuova voce in `packs/manifest.json` (imposta `"priority": true` nella settimana della verifica per attivare il badge `!` nell'Hub e il bonus `x1.5` stelle; quando modifichi un file esistente incrementa `"version"` di 1).
+   Verifica ogni pacchetto, il manifest, la corrispondenza tra i due e gli ID duplicati tra pacchetti. Per un solo file: `python3 validate_pack.py packs/nuovo_capitolo.json`.
+5. Carica su GitHub il file del pacchetto e `manifest.json`.
 
 ---
 
-## 5. Testare il funzionamento offline (Modalità Aereo)
+## Consigli sulle domande
 
-1. Esegui una sincronizzazione con Wi-Fi acceso (puoi provare cambiando `"version": 2` o `"priority": true` su uno dei pacchetti nel repository).
-2. Attiva la **Modalità Aereo** sul tablet.
-3. Chiudi completamente e riavvia **Maestri di Pixel**.
-4. Verifica che tutti i pacchetti scaricati restino disponibili e giocabili senza errori.
+- Bilancia le risposte Vero/Falso: se sono quasi tutte "Vero" il bambino impara a rispondere sempre Vero.
+- Usa `topic` per dividere un capitolo in argomenti: dall'Area Genitori puoi far allenare solo quelli della prossima interrogazione.
+- I `**grassetti**` evidenziano le parole chiave e non contano nei limiti di lunghezza.
+
+---
+
+## Provare il funzionamento offline
+
+1. Avvia l'app con il Wi-Fi acceso e attendi la sincronizzazione.
+2. Attiva la **Modalità Aereo**, chiudi e riavvia l'app.
+3. Verifica che i pacchetti scaricati restino giocabili.

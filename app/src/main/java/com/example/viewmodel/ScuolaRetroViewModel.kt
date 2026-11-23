@@ -8,7 +8,6 @@ import com.example.core.AudioManager
 import com.example.core.BundledAssetReader
 import com.example.core.DailyMissionItem
 import com.example.core.GameBalance
-import com.example.core.GitHubConfig
 import com.example.core.LearningEngine
 import com.example.core.MasteryRankInfo
 import com.example.core.MinigameLaunchConfig
@@ -149,11 +148,9 @@ class ScuolaRetroViewModel(application: Application) : AndroidViewModel(applicat
             }
             refreshSnapshot()
 
-            // Launch non-blocking background GitHub sync if configured
-            val gh = saveManager.config.github
-            if (gh.owner.isNotBlank() && gh.repo.isNotBlank() && gh.pat.isNotBlank()) {
-                launchBackgroundSync()
-            }
+            // Il repository dei pacchetti è fisso nell'app: a ogni avvio scarica in background
+            // i pacchetti nuovi o modificati (offline usa la cache senza disturbare)
+            launchBackgroundSync()
 
             delay(350)
             if (saveManager.activeProfile != null) {
@@ -880,11 +877,6 @@ class ScuolaRetroViewModel(application: Application) : AndroidViewModel(applicat
         }
     }
 
-    fun saveGithubConfig(gh: GitHubConfig) {
-        saveManager.updateConfig { it.copy(github = gh) }
-        refreshSnapshot()
-    }
-
     fun testLockedGithubConnection(onResult: (SyncResult) -> Unit) {
         viewModelScope.launch {
             _uiState.update { it.copy(isSyncing = true) }
@@ -892,11 +884,6 @@ class ScuolaRetroViewModel(application: Application) : AndroidViewModel(applicat
             refreshSnapshot()
             onResult(result)
         }
-    }
-
-    fun saveAndTestGithub(gh: GitHubConfig, onResult: (SyncResult) -> Unit) {
-        saveGithubConfig(gh)
-        testLockedGithubConnection(onResult)
     }
 
     fun syncNow(onDone: ((SyncResult) -> Unit)? = null) {
