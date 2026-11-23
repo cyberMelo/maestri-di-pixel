@@ -1,5 +1,9 @@
 package com.example.ui.screens
 
+import com.example.ui.components.stageHeight
+import com.example.ui.components.JourneyPanel
+import com.example.ui.components.TeacherMood
+import com.example.ui.components.MinigameStage
 import android.graphics.Paint
 import android.graphics.Typeface
 import androidx.activity.compose.BackHandler
@@ -148,6 +152,9 @@ fun GeoBalloonScreen(
     }
     var currentQueuePos by remember { mutableIntStateOf(0) }
     var correctFirstTry by remember { mutableIntStateOf(0) }
+    var teacherMood by remember { mutableStateOf(TeacherMood.IDLE) }
+    var moodTrigger by remember { mutableIntStateOf(0) }
+    var stageCorrect by remember { mutableIntStateOf(0) }
     var helpsUsed by remember { mutableIntStateOf(0) }
     var rawAnswerStars by remember { mutableIntStateOf(0) }
     var milesFlown by remember { mutableIntStateOf(0) }
@@ -300,6 +307,12 @@ fun GeoBalloonScreen(
             usedHelp = usedHelpOnCurrent
         )
 
+        teacherMood = if (opt.isCorrect) TeacherMood.HAPPY else TeacherMood.SAD
+
+        moodTrigger++
+
+        if (opt.isCorrect) stageCorrect++
+
         scope.launch {
             // Brief dash forward toward the cloud gate
             val dashSteps = 8
@@ -361,6 +374,7 @@ fun GeoBalloonScreen(
             .testTag("geo_balloon_screen")
     ) {
         val isShortLandscape = maxHeight < 520.dp && maxWidth > maxHeight
+        val screenH = maxHeight
         val pad = if (isShortLandscape) 8.dp else 12.dp
         val vGap = if (isShortLandscape) 6.dp else 8.dp
 
@@ -422,13 +436,20 @@ fun GeoBalloonScreen(
             }
 
             // Question + Helpers Card
-            GbaCard(
-                modifier = Modifier.fillMaxWidth(),
-                borderColor = Color(0xFF0284C7),
-                contentPadding = PaddingValues(
-                    horizontal = if (isShortLandscape) 10.dp else 14.dp,
-                    vertical = if (isShortLandscape) 6.dp else 10.dp
-                )
+            MinigameStage(
+                roomId = null,
+                teacherSpriteId = "npc_geo",
+                teacherName = "Esploratore Marco",
+                accent = Color(0xFF0284C7),
+                mood = teacherMood,
+                moodTrigger = moodTrigger,
+                reducedMotion = prefs.reducedMotion,
+                compact = isShortLandscape,
+                expandedHeight = stageHeight(screenH, 230.dp),
+                backdrop = skyBackdrop,
+                side = if (isShortLandscape) null else {
+                    { JourneyPanel(collected = stageCorrect.coerceAtMost(initialQuestions.size), total = initialQuestions.size) }
+                }
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -812,5 +833,23 @@ fun GeoBalloonScreen(
                 onCancel = { showExitConfirm = false }
             )
         }
+    }
+}
+
+/** Cielo con sole e colline per il palco della Mongolfiera. */
+private val skyBackdrop: androidx.compose.ui.graphics.drawscope.DrawScope.() -> Unit = {
+    drawRect(Brush.verticalGradient(listOf(Color(0xFF38BDF8), Color(0xFFBAE6FD))))
+    drawCircle(Color(0xFFFDE047), radius = size.height * 0.12f, center = Offset(size.width * 0.86f, size.height * 0.22f))
+    for (i in 0..3) {
+        val cx = size.width * (0.15f + i * 0.24f)
+        val cy = size.height * (0.18f + (i % 2) * 0.10f)
+        drawCircle(Color.White.copy(alpha = 0.85f), radius = size.height * 0.07f, center = Offset(cx, cy))
+        drawCircle(Color.White.copy(alpha = 0.85f), radius = size.height * 0.05f, center = Offset(cx + size.height * 0.08f, cy + 4f))
+    }
+    // Colline basse in fondo, dal 75% dell'altezza in giù
+    for ((cx, r, c) in listOf(
+        Triple(0.15f, 0.55f, Color(0xFF4ADE80)), Triple(0.5f, 0.45f, Color(0xFF22C55E)), Triple(0.85f, 0.60f, Color(0xFF4ADE80))
+    )) {
+        drawCircle(c, radius = size.height * r, center = Offset(size.width * cx, size.height * (0.75f + r)))
     }
 }

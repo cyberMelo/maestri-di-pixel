@@ -1,5 +1,9 @@
 package com.example.ui.screens
 
+import com.example.ui.components.stageHeight
+import com.example.ui.components.PlantGrowthPanel
+import com.example.ui.components.TeacherMood
+import com.example.ui.components.MinigameStage
 import android.graphics.Paint
 import android.graphics.Typeface
 import androidx.activity.compose.BackHandler
@@ -242,6 +246,9 @@ fun ScienceCatapultScreen(
 
     var combo by remember { mutableIntStateOf(0) }
     var correctFirstTry by remember { mutableIntStateOf(0) }
+    var teacherMood by remember { mutableStateOf(TeacherMood.IDLE) }
+    var moodTrigger by remember { mutableIntStateOf(0) }
+    var stageCorrect by remember { mutableIntStateOf(0) }
     var helpsUsedTotal by remember { mutableIntStateOf(0) }
     var rawAnswerStars by remember { mutableIntStateOf(0) }
     var juicePopupText by remember { mutableStateOf("") }
@@ -416,6 +423,12 @@ fun ScienceCatapultScreen(
             usedHelp = usedHelpThisQuestion
         )
         if (usedHelpThisQuestion) helpsUsedTotal++
+
+        teacherMood = if (isCorrect) TeacherMood.HAPPY else TeacherMood.SAD
+
+        moodTrigger++
+
+        if (isCorrect) stageCorrect++
 
         scope.launch {
             if (isCorrect) {
@@ -596,6 +609,7 @@ fun ScienceCatapultScreen(
     ) {
         val isWide = maxWidth >= 760.dp
         val isShortLandscape = maxHeight < 520.dp && maxWidth > maxHeight
+        val screenH = maxHeight
 
         Column(
             modifier = Modifier
@@ -676,15 +690,20 @@ fun ScienceCatapultScreen(
                 val towers = remember(choices.options.size) { buildTowers(choices.options.size) }
 
                 // Compact Question Card (Focus Mode centered max 680dp)
-                GbaCard(
-                    modifier = Modifier
-                        .widthIn(max = 680.dp)
-                        .fillMaxWidth()
-                        .align(Alignment.CenterHorizontally),
-                    contentPadding = PaddingValues(
-                        horizontal = 12.dp,
-                        vertical = if (isShortLandscape) 6.dp else 10.dp
-                    )
+                MinigameStage(
+                    roomId = "lab",
+                    teacherSpriteId = "npc_science",
+                    teacherName = "Maestra Flora",
+                    accent = Color(0xFF0D9488),
+                    mood = teacherMood,
+                    moodTrigger = moodTrigger,
+                    reducedMotion = prefs.reducedMotion,
+                    compact = isShortLandscape,
+                    expandedHeight = stageHeight(screenH, 220.dp),
+                    backdrop = null,
+                    side = if (isShortLandscape) null else {
+                        { PlantGrowthPanel(collected = stageCorrect.coerceAtMost(initialDeck.size), total = initialDeck.size) }
+                    }
                 ) {
                     val helperControls: @Composable () -> Unit = {
                         IconButton(

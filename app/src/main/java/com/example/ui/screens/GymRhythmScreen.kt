@@ -1,5 +1,9 @@
 package com.example.ui.screens
 
+import com.example.ui.components.stageHeight
+import com.example.ui.components.RocketFuelPanel
+import com.example.ui.components.TeacherMood
+import com.example.ui.components.MinigameStage
 import android.graphics.Paint
 import android.graphics.Typeface
 import androidx.activity.compose.BackHandler
@@ -283,6 +287,9 @@ fun GymRhythmScreen(
     var combo by remember { mutableIntStateOf(0) }
     var completedSteps by remember { mutableIntStateOf(0) }
     var correctFirstTry by remember { mutableIntStateOf(0) }
+    var teacherMood by remember { mutableStateOf(TeacherMood.IDLE) }
+    var moodTrigger by remember { mutableIntStateOf(0) }
+    var stageCorrect by remember { mutableIntStateOf(0) }
     var helpsUsedTotal by remember { mutableIntStateOf(0) }
     var rawAnswerStars by remember { mutableIntStateOf(0) }
     var juicePopupText by remember { mutableStateOf("") }
@@ -426,6 +433,12 @@ fun GymRhythmScreen(
             usedHelp = usedHelpThisQuestion
         )
         if (usedHelpThisQuestion) helpsUsedTotal++
+
+        teacherMood = if (isCorrect) TeacherMood.HAPPY else TeacherMood.SAD
+
+        moodTrigger++
+
+        if (isCorrect) stageCorrect++
 
         scope.launch {
             if (isCorrect) {
@@ -626,6 +639,7 @@ fun GymRhythmScreen(
     ) {
         val isWide = maxWidth >= 760.dp
         val isShortLandscape = maxHeight < 520.dp && maxWidth > maxHeight
+        val screenH = maxHeight
 
         Column(
             modifier = Modifier
@@ -720,15 +734,20 @@ fun GymRhythmScreen(
                 val controlsEnabled = !readingPauseActive && !isInputLocked
 
                 // Compact Question Header Card (Focus Mode centered max 680dp)
-                GbaCard(
-                    modifier = Modifier
-                        .widthIn(max = 680.dp)
-                        .fillMaxWidth()
-                        .align(Alignment.CenterHorizontally),
-                    contentPadding = PaddingValues(
-                        horizontal = 12.dp,
-                        vertical = if (isShortLandscape) 6.dp else 10.dp
-                    )
+                MinigameStage(
+                    roomId = null,
+                    teacherSpriteId = "npc_math",
+                    teacherName = "Coach Pitagora",
+                    accent = Color(0xFFDC2626),
+                    mood = teacherMood,
+                    moodTrigger = moodTrigger,
+                    reducedMotion = prefs.reducedMotion,
+                    compact = isShortLandscape,
+                    expandedHeight = stageHeight(screenH, 220.dp),
+                    backdrop = spaceBackdrop,
+                    side = if (isShortLandscape) null else {
+                        { RocketFuelPanel(collected = stageCorrect.coerceAtMost(initialDeck.size), total = initialDeck.size) }
+                    }
                 ) {
                     val helperControls: @Composable () -> Unit = {
                         IconButton(
@@ -1434,4 +1453,16 @@ private fun DrawScope.drawPixelMatrix(
             )
         }
     }
+}
+
+/** Cielo stellato per il palco della Palestra Spaziale. */
+private val spaceBackdrop: androidx.compose.ui.graphics.drawscope.DrawScope.() -> Unit = {
+    drawRect(Brush.verticalGradient(listOf(Color(0xFF0B1026), Color(0xFF312E81))))
+    for (i in 0 until 60) {
+        val x = ((i * 97) % 1000) / 1000f * size.width
+        val y = ((i * 53) % 1000) / 1000f * size.height
+        drawCircle(Color.White.copy(alpha = 0.35f + (i % 3) * 0.2f), radius = 1.5f + (i % 2), center = Offset(x, y))
+    }
+    drawCircle(Color(0xFFA78BFA), radius = size.height * 0.16f, center = Offset(size.width * 0.82f, size.height * 0.30f))
+    drawCircle(Color(0xFF7C3AED), radius = size.height * 0.16f, center = Offset(size.width * 0.84f, size.height * 0.27f))
 }

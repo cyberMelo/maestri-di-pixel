@@ -346,6 +346,66 @@ CREDIT_SOURCES = [
 ]
 
 
+ROOM_W, ROOM_H = 30, 7  # piastrelle: 4 file di parete (cornice, intonaco x2, battiscopa) + 3 di pavimento
+
+
+def bake_room(sh: Sheets, room_id: str) -> Image.Image:
+    """Sfondo del "palco" in cima ai mini-giochi: parete dell'aula + pavimento, senza bordo extra.
+    Lavagna, scaffale e altri elementi che cambiano durante il gioco li disegna l'app sopra."""
+    img = Image.new("RGBA", (ROOM_W * T, ROOM_H * T))
+
+    def put(sprite, x, y, bottom=False, dx=0, dy=0):
+        px, py = x * T + dx, y * T + dy
+        if bottom:
+            px += (T - sprite.width) // 2
+            py += T - sprite.height
+        img.alpha_composite(sprite, (px, py))
+
+    plaster_top = sh.px("city_preview", 62, 372, T, T)
+    plaster_up = sh.px("city_preview", 62, 404, T, T)
+    plaster_low = sh.px("city_preview", 62, 468, T, T)
+    window = sh.px("city_preview", 128, 384, 30, 50)
+    floors = {
+        "english": sh.tile("house", 0, 3),
+        "library": sh.tile("house", 0, 3),
+        "lab": sh.px("city_preview", 62, 532, T, T),
+    }
+    for x in range(ROOM_W):
+        put(plaster_top, x, 0)
+        put(plaster_up, x, 1)
+        put(plaster_up, x, 2)
+        put(plaster_low, x, 3)
+        for y in range(4, ROOM_H):
+            put(floors[room_id], x, y)
+    # Ombra della parete sul pavimento
+    shade = Image.new("RGBA", (ROOM_W * T, 6), (30, 20, 20, 70))
+    img.alpha_composite(shade, (0, 4 * T))
+
+    plant = sh.tile("city", 10, 3, 1, 2)
+    if room_id == "english":
+        for x in (2, 6, 23, 27):
+            put(window, x, 1, dx=1, dy=6)
+        put(plant, 0, 4, bottom=True, dy=-8)
+        put(plant, ROOM_W - 1, 4, bottom=True, dy=-8)
+    elif room_id == "library":
+        shelves = [sh.tile("house", 1, 6, 1, 2), sh.tile("house", 5, 6, 1, 2)]
+        for x in range(ROOM_W):
+            put(shelves[(x * 7) % 3 == 0], x, 3, bottom=True)
+        rug = Image.new("RGBA", (ROOM_W * T, T), (120, 40, 60, 255))
+        ImageDraw.Draw(rug).rectangle((0, 3, ROOM_W * T, T - 4), outline=(236, 164, 58, 255), width=2)
+        img.alpha_composite(rug, (0, 5 * T))
+    elif room_id == "lab":
+        for x in (2, 6):
+            put(window, x, 1, dx=1, dy=6)
+        put(sh.tile("house", 2, 6, 1, 2), 10, 3, bottom=True)
+        put(sh.tile("house", 0, 6, 1, 2), 11, 3, bottom=True)
+        put(sh.tile("house", 2, 6, 1, 2), 18, 3, bottom=True)
+        put(sh.tile("house", 1, 6, 1, 2), 19, 3, bottom=True)
+        for x in (0, 14, ROOM_W - 1):
+            put(plant, x, 4, bottom=True, dy=-8)
+    return img
+
+
 def write_credits(src: Path, out: Path):
     """Raccoglie le attribuzioni dei pacchetti usati: le licenze CC-BY-SA / GPL / OGA-BY le richiedono."""
     parts = ["Sfondi del Cortile e dell'Atrio composti da tools/art/build_maps.py con piastrelle LPC.",
@@ -368,6 +428,11 @@ def main():
         layout = load_layout(res / "maps" / f"{map_id}.txt")
         baker(sh, layout).save(out / f"{map_id}.png", optimize=True)
         print(map_id, len(layout[0]), "x", len(layout))
+    rooms = res / "sprites" / "rooms"
+    rooms.mkdir(parents=True, exist_ok=True)
+    for room_id in ("english", "library", "lab"):
+        bake_room(sh, room_id).save(rooms / f"{room_id}.png", optimize=True)
+        print("aula", room_id)
     write_credits(src, res / "sprites" / "CREDITS-maps.txt")
 
 

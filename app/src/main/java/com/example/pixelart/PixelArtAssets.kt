@@ -101,6 +101,14 @@ object PixelArtAssets {
         return bmp.asImageBitmap().also { spriteCache[key] = it }
     }
 
+    /** Sfondo dell'aula per il palco dei mini-giochi (english, library, lab), senza bordo extra. */
+    fun getRoomBackground(roomId: String): ImageBitmap? {
+        val key = "room_$roomId"
+        spriteCache[key]?.let { return it }
+        val bmp = sheet("rooms/$roomId.png") ?: return null
+        return bmp.asImageBitmap().also { spriteCache[key] = it }
+    }
+
     /** Righe dei cicli di camminata LPC: 0 su, 1 sinistra, 2 giù, 3 destra. */
     private fun lpcRow(facing: Facing): Int = when (facing) {
         Facing.UP -> 0

@@ -1,5 +1,9 @@
 package com.example.ui.screens
 
+import com.example.ui.components.stageHeight
+import com.example.ui.components.BookshelfPanel
+import com.example.ui.components.TeacherMood
+import com.example.ui.components.MinigameStage
 import android.graphics.Paint
 import android.graphics.Typeface
 import androidx.activity.compose.BackHandler
@@ -153,6 +157,9 @@ fun LibraryBooksScreen(
     }
     var currentQueuePos by remember { mutableIntStateOf(0) }
     var correctFirstTry by remember { mutableIntStateOf(0) }
+    var teacherMood by remember { mutableStateOf(TeacherMood.IDLE) }
+    var moodTrigger by remember { mutableIntStateOf(0) }
+    var stageCorrect by remember { mutableIntStateOf(0) }
     var helpsUsed by remember { mutableIntStateOf(0) }
     var rawAnswerStars by remember { mutableIntStateOf(0) }
     var booksCaught by remember { mutableIntStateOf(0) }
@@ -312,6 +319,12 @@ fun LibraryBooksScreen(
             usedHelp = usedHelpOnCurrent
         )
 
+        teacherMood = if (slot.isCorrect) TeacherMood.HAPPY else TeacherMood.SAD
+
+        moodTrigger++
+
+        if (slot.isCorrect) stageCorrect++
+
         scope.launch {
             if (slot.isCorrect) {
                 viewModel.audioManager.playSfx(SfxType.ANSWER_CORRECT)
@@ -365,6 +378,7 @@ fun LibraryBooksScreen(
             .testTag("library_books_screen")
     ) {
         val isShortLandscape = maxHeight < 520.dp && maxWidth > maxHeight
+        val screenH = maxHeight
         val pad = if (isShortLandscape) 8.dp else 12.dp
         val vGap = if (isShortLandscape) 6.dp else 8.dp
 
@@ -426,13 +440,20 @@ fun LibraryBooksScreen(
             }
 
             // Question Prompt + Helpers Card (compact single row on phone landscape)
-            GbaCard(
-                modifier = Modifier.fillMaxWidth(),
-                borderColor = Color(0xFF7C3AED),
-                contentPadding = PaddingValues(
-                    horizontal = if (isShortLandscape) 10.dp else 14.dp,
-                    vertical = if (isShortLandscape) 6.dp else 10.dp
-                )
+            MinigameStage(
+                roomId = "library",
+                teacherSpriteId = "npc_library",
+                teacherName = "Bibliotecaria Sofia",
+                accent = Color(0xFF7C3AED),
+                mood = teacherMood,
+                moodTrigger = moodTrigger,
+                reducedMotion = prefs.reducedMotion,
+                compact = isShortLandscape,
+                expandedHeight = stageHeight(screenH, 230.dp),
+                backdrop = null,
+                side = if (isShortLandscape) null else {
+                    { BookshelfPanel(collected = stageCorrect.coerceAtMost(initialQuestions.size), total = initialQuestions.size) }
+                }
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),

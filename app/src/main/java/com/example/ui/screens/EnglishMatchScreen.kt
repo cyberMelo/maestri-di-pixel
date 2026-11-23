@@ -1,5 +1,13 @@
 package com.example.ui.screens
 
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.animation.core.Animatable
+import com.example.ui.components.stageHeight
+import com.example.ui.components.ChalkboardPanel
+import com.example.ui.components.TeacherMood
+import com.example.ui.components.MinigameStage
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -105,6 +113,7 @@ private data class EnglishDeckItem(
  * Cheerful bilingual card-match board with Teacher Emma, English pronunciation TTS button,
  * streak stars, and crisp tactile 2x2 flashcard tiles.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun EnglishMatchScreen(
     config: MinigameLaunchConfig,
@@ -165,6 +174,9 @@ fun EnglishMatchScreen(
 
     var showExitConfirm by remember { mutableStateOf(false) }
     var finalResult by remember { mutableStateOf<MinigameResult?>(null) }
+    var teacherMood by remember { mutableStateOf(TeacherMood.IDLE) }
+    var moodTrigger by remember { mutableIntStateOf(0) }
+    var learnedWords by remember { mutableStateOf(listOf<String>()) }
 
     val currentItem = queue.getOrNull(currentQueuePos)
     val currentQuestion = currentItem?.question
@@ -270,6 +282,19 @@ fun EnglishMatchScreen(
             usedHelp = usedHelpOnCurrent
         )
 
+        teacherMood = if (tile.isCorrect) TeacherMood.HAPPY else TeacherMood.SAD
+        moodTrigger++
+        if (tile.isCorrect) {
+            // Sulla lavagna la coppia parola chiave = risposta (es. "farfalla = Butterfly")
+            val answer = q.getCorrectAnswerDisplay()
+            val keyword = englishSpeakPhrase.trim()
+            val entry = if (keyword.isNotBlank() && !keyword.equals(answer, ignoreCase = true) && keyword.length <= 24) {
+                "$keyword = $answer"
+            } else {
+                answer
+            }
+            if (entry.isNotBlank() && entry !in learnedWords) learnedWords = learnedWords + entry
+        }
         scope.launch {
             if (tile.isCorrect) {
                 viewModel.audioManager.playSfx(SfxType.ANSWER_CORRECT)
@@ -322,6 +347,7 @@ fun EnglishMatchScreen(
             .testTag("english_match_screen")
     ) {
         val isShortLandscape = maxHeight < 520.dp && maxWidth > maxHeight
+        val screenH = maxHeight
         val pad = if (isShortLandscape) 8.dp else 14.dp
         val vGap = if (isShortLandscape) 6.dp else 10.dp
 
@@ -378,75 +404,56 @@ fun EnglishMatchScreen(
                 }
             }
 
-            // Teacher Emma + Question Prompt + Bilingual Audio Bar
-            GbaCard(
-                modifier = Modifier.fillMaxWidth(),
-                borderColor = Color(0xFFDC2626),
-                contentPadding = PaddingValues(
-                    horizontal = if (isShortLandscape) 10.dp else 14.dp,
-                    vertical = if (isShortLandscape) 8.dp else 12.dp
-                )
+            // Palco: aula d'inglese, Teacher Emma che reagisce, domanda nel fumetto, lavagna delle parole
+            val hintText = currentQuestion?.getEffectiveHint().orEmpty()
+            MinigameStage(
+                roomId = "english",
+                teacherSpriteId = "npc_english",
+                teacherName = "Teacher Emma",
+                accent = Color(0xFFDC2626),
+                mood = teacherMood,
+                moodTrigger = moodTrigger,
+                reducedMotion = prefs.reducedMotion,
+                compact = isShortLandscape,
+                expandedHeight = stageHeight(screenH, 280.dp),
+                side = if (isShortLandscape) null else {
+                    { ChalkboardPanel(title = "Words learned", words = learnedWords) }
+                }
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(if (isShortLandscape) 46.dp else 58.dp)
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(Color(0xFFDBEAFE))
-                            .border(2.dp, Color(0xFF1D4ED8), RoundedCornerShape(10.dp)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        PixelSprite(
-                            bitmap = PixelArtAssets.getCharacterSprite("npc_english", Facing.DOWN, 0),
-                            contentDescription = "Teacher Emma",
-                            modifier = Modifier.size(if (isShortLandscape) 36.dp else 46.dp)
-                        )
-                    }
-
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = if (!currentQuestion?.topic.isNullOrBlank()) {
-                                "ENGLISH LAB · ${currentQuestion!!.topic.uppercase()}"
-                            } else {
-                                "ENGLISH LAB · TEACHER EMMA"
-                            },
-                            style = MaterialTheme.typography.labelSmall,
-                            color = Color(0xFFDC2626),
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = TextFormatter.toAnnotatedString(highlightColor = keywordHighlightColor(), raw = currentQuestion?.prompt.orEmpty()),
-                            style = if (isShortLandscape) {
-                                MaterialTheme.typography.titleMedium.copy(fontSize = 16.sp, lineHeight = 20.sp)
-                            } else {
-                                MaterialTheme.typography.titleLarge.copy(fontSize = 21.sp, lineHeight = 27.sp)
-                            },
-                            color = MaterialTheme.colorScheme.onSurface,
-                            maxLines = if (isShortLandscape) 2 else 3,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.testTag("english_question_prompt")
-                        )
-                    }
-
-                    // Speak English phrase button
+                if (!currentQuestion?.topic.isNullOrBlank()) {
+                    Text(
+                        text = currentQuestion!!.topic.uppercase(),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color(0xFFDC2626),
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                Text(
+                    text = TextFormatter.toAnnotatedString(highlightColor = keywordHighlightColor(), raw = currentQuestion?.prompt.orEmpty()),
+                    style = if (isShortLandscape) {
+                        MaterialTheme.typography.titleMedium.copy(fontSize = 16.sp, lineHeight = 20.sp)
+                    } else {
+                        MaterialTheme.typography.titleLarge.copy(fontSize = 22.sp, lineHeight = 28.sp)
+                    },
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = if (isShortLandscape) 2 else 3,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.testTag("english_question_prompt")
+                )
+                Spacer(Modifier.height(6.dp))
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Button(
                         onClick = { viewModel.ttsManager.speakEnglish(englishSpeakPhrase) },
                         modifier = Modifier
                             .heightIn(min = 48.dp)
                             .testTag("english_speak_en_button"),
                         contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626))
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626), contentColor = Color.White)
                     ) {
                         Icon(Icons.Default.RecordVoiceOver, contentDescription = "Pronuncia inglese", modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(4.dp))
                         Text("EN", fontWeight = FontWeight.Bold)
                     }
-
-                    // Speak full Italian prompt
                     IconButton(
                         onClick = { currentQuestion?.let { viewModel.ttsManager.speak(it.prompt) } },
                         modifier = Modifier
@@ -455,14 +462,8 @@ fun EnglishMatchScreen(
                             .background(Color(0xFFDBEAFE))
                             .testTag("english_tts_button")
                     ) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.VolumeUp,
-                            contentDescription = "Ascolta domanda",
-                            tint = DeepBlueAccent
-                        )
+                        Icon(Icons.AutoMirrored.Filled.VolumeUp, contentDescription = "Ascolta domanda", tint = DeepBlueAccent)
                     }
-
-                    val hintText = currentQuestion?.getEffectiveHint().orEmpty()
                     if (hintText.isNotBlank()) {
                         Button(
                             onClick = {
@@ -485,7 +486,6 @@ fun EnglishMatchScreen(
                             }
                         }
                     }
-
                     if (prefs.enable5050 && tileOptions.size == 4 && eliminatedIndices.isEmpty()) {
                         Button(
                             onClick = {
@@ -500,7 +500,7 @@ fun EnglishMatchScreen(
                                 .heightIn(min = 48.dp)
                                 .testTag("english_5050_button"),
                             contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = DeepBlueAccent)
+                            colors = ButtonDefaults.buttonColors(containerColor = DeepBlueAccent, contentColor = Color.White)
                         ) {
                             Icon(Icons.Default.Filter2, contentDescription = "50/50", modifier = Modifier.size(18.dp))
                             if (!isShortLandscape) {
@@ -510,7 +510,6 @@ fun EnglishMatchScreen(
                         }
                     }
                 }
-
                 if (showHint && currentQuestion != null) {
                     Spacer(Modifier.height(4.dp))
                     Text(
@@ -568,6 +567,15 @@ fun EnglishMatchScreen(
                                 label = "eng_tile_scale"
                             )
                             val letterTag = ('A' + tile.index).toString()
+                            val flip = remember(currentQueuePos, tile.index) {
+                                Animatable(if (prefs.reducedMotion) 0f else 90f)
+                            }
+                            LaunchedEffect(currentQueuePos, tile.index) {
+                                if (flip.value != 0f) {
+                                    delay(tile.index * 70L)
+                                    flip.animateTo(0f, tween(260))
+                                }
+                            }
 
                             Button(
                                 onClick = { pickTile(tile.index) },
@@ -576,18 +584,22 @@ fun EnglishMatchScreen(
                                     .weight(1f)
                                     .fillMaxHeight()
                                     .scale(tileScale)
+                                    .graphicsLayer {
+                                        rotationY = flip.value
+                                        cameraDistance = 14f * density
+                                    }
                                     .testTag("english_tile_${tile.index}"),
                                 shape = RoundedCornerShape(16.dp),
                                 contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp),
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = bgColor,
-                                    contentColor = Color.White,
-                                    disabledContainerColor = bgColor.copy(alpha = 0.65f),
-                                    disabledContentColor = Color.White.copy(alpha = 0.7f)
+                                    containerColor = if (isSelected) bgColor else Color(0xFFFFFBEB),
+                                    contentColor = InkPrimary,
+                                    disabledContainerColor = if (isSelected) bgColor else Color(0xFFFFFBEB).copy(alpha = 0.7f),
+                                    disabledContentColor = InkPrimary.copy(alpha = 0.7f)
                                 ),
                                 border = BorderStroke(
-                                    width = if (isSelected) 3.5.dp else 2.5.dp,
-                                    color = if (isSelected) SoftGold else CreamBackground.copy(alpha = 0.85f)
+                                    width = if (isSelected) 6.dp else 5.dp,
+                                    color = if (isSelected) SoftGold else bgColor
                                 )
                             ) {
                                 Row(
@@ -599,25 +611,25 @@ fun EnglishMatchScreen(
                                         modifier = Modifier
                                             .size(if (isShortLandscape) 30.dp else 36.dp)
                                             .clip(RoundedCornerShape(8.dp))
-                                            .background(Color.White.copy(alpha = 0.22f)),
+                                            .background(bgColor),
                                         contentAlignment = Alignment.Center
                                     ) {
                                         Text(
                                             text = letterTag,
                                             fontFamily = SilkscreenFontFamily,
                                             fontSize = if (isShortLandscape) 13.sp else 15.sp,
-                                            color = SoftGold
+                                            color = Color.White
                                         )
                                     }
                                     Text(
                                         text = if (eliminated) "—" else tile.label,
                                         style = if (isShortLandscape) {
-                                            MaterialTheme.typography.titleMedium.copy(fontSize = 16.sp)
+                                            MaterialTheme.typography.titleMedium.copy(fontSize = 18.sp)
                                         } else {
-                                            MaterialTheme.typography.headlineSmall.copy(fontSize = 20.sp)
+                                            MaterialTheme.typography.headlineSmall.copy(fontSize = 30.sp, fontWeight = FontWeight.Bold)
                                         },
-                                        color = Color.White,
-                                        textAlign = TextAlign.Start,
+                                        color = if (isSelected) Color.White else InkPrimary,
+                                        textAlign = TextAlign.Center,
                                         maxLines = 2,
                                         overflow = TextOverflow.Ellipsis,
                                         modifier = Modifier.weight(1f)
