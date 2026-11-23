@@ -18,9 +18,10 @@ L'applicazione è sviluppata in **Kotlin + Jetpack Compose** (Android nativo).
 
 ## 2. Checklist QA sul Campo per i 2 Galaxy Tab 9"
 
-1. **Offline cold start (Modalità Aereo):**
-   - Attiva la Modalità Aereo sul tablet e avvia **Maestri di Pixel** da zero.
-   - Verifica creazione profilo, ingresso nel Cortile e accesso ai 6 pacchetti integrati delle materie senza alcun errore bloccante.
+1. **Primo avvio senza rete (Modalità Aereo):**
+   - Attiva la Modalità Aereo, installa e avvia **Maestri di Pixel** da zero: l'app non contiene domande proprie.
+   - Verifica creazione profilo, ingresso nel Cortile e la pillola "Domande da scaricare: tocca per riprovare" in alto; le aule rispondono che non ci sono ancora capitoli, senza errori.
+   - Disattiva la Modalità Aereo e tocca la pillola: le domande si scaricano e compare "Domande scaricate!".
 2. **Sync GitHub + fallback offline:**
    - Con Wi-Fi attivo avvia l'app: la sincronizzazione parte da sola in background. In **Area Genitori → Pacchetti & Sync** (tieni premuto 2 secondi sull'ingranaggio, PIN iniziale `1234`) verifica l'esito; *Sincronizza ora* la ripete a mano.
    - Attiva la Modalità Aereo, chiudi e riavvia l'app: verifica che tutti i pacchetti sincronizzati restino giocabili dalla cache locale.

@@ -2,7 +2,6 @@ package com.example
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
-import com.example.core.BundledAssetReader
 import com.example.core.GameBalance
 import com.example.core.GeneratorSpec
 import com.example.core.LearningEngine
@@ -39,7 +38,6 @@ class ScuolaRetroTestSuite {
     private lateinit var context: Context
     private lateinit var sandboxDir: File
     private lateinit var saveManager: SaveManager
-    private lateinit var assetReader: BundledAssetReader
     private lateinit var packManager: PackManager
     private lateinit var learningEngine: LearningEngine
 
@@ -49,25 +47,16 @@ class ScuolaRetroTestSuite {
         sandboxDir = Files.createTempDirectory("scuola_retro_test_").toFile()
         saveManager = SaveManager(sandboxDir)
         saveManager.loadAll()
-        assetReader = BundledAssetReader { path ->
-            try {
-                context.assets.open(path).bufferedReader(Charsets.UTF_8).use { it.readText() }
-            } catch (_: Exception) {
-                null
-            }
-        }
-        packManager = PackManager(sandboxDir, saveManager, assetReader)
-        packManager.reloadPacks()
+        packManager = PackManager(sandboxDir, saveManager)
+        TestPacks.installInto(packManager)
         learningEngine = LearningEngine(saveManager, packManager)
     }
 
     // Group 1: PackValidator & TextFormatter
     @Test
     fun test01_packValidatorAndTextFormatter() {
-        val manifestRaw = assetReader.readAssetText("packs/manifest.json")
-        assertNotNull("Bundled manifest.json missing", manifestRaw)
-        val manifestVal = PackValidator.validateManifest(JSONObject(manifestRaw!!))
-        assertTrue("Bundled manifest should be valid: ${manifestVal.errors}", manifestVal.isValid)
+        val manifestVal = PackValidator.validateManifest(JSONObject(TestPacks.read("manifest.json")))
+        assertTrue("Fixture manifest should be valid: ${manifestVal.errors}", manifestVal.isValid)
 
         // Reject path traversal & duplicates in manifest
         val evilManifest = JSONObject(
@@ -80,19 +69,9 @@ class ScuolaRetroTestSuite {
         assertFalse(evilRes.isValid)
         assertTrue(evilRes.errors.size >= 3)
 
-        // Validate all 6 bundled packs have 0 errors
-        val allBundledFiles = listOf(
-            "storia_egizi.json",
-            "scienze_fotosintesi.json",
-            "matematica_calcolo_base.json",
-            "italiano_grammatica.json",
-            "geografia_italia.json",
-            "inglese_base.json"
-        )
-        for (fileName in allBundledFiles) {
-            val raw = assetReader.readAssetText("packs/$fileName")
-            assertNotNull("Missing bundled pack $fileName", raw)
-            val res = PackValidator.validatePack(JSONObject(raw!!), fileName)
+        // Validate all 6 fixture packs have 0 errors
+        for (fileName in TestPacks.FILES) {
+            val res = PackValidator.validatePack(JSONObject(TestPacks.read(fileName)), fileName)
             assertTrue("Pack $fileName invalid: ${res.errors}", res.isValid)
             assertEquals(0, res.errors.size)
         }

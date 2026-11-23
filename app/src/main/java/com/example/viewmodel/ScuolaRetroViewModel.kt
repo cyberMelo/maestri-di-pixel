@@ -5,7 +5,6 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.core.AppConfig
 import com.example.core.AudioManager
-import com.example.core.BundledAssetReader
 import com.example.core.DailyMissionItem
 import com.example.core.GameBalance
 import com.example.core.LearningEngine
@@ -107,17 +106,21 @@ data class AppUiState(
     val shouldExitApp: Boolean = false
 )
 
-class ScuolaRetroViewModel(application: Application) : AndroidViewModel(application) {
+/**
+ * @param syncOnBoot scarica i pacchetti da GitHub all'avvio; i test lo spengono per non dipendere dalla rete.
+ */
+class ScuolaRetroViewModel @JvmOverloads constructor(
+    application: Application,
+    private val syncOnBoot: Boolean = true
+) : AndroidViewModel(application) {
     private val dataRoot = File(application.filesDir, "scuola_retro_data")
     val saveManager = SaveManager(dataRoot)
-    private val assetReader = BundledAssetReader { path ->
-        try {
-            application.assets.open(path).bufferedReader(Charsets.UTF_8).use { it.readText() }
-        } catch (_: Exception) {
-            null
-        }
+    private fun readAssetText(path: String): String? = try {
+        getApplication<Application>().assets.open(path).bufferedReader(Charsets.UTF_8).use { it.readText() }
+    } catch (_: Exception) {
+        null
     }
-    val packManager = PackManager(dataRoot, saveManager, assetReader)
+    val packManager = PackManager(dataRoot, saveManager)
     val learningEngine = LearningEngine(saveManager, packManager)
     val audioManager = AudioManager(saveManager)
     val ttsManager = TTSManager(application.applicationContext, audioManager)
@@ -136,7 +139,7 @@ class ScuolaRetroViewModel(application: Application) : AndroidViewModel(applicat
         viewModelScope.launch {
             saveManager.loadAll()
             packManager.reloadPacks()
-            val shopJson = assetReader.readAssetText("data/shop_catalog.json")
+            val shopJson = readAssetText("data/shop_catalog.json")
             loadedShopCatalog = if (shopJson != null) {
                 try {
                     SaveManager.parseShopCatalog(shopJson)
@@ -150,7 +153,7 @@ class ScuolaRetroViewModel(application: Application) : AndroidViewModel(applicat
 
             // Il repository dei pacchetti è fisso nell'app: a ogni avvio scarica in background
             // i pacchetti nuovi o modificati (offline usa la cache senza disturbare)
-            launchBackgroundSync()
+            if (syncOnBoot) launchBackgroundSync()
 
             delay(350)
             if (saveManager.activeProfile != null) {
@@ -629,6 +632,10 @@ class ScuolaRetroViewModel(application: Application) : AndroidViewModel(applicat
 
     fun onGuidancePillClicked() {
         if (_uiState.value.isTransitioning || _uiState.value.activeModal != ActiveModal.None) return
+        if (packManager.getActivePacks().isEmpty()) {
+            retryPackDownload()
+            return
+        }
         val rec = _uiState.value.recommendedActivity ?: return
         audioManager.playSfx(SfxType.UI_CLICK)
         val modeLabel = if (rec.isBoss) "Sfida Boss: ${rec.title}" else rec.title
@@ -900,6 +907,21 @@ class ScuolaRetroViewModel(application: Application) : AndroidViewModel(applicat
             _uiState.update { it.copy(isSyncing = true) }
             packManager.syncFromGithub()
             refreshSnapshot()
+        }
+    }
+
+    /** Le domande arrivano solo dal repository: senza pacchetti la pillola in alto richiama questo. */
+    private fun retryPackDownload() {
+        if (packManager.isSyncing) return
+        audioManager.playSfx(SfxType.UI_CLICK)
+        syncNow { result ->
+            showToast(
+                when {
+                    packManager.getActivePacks().isNotEmpty() -> "Domande scaricate! Buono studio!"
+                    result.status == "offline" -> "Nessuna connessione: collegati a internet e riprova."
+                    else -> "Domande non scaricate: controlla Area Genitori > Pacchetti & Sync."
+                }
+            )
         }
     }
 

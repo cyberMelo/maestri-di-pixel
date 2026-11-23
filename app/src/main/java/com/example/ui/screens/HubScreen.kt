@@ -1019,6 +1019,17 @@ private fun HubHudOverlay(
     val starTint = if (isDark) StarYellow else SoftGold
     val frameColor = GameBalance.frameColor(profile?.equippedFrame ?: "frame_classic")
     val stampsCount = uiState.sessionsThisWeek.coerceIn(0, GameBalance.WEEKLY_GOAL_SESSIONS)
+    // Senza pacchetti (primo avvio offline) la pillola resta sempre visibile e al tocco riprova il download
+    val recommended = uiState.recommendedActivity
+    val noPacks = uiState.activePacks.isEmpty()
+    val pillText = when {
+        noPacks && uiState.isSyncing -> "Scarico le domande..."
+        noPacks -> "Domande da scaricare: tocca per riprovare"
+        uiState.config.studyPreferences.showGuidancePill && recommended != null ->
+            if (recommended.isBoss) "Sfida Boss: ${recommended.title}" else "Consigliata: ${recommended.title}"
+        else -> null
+    }
+    val pillHighlight = noPacks || recommended?.isBoss == true
 
     Column(
         modifier = modifier.testTag("hub_hud"),
@@ -1091,10 +1102,10 @@ private fun HubHudOverlay(
             }
 
             // Center Guidance Pill on wide screens
-            if (!isCompactWidth && uiState.config.studyPreferences.showGuidancePill && uiState.recommendedActivity != null) {
+            if (!isCompactWidth && pillText != null) {
                 GuidancePill(
-                    title = uiState.recommendedActivity.title,
-                    isBoss = uiState.recommendedActivity.isBoss,
+                    text = pillText,
+                    highlight = pillHighlight,
                     onClick = onGuidanceClick,
                     modifier = Modifier
                         .weight(1f, fill = false)
@@ -1215,10 +1226,10 @@ private fun HubHudOverlay(
         }
 
         // Compact phone guidance pill on second row so nothing clips
-        if (isCompactWidth && uiState.config.studyPreferences.showGuidancePill && uiState.recommendedActivity != null) {
+        if (isCompactWidth && pillText != null) {
             GuidancePill(
-                title = uiState.recommendedActivity.title,
-                isBoss = uiState.recommendedActivity.isBoss,
+                text = pillText,
+                highlight = pillHighlight,
                 onClick = onGuidanceClick,
                 modifier = Modifier.align(Alignment.CenterHorizontally)
             )
@@ -1228,8 +1239,8 @@ private fun HubHudOverlay(
 
 @Composable
 private fun GuidancePill(
-    title: String,
-    isBoss: Boolean,
+    text: String,
+    highlight: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -1240,13 +1251,13 @@ private fun GuidancePill(
             .clickable(onClick = onClick)
             .testTag("guidance_pill"),
         shape = RoundedCornerShape(20.dp),
-        color = if (isBoss) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.primaryContainer,
-        border = BorderStroke(1.5.dp, if (isBoss) WarmAmber else if (isDark) SkyHighlight else DeepBlueAccent)
+        color = if (highlight) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.primaryContainer,
+        border = BorderStroke(1.5.dp, if (highlight) WarmAmber else if (isDark) SkyHighlight else DeepBlueAccent)
     ) {
         Text(
-            text = if (isBoss) "Sfida Boss: $title" else "Consigliata: $title",
+            text = text,
             style = MaterialTheme.typography.labelLarge,
-            color = if (isBoss) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onPrimaryContainer,
+            color = if (highlight) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onPrimaryContainer,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp)

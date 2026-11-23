@@ -48,9 +48,9 @@ class UiSmokeCrashTest {
 
     private fun createReadyViewModel(): ScuolaRetroViewModel {
         val app = ApplicationProvider.getApplicationContext<Application>()
-        val vm = ScuolaRetroViewModel(app)
+        val vm = ScuolaRetroViewModel(app, syncOnBoot = false)
         vm.saveManager.loadAll()
-        vm.packManager.reloadPacks()
+        TestPacks.installInto(vm.packManager)
         vm.createProfileAndEnterHub("Marco", 0)
         vm.updateStudyPreferences { it.copy(readingPauseSec = 0f, enable5050 = true) }
         vm.refreshSnapshot()

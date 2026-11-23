@@ -81,11 +81,12 @@ Accessibile tenendo premuta per **2 secondi** l'icona ingranaggio nella barra su
 
 ## Pacchetti didattici e Sincronizzazione GitHub
 
-L'app include già i pacchetti base per tutte e 6 le materie e funziona **100% offline**. I nuovi capitoli del sussidiario arrivano dal repository [`cyberMelo/maestri-di-pixel-packs`](https://github.com/cyberMelo/maestri-di-pixel-packs), fisso nell'app (`PackManager.LOCKED_GITHUB_*`):
+L'app **non contiene domande**: tutte arrivano dal repository [`cyberMelo/maestri-di-pixel-packs`](https://github.com/cyberMelo/maestri-di-pixel-packs), fisso nell'app (`PackManager.LOCKED_GITHUB_*`). Al primo avvio serve la rete per scaricarle; da lì in poi l'app funziona **offline** con la cache.
 
 - **A ogni avvio** l'app sincronizza in background (se il repository è privato serve il token, vedi sotto); senza rete usa la cache e continua a funzionare.
+- **Primo avvio senza rete**: nella barra in alto compare "Domande da scaricare: tocca per riprovare"; un tocco riprova il download appena c'è connessione.
 - **Scarica solo i file cambiati**, confrontando l'impronta (SHA Git) di ogni file con quella dell'ultimo download: basta caricare il file modificato su GitHub, non serve ricordarsi di alzare `version`.
-- **ID domanda unici tra tutti i pacchetti**: i progressi sono salvati per ID, quindi un pacchetto che riusa un ID di un altro pacchetto (anche di quelli inclusi nell'app) viene scartato e l'avviso compare in **Area Genitori → Pacchetti & Sync**.
+- **ID domanda unici tra tutti i pacchetti**: i progressi sono salvati per ID, quindi un pacchetto che riusa un ID di un altro pacchetto viene scartato e l'avviso compare in **Area Genitori → Pacchetti & Sync**.
 
 Prima di caricare, controlla manifest e pacchetti insieme con lo script incluso:
 ```bash

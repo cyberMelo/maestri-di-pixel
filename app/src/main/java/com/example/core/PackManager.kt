@@ -12,14 +12,9 @@ import java.io.IOException
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
-fun interface BundledAssetReader {
-    fun readAssetText(assetPath: String): String?
-}
-
 class PackManager(
     private val rootDir: File,
     private val saveManager: SaveManager,
-    private val assetReader: BundledAssetReader,
     private val httpClient: OkHttpClient = OkHttpClient.Builder()
         .connectTimeout(10, TimeUnit.SECONDS)
         .readTimeout(10, TimeUnit.SECONDS)
@@ -69,81 +64,36 @@ class PackManager(
     fun reloadPacks() {
         val loaded = linkedMapOf<String, PackData>()
 
-        // 1. Bundled packs from assets/packs/manifest.json (NEVER directory scan APK assets)
-        val bundledManifestRaw = assetReader.readAssetText("packs/manifest.json")
-        if (bundledManifestRaw != null) {
-            try {
-                val mObj = JSONObject(bundledManifestRaw)
-                if (PackValidator.validateManifest(mObj).isValid) {
-                    val entries = PackValidator.parseManifestEntries(mObj)
-                    for (entry in entries) {
-                        val rawPack = assetReader.readAssetText("packs/${entry.file}") ?: continue
-                        val pObj = JSONObject(rawPack)
-                        if (PackValidator.validatePack(pObj, entry.file).isValid) {
-                            val pack = PackValidator.parsePack(
-                                obj = pObj,
-                                source = "bundled",
-                                priority = entry.priority,
-                                archived = entry.archived
-                            )
-                            loaded[pack.packId] = pack
-                        }
-                    }
-                }
-            } catch (_: Exception) {
-                // Bundled manifest fallback safe
-            }
-        }
-
-        // 2. GitHub cached packs in packs_cache/
+        // 1. Pacchetti scaricati dal repository delle domande (packs_cache/): unica fonte ufficiale
         val cacheManifestFile = File(cacheDir, "manifest.json")
-        if (cacheManifestFile.exists()) {
+        val entries = try {
+            JSONObject(cacheManifestFile.readText(Charsets.UTF_8))
+                .takeIf { PackValidator.validateManifest(it).isValid }
+                ?.let { PackValidator.parseManifestEntries(it) }
+        } catch (_: Exception) {
+            null // nessun download ancora, o manifest rovinato: restano solo i pacchetti locali
+        }.orEmpty()
+        for (entry in entries) {
+            // Gli archiviati si caricano comunque (nascosti) per mostrare le medaglie già vinte
             try {
-                val mObj = JSONObject(cacheManifestFile.readText(Charsets.UTF_8))
-                if (PackValidator.validateManifest(mObj).isValid) {
-                    val entries = PackValidator.parseManifestEntries(mObj)
-                    for (entry in entries) {
-                        if (entry.archived) {
-                            val existing = loaded[entry.packId]
-                            if (existing != null) {
-                                loaded[entry.packId] = existing.copy(archived = true)
-                            } else {
-                                // Still try reading cached pack for medal metadata, marked archived
-                                val cachedFile = resolveSafeChild(cacheDir, entry.file)
-                                if (cachedFile != null && cachedFile.exists()) {
-                                    val pObj = JSONObject(cachedFile.readText(Charsets.UTF_8))
-                                    if (PackValidator.validatePack(pObj, entry.file).isValid) {
-                                        loaded[entry.packId] = PackValidator.parsePack(
-                                            obj = pObj,
-                                            source = "github",
-                                            priority = entry.priority,
-                                            archived = true
-                                        )
-                                    }
-                                }
-                            }
-                            continue
-                        }
-                        val cachedFile = resolveSafeChild(cacheDir, entry.file) ?: continue
-                        if (!cachedFile.exists()) continue
-                        val pObj = JSONObject(cachedFile.readText(Charsets.UTF_8))
-                        if (PackValidator.validatePack(pObj, entry.file).isValid) {
-                            val pack = PackValidator.parsePack(
-                                obj = pObj,
-                                source = "github",
-                                priority = entry.priority,
-                                archived = false
-                            )
-                            loaded[pack.packId] = pack
-                        }
-                    }
+                val cachedFile = resolveSafeChild(cacheDir, entry.file) ?: continue
+                if (!cachedFile.exists()) continue
+                val pObj = JSONObject(cachedFile.readText(Charsets.UTF_8))
+                if (PackValidator.validatePack(pObj, entry.file).isValid) {
+                    val pack = PackValidator.parsePack(
+                        obj = pObj,
+                        source = "github",
+                        priority = entry.priority,
+                        archived = entry.archived
+                    )
+                    loaded[pack.packId] = pack
                 }
             } catch (_: Exception) {
-                // Keep bundled packs intact if cache manifest is corrupted
+                // File rovinato: si salta solo questo pacchetto
             }
         }
 
-        // 3. Locally imported packs in packs_local/*.json (override and force archived = false)
+        // 2. Pacchetti importati a mano in packs_local/*.json (hanno la precedenza, mai archiviati)
         val localFiles = localDir.listFiles { f -> f.isFile && f.name.endsWith(".json") }
             ?.sortedBy { it.name } ?: emptyList()
         for (file in localFiles) {

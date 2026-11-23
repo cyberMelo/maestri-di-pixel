@@ -1,6 +1,6 @@
 # Maestri di Pixel — Pacchetti Didattici
 
-Repository dei pacchetti di domande che l'app **Maestri di Pixel** scarica sui tablet. Si aggiungono capitoli e verifiche man mano, senza ricompilare l'app.
+Repository dei pacchetti di domande che l'app **Maestri di Pixel** scarica sui tablet: è l'**unica fonte** delle domande, l'app non ne contiene nessuna. Si aggiungono capitoli e verifiche man mano, senza ricompilare l'app.
 
 ---
 
@@ -28,7 +28,7 @@ Alla scadenza del token la sincronizzazione mostra "Accesso negato" in Area Geni
 ## Aggiungere un nuovo capitolo
 
 1. Trasforma 1–2 pagine del sussidiario in un file `.json` (`schema_version = 1`) seguendo `schemas/pack.schema.json`.
-2. **Usa ID domanda unici** con un prefisso legato al pacchetto (es. `sto_romani_001`). I progressi sono salvati per ID: se un ID è già usato da un altro pacchetto, anche da uno di quelli inclusi nell'app, l'app scarta il pacchetto e lo segnala in Area Genitori.
+2. **Usa ID domanda unici** con un prefisso legato al pacchetto (es. `sto_romani_001`). I progressi sono salvati per ID: se un ID è già usato da un altro pacchetto, l'app scarta il pacchetto e lo segnala in Area Genitori.
 3. Aggiungi la voce in `packs/manifest.json` (schema in `schemas/manifest.schema.json`). Metti `"priority": true` nella settimana della verifica per il badge `!` nell'Hub e il bonus stelle `x1.5`; `"archived": true` lo nasconde mantenendo le medaglie.
 4. Controlla tutto insieme prima di caricare:
    ```bash
