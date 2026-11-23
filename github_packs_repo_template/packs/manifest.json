@@ -3,15 +3,6 @@
   "updated_at": "2026-11-21T09:00:00Z",
   "packs": [
     {
-      "pack_id": "storia_egizi",
-      "file": "storia_egizi.json",
-      "subject": "storia",
-      "title": "Gli Antichi Egizi",
-      "version": 1,
-      "priority": false,
-      "archived": false
-    },
-    {
       "pack_id": "scienze_fotosintesi",
       "file": "scienze_fotosintesi.json",
       "subject": "scienze",

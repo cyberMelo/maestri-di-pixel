@@ -45,7 +45,7 @@
     "pack_id": {
       "type": "string",
       "pattern": "^[a-z0-9_]{3,48}$",
-      "description": "Identificativo univoco snake_case (3-48 caratteri), es. storia_egizi."
+      "description": "Identificativo univoco snake_case (3-48 caratteri), es. storia_sumeri."
     },
     "subject": {
       "type": "string",
