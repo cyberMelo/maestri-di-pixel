@@ -572,6 +572,15 @@ class ScuolaRetroTestSuite {
         assertNotNull(PixelArtAssets.getHatIcon("hat_crown"))
         assertNotNull(PixelArtAssets.getCompanionSprite("pet_fox", 0))
         assertNotNull(PixelArtAssets.getCompanionSprite("pet_dragon", 1))
+        // Sprite LPC e sfondi dipinti caricati dalle resources, con le dimensioni attese
+        assertEquals(PixelArtAssets.CHARACTER_PX, PixelArtAssets.getCharacterSprite("npc_math", Facing.LEFT, 2).width)
+        for (map in listOf(SchoolMaps.schoolYard, SchoolMaps.schoolHallway)) {
+            val bg = PixelArtAssets.getMapBackground(map.id)
+            assertNotNull("Sfondo mancante per ${map.id}", bg)
+            val marginX = bg!!.width / PixelArtAssets.TILE_PX - map.width
+            val marginY = bg.height / PixelArtAssets.TILE_PX - map.height
+            assertTrue("Lo sfondo di ${map.id} deve coprire la griglia con un bordo uniforme", marginX > 0 && marginX == marginY)
+        }
 
         // Subject mastery map covers all 6 subjects
         val masteryMap = learningEngine.getSubjectMasteryMap()
@@ -581,7 +590,7 @@ class ScuolaRetroTestSuite {
         // Verify Atrium interactive props & friendly NPCs are reachable via A* without blocking any door
         val hallway = SchoolMaps.schoolHallway
         val start = hallway.spawns["from_yard"]!!
-        listOf("prop_trophy_case", "prop_missions_left", "prop_missions_right").forEach { propId ->
+        listOf("prop_trophy_case", "prop_missions").forEach { propId ->
             val prop = hallway.props.first { it.id == propId }
             val path = SchoolMaps.findPath4Dir(hallway, start, prop.pos, allowPartialPath = true)
             assertTrue("Atrium prop $propId must be reachable adjacent", path.isNotEmpty())

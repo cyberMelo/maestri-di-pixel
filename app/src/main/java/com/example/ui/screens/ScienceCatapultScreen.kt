@@ -83,6 +83,7 @@ import com.example.core.QuestionData
 import com.example.core.SfxType
 import com.example.core.ShuffledOptions
 import com.example.core.TextFormatter
+import com.example.ui.theme.keywordHighlightColor
 import com.example.ui.components.ConfirmModal
 import com.example.ui.components.DialogBoxModal
 import com.example.ui.components.ExplanationModal
@@ -770,7 +771,7 @@ fun ScienceCatapultScreen(
                                 horizontalArrangement = Arrangement.spacedBy(6.dp)
                             ) {
                                 Text(
-                                    text = TextFormatter.toAnnotatedString(q.prompt),
+                                    text = TextFormatter.toAnnotatedString(highlightColor = keywordHighlightColor(), raw = q.prompt),
                                     style = MaterialTheme.typography.titleMedium.copy(
                                         fontSize = 18.sp,
                                         lineHeight = 22.sp
@@ -786,7 +787,7 @@ fun ScienceCatapultScreen(
                             }
                         } else {
                             Text(
-                                text = TextFormatter.toAnnotatedString(q.prompt),
+                                text = TextFormatter.toAnnotatedString(highlightColor = keywordHighlightColor(), raw = q.prompt),
                                 style = MaterialTheme.typography.headlineSmall.copy(
                                     fontSize = if (isWide) 20.sp else 19.sp,
                                     lineHeight = if (isWide) 28.sp else 25.sp
@@ -835,7 +836,7 @@ fun ScienceCatapultScreen(
                                     .testTag("catapult_hint_banner")
                             ) {
                                 Text(
-                                    text = TextFormatter.toAnnotatedString("Indizio: $hintText"),
+                                    text = TextFormatter.toAnnotatedString(highlightColor = keywordHighlightColor(), raw = "Indizio: $hintText"),
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer
                                 )

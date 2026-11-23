@@ -1,0 +1,474 @@
+Sfondi del Cortile e dell'Atrio composti da tools/art/build_maps.py con piastrelle LPC.
+Licenze dei pacchetti: CC-BY-SA 3.0 / GPL 3.0 (alcune parti anche CC-BY 3.0 / OGA-BY 3.0).
+Tetto a coppi, tappeti, sommità dei muri e trofeo disegnati via codice nello script.
+
+======================================================================
+LPC Tile Atlas - https://opengameart.org/content/lpc-tile-atlas
+======================================================================
+License
+-------
+
+CC-BY-SA 3.0:
+ - http://creativecommons.org/licenses/by-sa/3.0/
+ - See the file: cc-by-sa-3.0.txt
+GNU GPL 3.0:
+ - http://www.gnu.org/licenses/gpl-3.0.html
+ - See the file: gpl-3.0.txt
+
+Note the file is based on the LCP contest readme so don't expect the exact little pieces used like the base one.
+*Additional license information.
+
+Assets from:
+
+LPC participants:
+----------------
+
+Casper Nilsson
+	*GNU GPL 3.0 or later
+	email: casper.nilsson@gmail.com
+	Freenode: CasperN
+	OpenGameArt.org: C.Nilsson
+	
+ - LPC C.Nilsson (2D art)
+
+Daniel Eddeland 
+	*GNU GPL 3.0 or later
+ - Tilesets of plants, props, food and environments, suitable for farming / fishing sims and other games. 
+ - Includes wheat, grass, sand tilesets, fence tilesets and plants such as corn and tomato. 
+
+
+Johann CHARLOT 
+	*GNU LGPL Version 3. 
+	*Later versions are permitted.
+	Homepage  http://poufpoufproduction.fr
+	Email     johannc@poufpoufproduction.fr
+	
+ - Shoot'em up graphic kit
+
+Skyler Robert Colladay 
+
+ - FeralFantom's Entry (2D art)
+
+BASE assets:
+------------
+
+Lanea Zimmerman (AKA Sharm)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ - barrel.png
+ - brackish.png
+ - buckets.png
+ - bridges.png
+ - cabinets.png
+ - cement.png
+ - cementstair.png
+ - chests.png
+ - country.png
+ - cup.png
+ - dirt2.png
+ - dirt.png
+ - dungeon.png
+ - grassalt.png
+ - grass.png
+ - holek.png
+ - holemid.png
+ - hole.png
+ - house.png
+ - inside.png
+ - kitchen.png
+ - lava.png
+ - lavarock.png
+ - mountains.png
+ - rock.png
+ - shadow.png
+ - signs.png
+ - stairs.png
+ - treetop.png
+ - trunk.png
+ - waterfall.png
+ - watergrass.png
+ - water.png
+ - princess.png and princess.xcf
+
+
+Stephen Challener (AKA Redshrike)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ - female_walkcycle.png
+ - female_hurt.png
+ - female_slash.png
+ - female_spellcast.png
+ - male_walkcycle.png
+ - male_hurt.png
+ - male_slash.png
+ - male_spellcast.png
+ - male_pants.png
+ - male_hurt_pants.png
+ - male_fall_down_pants.png
+ - male_slash_pants.png
+
+
+Charles Sanchez (AKA CharlesGabriel)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ - bat.png
+ - bee.png
+ - big_worm.png
+ - eyeball.png
+ - ghost.png
+ - man_eater_flower.png
+ - pumpking.png
+ - slime.png
+ - small_worm.png
+ - snake.png
+
+
+Manuel Riecke (AKA MrBeast)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ - hairfemale.png and hairfemale.xcf
+ - hairmale.png and hairmale.xcf
+ - soldier.png
+ - soldier_altcolor.png
+
+
+Daniel Armstrong (AKA HughSpectrum)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Castle work:
+
+ - castlewalls.png
+ - castlefloors.png
+ - castle_outside.png
+ - castlefloors_outside.png
+ - castle_lightsources.png
+
+======================================================================
+LPC Tile Atlas 2 - https://opengameart.org/content/lpc-tile-atlas2
+======================================================================
+License
+-------
+
+CC-BY-SA 3.0:
+ - http://creativecommons.org/licenses/by-sa/3.0/
+ - See the file: cc-by-sa-3.0.txt
+GNU GPL 3.0:
+ - http://www.gnu.org/licenses/gpl-3.0.html
+ - See the file: gpl-3.0.txt
+
+Note only some files from the entries are selected.
+*Additional license information.
+
+Assets from:
+
+LPC participants:
+----------------
+
+Barbara Rivera
+ 
+ - tree,tombstone
+
+Casper Nilsson
+	*GNU GPL 3.0 or later
+	email: casper.nilsson@gmail.com
+	Freenode: CasperN
+	OpenGameArt.org: C.Nilsson
+	
+ - LPC C.Nilsson (2D art)
+ 
+Chris Phillips
+
+ - tree
+
+Daniel Eddeland 
+	*GNU GPL 3.0 or later
+	
+ - Tilesets of plants, props, food and environments, suitable for farming / fishing sims and other games. 
+ - Includes wheat, grass, sand tilesets, fence tilesets and plants such as corn and tomato. 
+ - Also includes village/marketplace objects like sacks, food, some smithing equipment, tables and stalls.
+
+
+Anamaris and Krusmira (aka? Emilio J Sanchez)
+
+ - Sierra__Steampun-a-fy (with concept art)
+ 
+Jonas Klinger 
+
+ - Skorpio's SciFi Sprite Pack
+ 
+Joshua Taylor
+
+ - Fruit and Veggie Inventory
+ 
+Leo Villeveygoux
+
+ - Limestone Wall
+
+Mark Weyer 
+
+ - signpost+shadow
+ 
+Matthew Nash
+
+ - Public Toilet Tileset
+ 
+Skyler Robert Colladay
+
+ - FeralFantom's Entry
+
+
+BASE assets:
+------------
+
+Lanea Zimmerman (AKA Sharm)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ - barrel.png
+ - brackish.png
+ - buckets.png
+ - bridges.png
+ - cabinets.png
+ - cement.png
+ - cementstair.png
+ - chests.png
+ - country.png
+ - cup.png
+ - dirt2.png
+ - dirt.png
+ - dungeon.png
+ - grassalt.png
+ - grass.png
+ - holek.png
+ - holemid.png
+ - hole.png
+ - house.png
+ - inside.png
+ - kitchen.png
+ - lava.png
+ - lavarock.png
+ - mountains.png
+ - rock.png
+ - shadow.png
+ - signs.png
+ - stairs.png
+ - treetop.png
+ - trunk.png
+ - waterfall.png
+ - watergrass.png
+ - water.png
+ - princess.png and princess.xcf
+
+
+Stephen Challener (AKA Redshrike)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ - female_walkcycle.png
+ - female_hurt.png
+ - female_slash.png
+ - female_spellcast.png
+ - male_walkcycle.png
+ - male_hurt.png
+ - male_slash.png
+ - male_spellcast.png
+ - male_pants.png
+ - male_hurt_pants.png
+ - male_fall_down_pants.png
+ - male_slash_pants.png
+
+
+Charles Sanchez (AKA CharlesGabriel)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ - bat.png
+ - bee.png
+ - big_worm.png
+ - eyeball.png
+ - ghost.png
+ - man_eater_flower.png
+ - pumpking.png
+ - slime.png
+ - small_worm.png
+ - snake.png
+
+
+Manuel Riecke (AKA MrBeast)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ - hairfemale.png and hairfemale.xcf
+ - hairmale.png and hairmale.xcf
+ - soldier.png
+ - soldier_altcolor.png
+
+
+Daniel Armstrong (AKA HughSpectrum)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Castle work:
+
+ - castlewalls.png
+ - castlefloors.png
+ - castle_outside.png
+ - castlefloors_outside.png
+ - castle_lightsources.png
+
+======================================================================
+LPC City Inside - https://opengameart.org/content/lpc-city-inside
+======================================================================
+city_inside.png
+= Red carpets =
+* From LPC base tileset by Daniel Armstrong (AKA HughSpectrum)
+= Beds =
+* Based on bed from LPC base tileset by Lanea Zimmerman (AKA Sharm)
+= Wooden big table =
+* Based on table from LPC base tileset by Lanea Zimmerman (AKA Sharm)
+= Cloth big table =
+* By Tuomo Untinen
+= Brazier =
+* By Tuomo Untinen
+= Throne =
+* By Tuomo Untinen
+= Doors =
+* Based on door by Guido Bos
+= Cupboard, small table and table with mirror =
+* Cupboard based on LPC base tileset by Lanea Zimmerman (AKA Sharm)
+* Tables are from Castle_2.png by Lanea Zimmerman (AKA Sharm)
+* Mirror by Tuomo Untinen
+= Red banners, paintings and old papers =
+* By Tuomo Untinen
+= Small footchair =
+* By Tuomo Untinen
+= Double bed =
+* By Tuomo Untinen
+= Plants in pots =
+* By Tuomo Untinen
+= Gray bright windows =
+* By Tuomo Untinen
+= Short column and statue =
+* By Tuomo Untinen
+= Stone sign =
+* By Tuomo Untinen
+= Horse head =
+* By Tuomo Untinen
+= Grand piano =
+* By Tuomo Untinen
+= Cobblestone floor =
+* By Tuomo Untinen
+= Cellwall and door =
+* By Tuomo Untinen
+= Yellow stone floor =
+* Based from LPC base tileset by Daniel Armstrong (AKA HughSpectrum)
+= Gray wall topping  =
+* Tuomo Untinen
+= Vases with cover =
+* Based LPC base tiles by Lanea Zimmerman (AKA Sharm)
+* Modifications by Tuomo Untinen
+= Fireplace =
+* By Lanea Zimmerman
+
+======================================================================
+LPC House Interior and Decorations - https://opengameart.org/content/lpc-house-interior-and-decorations
+======================================================================
+= Wooden floor(CC-BY-SA) =
+ * Horizontal wooden floor by Lanea Zimmerman (AKA Sharm)
+ * Horizontal wooden floor with hole by Lanea Zimmerman (AKA Sharm) and Tuomo Untinen
+ * Vertical wooden floor by Tuomo Untinen
+ * Vertical wooden floor with hole by Tuomo Untinen
+= Wooden wall topping (CC-BY-SA) =
+ * Tuomo Untinen
+= Pile of barrels =
+ * Based LPC base tiles by Lanea Zimmerman (AKA Sharm)
+= Decorational stuff (CC-BY-SA) =
+ * Green bottle
+ * Wine glass and bottle
+ * Hanging sacks
+ * Wall mounted rope and ropes
+ * Wall mounted swords
+ * Wall mounted kite shield
+ * Wall hole
+ By Tuomo Untinen
+ * Small sack from LPC farming tileset by Daniel Eddeland (http://opengameart.org/content/lpc- farming-tilesets-magic-animations-and-ui-elements) 
+ * Purple bottles and gray lantern from Hyptosis Mage city
+ * Green and blue bottle by Tuomo Untinen
+= Wall clock (CC-BY-SA) =
+ * Lanea Zimmerman AKA Sharm
+ * Tuomo Untinen (Scaled down and animation)
+= Stone floor (CC-BY-SA)= 
+ * Tuomo Untinen 
+= Cobble stone floor (CC-BY-SA)= 
+ * Based on LPC base tileset by Lanea Zimmerman (AKA Sharm)
+= Cabinets and kitchen stuff including metal stove(CC-BY-SA) =
+ * Based on LPC base tileset by Lanea Zimmerman (AKA Sharm)
+ * Cutboard is made by Hyptosis
+ * Sacks based on LPC farming tileset by Daniel Eddeland (http://opengameart.org/content/lpc- farming-tilesets-magic-animations-and-ui-elements) 
+ * Spears by Tuomo Untinen
+ * Vertical chest by Tuomo Untinen based on LPC base tiles Lanea Zimmerman (AKA Sharm)
+Manuel Riecke (AKA MrBeast)
+= Skull (CC-BY-SA) =
+ * http://opengameart.org/content/lpc-dungeon-elements
+ * Graphical artist Lanea Zimmerman AKA Sharm
+ * Contributor William Thompson
+= pile sacks =
+ * LPC farming tileset by Daniel Eddeland (http://opengameart.org/content/lpc- farming-tilesets-magic-animations-and-ui-elements) 
+= Pile of papers(CC-BY-SA) = 
+ * Based on caeles papers
+= Armor shelves(CC-BY-SA) =
+ * Based on LPC base tileset by Lanea Zimmerman (AKA Sharm)
+ * Armors by: Adapted by Matthew Krohn from art created by Johannes Sjölund
+= Table lamp =
+  * Tuomo Untinen
+= Distiller =
+ * Table is from LPC base tileset by Lanea Zimmerman (AKA Sharm)
+ * Distiller by Tuomo Untinen
+= Fireplace =
+ * Tuomo Untinen
+ * Inspired by Lanea Zimmerman (AKA Sharm) Fireplace
+
+======================================================================
+LPC Wooden Furniture - https://opengameart.org/content/lpc-wooden-furniture
+======================================================================
+"LPC Wooden Furniture" by bluecarrot16, Baŝto, Lanea Zimmerman (Sharm), William Thompson, Tuomo Untinen (Reemax), Janna/Lilius/Jannax. Please link back to https://opengameart.org/content/lpc-wooden-furniture . see CREDITS-*.txt. All information in this file must be included.
+
+
+Liberated Pixel Cup (LPC) Base Assets (sprites & map tiles)
+Lanea Zimmerman (Sharm)
+CC-BY-SA 3.0 / GPL 3.0
+http://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles
+
+LPC: Modified base tiles
+Lanea Zimmerman (Sharm), William Thompson
+CC-BY 3.0 / CC-BY-SA 3.0 / GPL 3.0 / OGA-BY 3.0
+http://opengameart.org/content/lpc-modified-base-tiles
+
+[LPC] House interior and decorations
+Tuomo Untinen (Reemax)
+CC-BY-SA 3.0 / GPL 3.0 / GPL 2.0
+http://opengameart.org/content/lpc-house-interior-and-decorations
+
+Flowers, buildings and boxes; Interior wooden tiles; some old castle stuff
+CC-BY-SA 3.0 / GPL 3.0
+Guido Bos
+https://opengameart.org/content/flowers-buildings-and-boxes-interior-wooden-tiles-some-old-castle-stuff
+
+[LPC] Dungeon Elements
+Lanea Zimmerman (Sharm), William.Thompsonj
+CC-BY 3.0 / GPL 3.0 / GPL 2.0 / OGA-BY 3.0
+https://opengameart.org/content/lpc-dungeon-elements
+
+LPC: Interior Castle Tiles
+Lanea Zimmerman (Sharm)
+CC-BY 3.0 / CC-BY-SA 3.0 / GPL 3.0 / OGA-BY 3.0
+https://opengameart.org/content/lpc-interior-castle-tiles
+
+Home Objects
+Janna/Lilius/Jannax
+CC0
+https://opengameart.org/content/home-objects
+
+[LPC] Clock Animation
+Lanea Zimmerman (Sharm), William.Thompsonj
+CC-BY 3.0 / GPL 3.0
+https://opengameart.org/content/lpc-clock-animation
+
+======================================================================
+LPC Flowers (flowers.png) - https://opengameart.org/content/lpc-tile-atlas
+======================================================================

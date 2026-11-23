@@ -92,7 +92,6 @@ import com.example.pixelart.HubPortal
 import com.example.pixelart.PixelArtAssets
 import com.example.pixelart.SchoolMapData
 import com.example.pixelart.SchoolMaps
-import com.example.pixelart.TileKind
 import com.example.ui.components.PixelSprite
 import com.example.ui.components.VirtualDpad
 import com.example.ui.theme.CreamBackground
@@ -404,15 +403,12 @@ fun HubScreen(
             val canvasHeightPx = with(density) { maxHeight.toPx() }
             val isTablet = maxWidth >= 680.dp
 
-            // Resolution-adaptive tile scale: scales in dp + covers screen width/height with zero empty bars
-            val tileDrawPx = remember(canvasWidthPx, canvasHeightPx, maxWidth, map.width, map.height, density) {
-                val minTilePx = with(density) {
-                    (if (maxWidth >= 840.dp) 46.dp else if (maxWidth >= 600.dp) 42.dp else 38.dp).toPx()
-                }
-                val maxTilePx = with(density) { 68.dp.toPx() }
-                val fitWidthPx = if (map.width > 0) canvasWidthPx / map.width.toFloat() else minTilePx
-                val fitHeightPx = if (map.height > 0) canvasHeightPx / map.height.toFloat() else minTilePx
-                maxOf(minTilePx, fitWidthPx, fitHeightPx).coerceAtMost(maxTilePx)
+            // Ingrandimento intero dei disegni a 32 px (x2, x3, x4): i pixel restano tutti uguali e nitidi.
+            // La piastrella mira a ~52 dp; lo sfondo dipinto ha un bordo extra, quindi non servono bande vuote.
+            val tileDrawPx = remember(density) {
+                val targetPx = with(density) { 52.dp.toPx() }
+                val scale = (targetPx / PixelArtAssets.TILE_PX).roundToInt().coerceIn(2, 4)
+                (PixelArtAssets.TILE_PX * scale).toFloat()
             }
             val mapPixelW = map.width * tileDrawPx
             val mapPixelH = map.height * tileDrawPx
@@ -520,81 +516,29 @@ fun HubScreen(
                 }
         ) {
             val tileSizeInt = tileDrawPx.roundToInt()
-
-            // Draw visible tiles + seamless natural border extension so zero empty bars ever appear
-            val startCol = floor(camX / tileDrawPx).toInt() - 1
-            val endCol = floor((camX + size.width) / tileDrawPx).toInt() + 1
-            val startRow = floor(camY / tileDrawPx).toInt() - 1
-            val endRow = floor((camY + size.height) / tileDrawPx).toInt() + 1
-
             val reducedMotion = uiState.config.studyPreferences.reducedMotion
             val nowMs = animClockMs
             val timeSec = (nowMs % 60_000L) / 1000f
 
-            for (y in startRow..endRow) {
-                for (x in startCol..endCol) {
-                    val inBounds = x in 0 until map.width && y in 0 until map.height
-                    val kind = if (inBounds) {
-                        map.tileAt(x, y)
-                    } else if (hubId == "school_hallway") {
-                        if (y < 0) TileKind.HALL_WALL_TOP else TileKind.HALL_WALL
-                    } else {
-                        val hash = ((x * 7 + y * 13) % 5 + 5) % 5
-                        if (y < 0 || hash == 0 || hash == 3) TileKind.TREE_BUSH
-                        else if (hash == 2) TileKind.GRASS_FLOWERS
-                        else TileKind.GRASS_PLAIN
-                    }
-                    val tileBmp = PixelArtAssets.tiles[kind] ?: continue
-                    val dx = (x * tileDrawPx - camX).roundToInt()
-                    val dy = (y * tileDrawPx - camY).roundToInt()
-                    drawImage(
-                        image = tileBmp,
-                        dstOffset = IntOffset(dx, dy),
-                        dstSize = IntSize(tileSizeInt + 1, tileSizeInt + 1),
-                        filterQuality = FilterQuality.None
-                    )
-                    if (!inBounds) continue
-                    // Subtle animated sunlight shimmer on flowers, windows, and trophy case
-                    if (!reducedMotion) {
-                        val phase = (x * 7 + y * 13 + ambientTick) % 6
-                        if (kind == com.example.pixelart.TileKind.GRASS_FLOWERS && phase == 0) {
-                            drawCircle(
-                                color = Color(0xBBFEF08A),
-                                radius = tileDrawPx * 0.07f,
-                                center = Offset(dx + tileDrawPx * 0.25f, dy + tileDrawPx * 0.28f)
-                            )
-                        } else if ((kind == com.example.pixelart.TileKind.WINDOW_EXT || kind == com.example.pixelart.TileKind.WINDOW_INT) && phase <= 1) {
-                            drawRect(
-                                color = Color(0x44E0F2FE),
-                                topLeft = Offset(dx + tileDrawPx * 0.22f, dy + tileDrawPx * 0.22f),
-                                size = androidx.compose.ui.geometry.Size(tileDrawPx * 0.20f, tileDrawPx * 0.16f)
-                            )
-                        } else if (kind == com.example.pixelart.TileKind.TROPHY_CASE && phase <= 1) {
-                            drawCircle(
-                                color = Color(0xEEFEF08A),
-                                radius = tileDrawPx * 0.10f,
-                                center = Offset(dx + tileDrawPx * 0.50f, dy + tileDrawPx * 0.28f)
-                            )
-                        }
-                    }
-                }
+            // Sfondo dipinto (tools/art/build_maps.py): la griglia logica parte dopo il bordo extra
+            PixelArtAssets.getMapBackground(hubId)?.let { bg ->
+                val scale = tileDrawPx / PixelArtAssets.TILE_PX
+                val margin = (bg.width / PixelArtAssets.TILE_PX - map.width) / 2
+                drawImage(
+                    image = bg,
+                    dstOffset = IntOffset((-margin * tileDrawPx - camX).roundToInt(), (-margin * tileDrawPx - camY).roundToInt()),
+                    dstSize = IntSize((bg.width * scale).roundToInt(), (bg.height * scale).roundToInt()),
+                    filterQuality = FilterQuality.None
+                )
             }
 
-            // Warm sunlit window shafts inside the Atrium
-            if (hubId == "school_hallway" && !reducedMotion) {
-                for (winX in listOf(2f, 23f)) {
-                    val bx = winX * tileDrawPx - camX
-                    val by = 2f * tileDrawPx - camY
-                    val rayPath = Path().apply {
-                        moveTo(bx + tileDrawPx * 0.1f, by)
-                        lineTo(bx + tileDrawPx * 0.9f, by)
-                        lineTo(bx + tileDrawPx * 1.45f, by + tileDrawPx * 2.6f)
-                        lineTo(bx - tileDrawPx * 0.35f, by + tileDrawPx * 2.6f)
-                        close()
-                    }
-                    drawPath(path = rayPath, color = Color(0x1FFEF9C3))
-                }
-            }
+            // Personaggi LPC: fotogramma quadrato più grande di una piastrella, piedi sul fondo della cella
+            val characterPx = tileDrawPx * PixelArtAssets.CHARACTER_PX / PixelArtAssets.TILE_PX
+            fun characterOffset(x: Float, y: Float, bob: Int = 0) = IntOffset(
+                (x + 0.5f - characterPx / tileDrawPx / 2f).let { it * tileDrawPx - camX }.roundToInt(),
+                ((y + 1f) * tileDrawPx - characterPx - camY).roundToInt() + bob
+            )
+            val characterSize = IntSize(characterPx.roundToInt(), characterPx.roundToInt())
 
             // Door proximity welcome glow when player approaches any door
             for (portal in map.portals) {
@@ -677,13 +621,13 @@ fun HubScreen(
                 val idleBob = if (!reducedMotion && (ambientTick + npc.pos.x) % 4 == 0) -2 else 0
                 drawOval(
                     color = Color(0x4A000000),
-                    topLeft = Offset(nx + tileDrawPx * 0.14f, ny + tileDrawPx * 0.80f),
-                    size = androidx.compose.ui.geometry.Size(tileDrawPx * 0.72f, tileDrawPx * 0.20f)
+                    topLeft = Offset(nx + tileDrawPx * 0.20f, ny + tileDrawPx * 0.82f),
+                    size = androidx.compose.ui.geometry.Size(tileDrawPx * 0.60f, tileDrawPx * 0.20f)
                 )
                 drawImage(
                     image = bmp,
-                    dstOffset = IntOffset(nx.roundToInt(), ny.roundToInt() + idleBob),
-                    dstSize = IntSize(tileSizeInt, tileSizeInt),
+                    dstOffset = characterOffset(npc.pos.x.toFloat(), npc.pos.y.toFloat(), idleBob),
+                    dstSize = characterSize,
                     filterQuality = FilterQuality.None
                 )
             }
@@ -694,13 +638,13 @@ fun HubScreen(
             val py = playerRenderY * tileDrawPx - camY
             drawOval(
                 color = Color(0x52000000),
-                topLeft = Offset(px + tileDrawPx * 0.14f, py + tileDrawPx * 0.80f),
-                size = androidx.compose.ui.geometry.Size(tileDrawPx * 0.72f, tileDrawPx * 0.20f)
+                topLeft = Offset(px + tileDrawPx * 0.20f, py + tileDrawPx * 0.82f),
+                size = androidx.compose.ui.geometry.Size(tileDrawPx * 0.60f, tileDrawPx * 0.20f)
             )
             drawImage(
                 image = playerBmp,
-                dstOffset = IntOffset(px.roundToInt(), py.roundToInt()),
-                dstSize = IntSize(tileSizeInt, tileSizeInt),
+                dstOffset = characterOffset(playerRenderX, playerRenderY),
+                dstSize = characterSize,
                 filterQuality = FilterQuality.None
             )
 
@@ -912,7 +856,7 @@ fun HubScreen(
 
                 for (npc in map.npcs) {
                     val cx = (npc.pos.x + 0.5f) * tileDrawPx - camX
-                    val topY = npc.pos.y * tileDrawPx - camY - 5f
+                    val topY = (npc.pos.y + 1) * tileDrawPx - characterPx - camY + 2f
                     val hasPrio = when (npc.subjectFilter) {
                         "storia" -> storiaPriority
                         "scienze" -> scienzePriority
@@ -934,7 +878,8 @@ fun HubScreen(
                 // Draw interactive Atrium prop signs (Trophy Case + Mission Boards)
                 for (prop in map.props) {
                     val cx = (prop.pos.x + 0.5f) * tileDrawPx - camX
-                    val topY = prop.pos.y * tileDrawPx - camY - 4f
+                    val propRows = if (map.tileAt(prop.pos.x, prop.pos.y).symbol == 'C') 1 else 0 // teca alta 2 piastrelle
+                    val topY = (prop.pos.y - propRows) * tileDrawPx - camY - 4f
                     val isMissions = prop.action == com.example.pixelart.PortalAction.OpenDailyMissions
                     val badge = isMissions && claimableMissionsCount > 0
                     val propColor = if (isMissions) {
@@ -947,7 +892,9 @@ fun HubScreen(
 
                 for (portal in map.portals) {
                     val cx = (portal.pos.x + 0.5f) * tileDrawPx - camX
-                    val doorTopY = portal.pos.y * tileDrawPx - camY
+                    // Le porte dipinte sono alte 2 piastrelle (tranne il varco nel muro sud): la targa va sopra
+                    val doorRows = if (portal.pos.y == map.height - 1) 0 else 1
+                    val doorTopY = (portal.pos.y - doorRows) * tileDrawPx - camY
                     val hasPrio = when (portal.id) {
                         "portal_school_entrance" -> storiaPriority || mathPriority || scienzePriority || italianoPriority || geografiaPriority || inglesePriority
                         "portal_history" -> storiaPriority

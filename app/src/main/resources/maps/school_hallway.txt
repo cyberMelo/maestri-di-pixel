@@ -1,0 +1,17 @@
+# Atrio della scuola: una riga per fila di piastrelle (legenda in TileKind.symbol)
+tttttttttttttttttttttttttt
+twwowwwowwwowwowwwowwwowwt
+twLww2wwwNwww3wwwwwww4wLwt
+tPbabmbababacmcabababmbaPt
+tbabababababcccbababababat
+ttttttbabPcccccccPbatttttt
+towwwwababccSCSccbabwwwwot
+tww1wwbabnccdddccnbawwDwwt
+tbamccccccccccccccccccmbat
+tababababPcccccccPbabababt
+ttttttabababcccbababtttttt
+towwwwbabnbacccabnbawwwwot
+tww5wwabababcccbababww6wwt
+tabmccccccccccccccccccmabt
+tbabababaPabcmcbaPabababat
+twwwwwwwwwwwwDwwwwwwwwwwwt

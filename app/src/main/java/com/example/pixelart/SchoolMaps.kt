@@ -76,62 +76,25 @@ object SchoolMaps {
     val schoolYard: SchoolMapData by lazy { buildSchoolYard() }
     val schoolHallway: SchoolMapData by lazy { buildSchoolHallway() }
 
+
+    /**
+     * Pianta della mappa da resources/maps/<id>.txt: una riga per fila, un carattere per piastrella
+     * (vedi [TileKind.symbol]); le righe che iniziano con # sono commenti. Lo stesso file è usato da
+     * tools/art/build_maps.py per dipingere lo sfondo, così grafica e collisioni coincidono sempre.
+     */
+    private fun loadGrid(mapId: String): Array<Array<TileKind>> {
+        val text = SchoolMaps::class.java.getResourceAsStream("/maps/$mapId.txt")
+            ?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }
+            ?: error("Pianta mancante: resources/maps/$mapId.txt")
+        val rows = text.lines().filter { it.isNotBlank() && !it.startsWith("#") }
+        require(rows.all { it.length == rows[0].length }) { "Righe di lunghezza diversa in $mapId.txt" }
+        return Array(rows.size) { y -> Array(rows[y].length) { x -> TileKind.fromSymbol(rows[y][x]) } }
+    }
+
     private fun buildSchoolYard(): SchoolMapData {
-        val w = 26
-        val h = 18
-        val grid = Array(h) { Array(w) { TileKind.GRASS_PLAIN } }
-
-        // Scattered flowers
-        val flowerSpots = listOf(
-            GridPos(3, 8), GridPos(6, 13), GridPos(20, 9), GridPos(22, 13),
-            GridPos(8, 7), GridPos(18, 14), GridPos(4, 15), GridPos(21, 7)
-        )
-        flowerSpots.forEach { grid[it.y][it.x] = TileKind.GRASS_FLOWERS }
-
-        // Perimeter trees and fences
-        for (x in 0 until w) {
-            grid[0][x] = TileKind.TREE_BUSH
-            grid[h - 1][x] = TileKind.FENCE_H
-        }
-        for (y in 0 until h) {
-            grid[y][0] = TileKind.TREE_BUSH
-            grid[y][w - 1] = TileKind.TREE_BUSH
-        }
-
-        // School building facade along top (rows 1..4, cols 5..20)
-        for (x in 5..20) {
-            grid[1][x] = TileKind.SCHOOL_ROOF
-            grid[2][x] = TileKind.SCHOOL_ROOF
-            grid[3][x] = TileKind.SCHOOL_WALL_EXT
-            grid[4][x] = TileKind.SCHOOL_WALL_EXT
-        }
-        // Facade windows
-        for (wx in listOf(7, 9, 16, 18)) {
-            grid[3][wx] = TileKind.WINDOW_EXT
-        }
-        // Main School Entrance door at (13, 4) & doormat at (13, 5)
-        grid[4][12] = TileKind.SCHOOL_WALL_EXT
-        grid[4][13] = TileKind.DOOR_ACTIVE
-        grid[5][13] = TileKind.DOORMAT
-
-        // Stone paths connecting entrance and NPC plazas
-        for (y in 6..15) {
-            grid[y][12] = TileKind.PATH_STONE
-            grid[y][13] = TileKind.PATH_STONE
-        }
-        for (x in 5..21) {
-            grid[10][x] = TileKind.PATH_STONE
-            grid[11][x] = TileKind.PATH_STONE
-        }
-        // Plazas around NPCs
-        for (x in 4..7) for (y in 8..11) grid[y][x] = TileKind.PATH_STONE
-        for (x in 18..21) for (y in 8..11) grid[y][x] = TileKind.PATH_STONE
-
-        // Yard benches
-        grid[7][8] = TileKind.BENCH
-        grid[7][17] = TileKind.BENCH
-        grid[14][7] = TileKind.BENCH
-        grid[14][18] = TileKind.BENCH
+        val grid = loadGrid("school_yard")
+        val w = grid[0].size
+        val h = grid.size
 
         val npcs = listOf(
             HubNpc(
@@ -194,128 +157,9 @@ object SchoolMaps {
     }
 
     private fun buildSchoolHallway(): SchoolMapData {
-        val w = 26
-        val h = 16
-        val grid = Array(h) { y ->
-            Array(w) { x ->
-                if ((x + y) % 2 == 0) TileKind.HALL_FLOOR_A else TileKind.HALL_FLOOR_B
-            }
-        }
-
-        // Outer perimeter walls
-        for (x in 0 until w) {
-            grid[0][x] = TileKind.HALL_WALL_TOP
-            grid[1][x] = TileKind.HALL_WALL
-            grid[2][x] = TileKind.HALL_WALL
-            grid[h - 1][x] = TileKind.HALL_WALL
-        }
-        for (y in 0 until h) {
-            grid[y][0] = TileKind.HALL_WALL_TOP
-            grid[y][w - 1] = TileKind.HALL_WALL_TOP
-        }
-
-        // Royal blue & gold carpet runners connecting the foyer, central atrium plaza, and side wings
-        for (y in 3..14) {
-            for (x in 12..14) grid[y][x] = TileKind.HALL_CARPET
-        }
-        for (y in 5..9) {
-            for (x in 10..16) grid[y][x] = TileKind.HALL_CARPET
-        }
-        // Carpet welcome strips toward mid & lower side classrooms
-        for (x in 4..10) grid[8][x] = TileKind.HALL_CARPET
-        for (x in 16..21) grid[8][x] = TileKind.HALL_CARPET
-        for (x in 4..12) grid[13][x] = TileKind.HALL_CARPET
-        for (x in 14..21) grid[13][x] = TileKind.HALL_CARPET
-
-        // Central Atrium Trophy & Reading Island (3x2 centerpiece on blue-gold carpet)
-        grid[6][12] = TileKind.BOOKSHELF
-        grid[6][13] = TileKind.TROPHY_CASE
-        grid[6][14] = TileKind.BOOKSHELF
-        grid[7][12] = TileKind.STUDY_DESK
-        grid[7][13] = TileKind.STUDY_DESK
-        grid[7][14] = TileKind.STUDY_DESK
-
-        // Corner plants & cozy indoor benches on tiled floor framing the central carpet plaza & foyer
-        grid[5][9] = TileKind.POTTED_PLANT
-        grid[5][17] = TileKind.POTTED_PLANT
-        grid[7][9] = TileKind.INDOOR_BENCH
-        grid[7][17] = TileKind.INDOOR_BENCH
-        grid[9][9] = TileKind.POTTED_PLANT
-        grid[9][17] = TileKind.POTTED_PLANT
-        grid[11][9] = TileKind.INDOOR_BENCH
-        grid[11][17] = TileKind.INDOOR_BENCH
-        grid[14][9] = TileKind.POTTED_PLANT
-        grid[14][17] = TileKind.POTTED_PLANT
-        grid[3][1] = TileKind.POTTED_PLANT
-        grid[3][24] = TileKind.POTTED_PLANT
-
-        // North Wall props strictly BETWEEN the 3 wide-spaced North doors (x = 5, 13, 21)
-        grid[1][2] = TileKind.WINDOW_INT
-        grid[1][9] = TileKind.WINDOW_INT
-        grid[1][17] = TileKind.WINDOW_INT
-        grid[1][23] = TileKind.WINDOW_INT
-
-        grid[2][2] = TileKind.LOCKER_PROP
-        grid[2][9] = TileKind.NOTICE_BOARD
-        grid[2][17] = TileKind.NOTICE_BOARD
-        grid[2][23] = TileKind.LOCKER_PROP
-
-        // Mid-West Wing (Palestra · Matematica) alcove: x = 1..5, y = 5..7
-        for (x in 1..5) {
-            grid[5][x] = TileKind.HALL_WALL_TOP
-            grid[6][x] = TileKind.HALL_WALL
-            grid[7][x] = TileKind.HALL_WALL
-        }
-        grid[6][1] = TileKind.WINDOW_INT
-        grid[7][3] = TileKind.DOOR_GYM
-        grid[8][3] = TileKind.DOORMAT
-
-        // Mid-East Wing (Laboratorio · Scienze) alcove: x = 20..24, y = 5..7
-        for (x in 20..24) {
-            grid[5][x] = TileKind.HALL_WALL_TOP
-            grid[6][x] = TileKind.HALL_WALL
-            grid[7][x] = TileKind.HALL_WALL
-        }
-        grid[6][24] = TileKind.WINDOW_INT
-        grid[7][22] = TileKind.DOOR_ACTIVE
-        grid[8][22] = TileKind.DOORMAT
-
-        // Lower-West Wing (Geografia · Mongolfiera) alcove: x = 1..5, y = 10..12
-        for (x in 1..5) {
-            grid[10][x] = TileKind.HALL_WALL_TOP
-            grid[11][x] = TileKind.HALL_WALL
-            grid[12][x] = TileKind.HALL_WALL
-        }
-        grid[11][1] = TileKind.WINDOW_INT
-        grid[12][3] = TileKind.DOOR_GEO
-        grid[13][3] = TileKind.DOORMAT
-
-        // Lower-East Wing (Inglese · Parole EN) alcove: x = 20..24, y = 10..12
-        for (x in 20..24) {
-            grid[10][x] = TileKind.HALL_WALL_TOP
-            grid[11][x] = TileKind.HALL_WALL
-            grid[12][x] = TileKind.HALL_WALL
-        }
-        grid[11][24] = TileKind.WINDOW_INT
-        grid[12][22] = TileKind.DOOR_ENGLISH
-        grid[13][22] = TileKind.DOORMAT
-
-        // North Wing Doors (spaced 8 tiles apart: x = 5, 13, 21)
-        // 1. Aula di Storia at (5, 2)
-        grid[2][5] = TileKind.DOOR_HISTORY
-        grid[3][5] = TileKind.DOORMAT
-
-        // 2. Armadietto & Spaccio (grand center) at (13, 2)
-        grid[2][13] = TileKind.DOOR_LOCKER
-        grid[3][13] = TileKind.DOORMAT
-
-        // 3. Biblioteca (Italiano) at (21, 2)
-        grid[2][21] = TileKind.DOOR_LIBRARY
-        grid[3][21] = TileKind.DOORMAT
-
-        // South Exit Door back to Yard centered at (13, 15)
-        grid[15][13] = TileKind.DOOR_ACTIVE
-        grid[14][13] = TileKind.DOORMAT
+        val grid = loadGrid("school_hallway")
+        val w = grid[0].size
+        val h = grid.size
 
         val portals = listOf(
             HubPortal(
@@ -419,17 +263,10 @@ object SchoolMaps {
                 action = PortalAction.OpenTrophyHall
             ),
             HubInteractiveProp(
-                id = "prop_missions_left",
+                id = "prop_missions",
                 label = "Missioni",
                 subtitle = "Premi Oggi",
                 pos = GridPos(9, 2),
-                action = PortalAction.OpenDailyMissions
-            ),
-            HubInteractiveProp(
-                id = "prop_missions_right",
-                label = "Missioni",
-                subtitle = "Premi Oggi",
-                pos = GridPos(17, 2),
                 action = PortalAction.OpenDailyMissions
             )
         )

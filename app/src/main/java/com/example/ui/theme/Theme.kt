@@ -73,3 +73,8 @@ fun ScuolaRetroTheme(
         )
     }
 }
+
+/** Colore delle parole chiave (**grassetto**) nelle domande: blu scuro sul chiaro, azzurro sullo scuro. */
+@Composable
+fun keywordHighlightColor(): Color =
+    if (LocalDarkTheme.current) Color(0xFF7DD3FC) else com.example.core.GameBalance.KEYWORD_HIGHLIGHT_COLOR

@@ -66,6 +66,7 @@ import com.example.core.MinigameResult
 import com.example.core.QuestionData
 import com.example.core.SfxType
 import com.example.core.TextFormatter
+import com.example.ui.theme.keywordHighlightColor
 import com.example.pixelart.Facing
 import com.example.pixelart.PixelArtAssets
 import com.example.ui.components.ConfirmModal
@@ -342,7 +343,7 @@ fun EnglishMatchScreen(
                         .heightIn(min = 48.dp)
                         .testTag("english_exit_button"),
                     contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E40AF))
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E40AF), contentColor = Color.White)
                 ) {
                     Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = "Esci")
                     if (!isShortLandscape) {
@@ -418,13 +419,13 @@ fun EnglishMatchScreen(
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = TextFormatter.toAnnotatedString(currentQuestion?.prompt.orEmpty()),
+                            text = TextFormatter.toAnnotatedString(highlightColor = keywordHighlightColor(), raw = currentQuestion?.prompt.orEmpty()),
                             style = if (isShortLandscape) {
                                 MaterialTheme.typography.titleMedium.copy(fontSize = 16.sp, lineHeight = 20.sp)
                             } else {
                                 MaterialTheme.typography.titleLarge.copy(fontSize = 21.sp, lineHeight = 27.sp)
                             },
-                            color = InkPrimary,
+                            color = MaterialTheme.colorScheme.onSurface,
                             maxLines = if (isShortLandscape) 2 else 3,
                             overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.testTag("english_question_prompt")

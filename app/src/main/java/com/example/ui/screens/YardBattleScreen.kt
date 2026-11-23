@@ -76,8 +76,14 @@ import com.example.core.QuestionData
 import com.example.core.SfxType
 import com.example.core.ShuffledOptions
 import com.example.core.TextFormatter
+import com.example.ui.theme.keywordHighlightColor
 import com.example.pixelart.Facing
 import com.example.pixelart.PixelArtAssets
+import kotlin.math.roundToInt
+import androidx.compose.ui.graphics.FilterQuality
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.IntOffset
+import com.example.pixelart.SchoolMaps
 import com.example.ui.components.ConfirmModal
 import com.example.ui.components.DialogBoxModal
 import com.example.ui.components.ExplanationModal
@@ -426,6 +432,7 @@ fun YardBattleScreen(
         val isCompactHeight = maxHeight < 620.dp
         val isShortLandscape = maxHeight < 520.dp && maxWidth > maxHeight
         val isCompactWidth = maxWidth < 640.dp
+        val screenMaxHeight = maxHeight
 
         Column(
             modifier = Modifier
@@ -476,255 +483,151 @@ fun YardBattleScreen(
             // Pokémon GBA-style Illustrated Battle Stage Panel
             val isEnemyHit = enemyShake != 0f
             val isPlayerHit = playerShake != 0f
+            val arenaHeight = when {
+                isShortLandscape -> 76.dp
+                else -> (screenMaxHeight * 0.38f).coerceIn(76.dp, 330.dp)
+            }
+            val yardBackdrop = remember { PixelArtAssets.getMapBackground("school_yard") }
             Surface(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(arenaHeight),
                 shape = RoundedCornerShape(14.dp),
                 border = BorderStroke(3.dp, if (config.isBoss) SoftGold else GameBalance.GBA_FRAME_DARK),
                 shadowElevation = 6.dp
             ) {
-                Box(modifier = Modifier.fillMaxWidth()) {
-                    // Illustrated 16-bit GBA battle backdrop with oval grassy/royal platforms
+                BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+                    // Personaggi ingranditi di un fattore intero: pixel tutti uguali
+                    val density = androidx.compose.ui.platform.LocalDensity.current
+                    val spriteScale = with(density) { (maxHeight.toPx() * 0.62f / PixelArtAssets.CHARACTER_PX).toInt().coerceAtLeast(1) }
+                    val spritePx = with(density) { (PixelArtAssets.CHARACTER_PX * spriteScale).toDp() }
+                    val hpPanelWidth = minOf(340.dp, maxWidth * 0.34f)
+                    // Sfondo: il vero cortile della scuola (facciata e prato), ingrandito a fattore intero
                     Canvas(modifier = Modifier.matchParentSize()) {
                         val w = size.width
                         val h = size.height
                         if (w <= 0f || h <= 0f) return@Canvas
-                        val skyBrush = if (config.isBoss) {
-                            Brush.verticalGradient(listOf(Color(0xFF312E81), Color(0xFF4C1D95), Color(0xFF7C3AED)))
-                        } else {
-                            Brush.verticalGradient(listOf(Color(0xFF7DD3FC), Color(0xFFBAE6FD), Color(0xFFDCFCE7)))
+                        val bg = yardBackdrop
+                        if (bg != null) {
+                            val tile = PixelArtAssets.TILE_PX
+                            val scale = maxOf(1, (h / (tile * 7f)).roundToInt())
+                            val cropW = (w / scale).roundToInt().coerceAtMost(bg.width)
+                            val cropH = (h / scale).roundToInt().coerceAtMost(bg.height)
+                            val margin = (bg.width / tile - SchoolMaps.schoolYard.width) / 2
+                            val doorX = ((margin + 13.5f) * tile).roundToInt()
+                            val srcX = (doorX - cropW / 2).coerceIn(0, bg.width - cropW)
+                            val srcY = ((margin + 0.6f) * tile).roundToInt().coerceIn(0, bg.height - cropH)
+                            drawImage(
+                                image = bg,
+                                srcOffset = IntOffset(srcX, srcY),
+                                srcSize = IntSize(cropW, cropH),
+                                dstSize = IntSize(w.roundToInt(), h.roundToInt()),
+                                filterQuality = FilterQuality.None
+                            )
                         }
-                        drawRect(brush = skyBrush)
-
-                        // Distant sun/stars + clouds or golden boss pillars
+                        // Boss: il cielo si fa notte viola e dorata
                         if (config.isBoss) {
-                            for (i in 0..5) {
-                                val sx = w * (0.10f + i * 0.16f)
-                                val sy = h * (0.16f + (i % 2) * 0.14f)
-                                drawCircle(SoftGold.copy(alpha = 0.55f), radius = 3.5f, center = androidx.compose.ui.geometry.Offset(sx, sy))
+                            drawRect(Color(0xFF312E81).copy(alpha = 0.55f))
+                            for (i in 0..7) {
+                                drawCircle(
+                                    SoftGold.copy(alpha = 0.7f),
+                                    radius = 3.5f,
+                                    center = androidx.compose.ui.geometry.Offset(w * (0.08f + i * 0.12f), h * (0.10f + (i % 3) * 0.08f))
+                                )
                             }
-                            drawRect(
-                                color = Color(0xFF1E1B4B).copy(alpha = 0.45f),
-                                topLeft = androidx.compose.ui.geometry.Offset(0f, h * 0.62f),
-                                size = androidx.compose.ui.geometry.Size(w, h * 0.38f)
-                            )
-                        } else {
-                            drawCircle(
-                                color = Color(0xFFFEF08A),
-                                radius = h * 0.16f,
-                                center = androidx.compose.ui.geometry.Offset(w * 0.50f, h * 0.20f)
-                            )
-                            drawRoundRect(
-                                color = Color.White.copy(alpha = 0.8f),
-                                topLeft = androidx.compose.ui.geometry.Offset(w * 0.18f, h * 0.12f),
-                                size = androidx.compose.ui.geometry.Size(w * 0.11f, h * 0.11f),
-                                cornerRadius = androidx.compose.ui.geometry.CornerRadius(12f, 12f)
-                            )
-                            drawRoundRect(
-                                color = Color.White.copy(alpha = 0.8f),
-                                topLeft = androidx.compose.ui.geometry.Offset(w * 0.72f, h * 0.10f),
-                                size = androidx.compose.ui.geometry.Size(w * 0.13f, h * 0.11f),
-                                cornerRadius = androidx.compose.ui.geometry.CornerRadius(12f, 12f)
-                            )
-                            // Rolling green meadow floor
-                            drawRect(
-                                color = Color(0xFF86EFAC),
-                                topLeft = androidx.compose.ui.geometry.Offset(0f, h * 0.58f),
-                                size = androidx.compose.ui.geometry.Size(w, h * 0.42f)
-                            )
-                            drawRect(
-                                color = Color(0xFF4ADE80),
-                                topLeft = androidx.compose.ui.geometry.Offset(0f, h * 0.76f),
-                                size = androidx.compose.ui.geometry.Size(w, h * 0.24f)
-                            )
                         }
-
-                        // GBA Oval Battle Platforms under Player (left) and Enemy (right)
-                        val padColor = if (config.isBoss) Color(0xFFA78BFA) else Color(0xFF22C55E)
-                        val padRim = if (config.isBoss) SoftGold else Color(0xFF15803D)
-                        val leftPadW = (w * 0.22f).coerceIn(76f, 170f)
-                        val padH = (h * 0.24f).coerceIn(18f, 32f)
-                        // Player platform
-                        drawOval(
-                            color = padRim.copy(alpha = 0.7f),
-                            topLeft = androidx.compose.ui.geometry.Offset(w * 0.03f, h * 0.56f),
-                            size = androidx.compose.ui.geometry.Size(leftPadW, padH)
-                        )
-                        drawOval(
-                            color = padColor.copy(alpha = 0.85f),
-                            topLeft = androidx.compose.ui.geometry.Offset(w * 0.035f, h * 0.54f),
-                            size = androidx.compose.ui.geometry.Size(leftPadW * 0.94f, padH * 0.82f)
-                        )
-                        // Enemy platform
-                        drawOval(
-                            color = padRim.copy(alpha = 0.7f),
-                            topLeft = androidx.compose.ui.geometry.Offset(w - leftPadW - w * 0.03f, h * 0.56f),
-                            size = androidx.compose.ui.geometry.Size(leftPadW, padH)
-                        )
-                        drawOval(
-                            color = padColor.copy(alpha = 0.85f),
-                            topLeft = androidx.compose.ui.geometry.Offset(w - leftPadW - w * 0.025f, h * 0.54f),
-                            size = androidx.compose.ui.geometry.Size(leftPadW * 0.94f, padH * 0.82f)
-                        )
-
-                        // Starburst attack impact flash VFX
+                        // Pedane ovali sotto i due sfidanti
+                        val padColor = if (config.isBoss) Color(0xFFA78BFA) else Color(0xFF4ADE80)
+                        val padRim = if (config.isBoss) SoftGold else Color(0xFF166534)
+                        val padW = spritePx.toPx() * 1.25f
+                        val padH = padW * 0.26f
+                        val padY = h * 0.86f - padH / 2f
+                        for (cx in listOf(w * 0.22f, w * 0.78f)) {
+                            drawOval(padRim.copy(alpha = 0.75f), topLeft = androidx.compose.ui.geometry.Offset(cx - padW / 2f, padY + 4f), size = androidx.compose.ui.geometry.Size(padW, padH))
+                            drawOval(padColor.copy(alpha = 0.9f), topLeft = androidx.compose.ui.geometry.Offset(cx - padW * 0.47f, padY), size = androidx.compose.ui.geometry.Size(padW * 0.94f, padH * 0.85f))
+                        }
+                        // Lampo dell'impatto
                         if (isEnemyHit) {
-                            val cx = w * 0.88f
-                            val cy = h * 0.44f
-                            drawCircle(SoftGold.copy(alpha = 0.55f), radius = h * 0.34f, center = androidx.compose.ui.geometry.Offset(cx, cy))
-                            drawCircle(Color.White.copy(alpha = 0.85f), radius = h * 0.16f, center = androidx.compose.ui.geometry.Offset(cx, cy))
+                            val c = androidx.compose.ui.geometry.Offset(w * 0.78f, h * 0.55f)
+                            drawCircle(SoftGold.copy(alpha = 0.55f), radius = h * 0.30f, center = c)
+                            drawCircle(Color.White.copy(alpha = 0.85f), radius = h * 0.14f, center = c)
                         }
                         if (isPlayerHit) {
-                            val cx = w * 0.12f
-                            val cy = h * 0.44f
-                            drawCircle(WarmAmber.copy(alpha = 0.50f), radius = h * 0.30f, center = androidx.compose.ui.geometry.Offset(cx, cy))
+                            drawCircle(WarmAmber.copy(alpha = 0.50f), radius = h * 0.28f, center = androidx.compose.ui.geometry.Offset(w * 0.22f, h * 0.55f))
                         }
                     }
 
-                    Column(
+                    // Sfidanti grandi sulle pedane
+                    PixelSprite(
+                        bitmap = PixelArtAssets.getCharacterSprite(
+                            id = "avatar_${profile?.avatarId ?: 0}",
+                            facing = Facing.RIGHT,
+                            stepFrame = if (isEnemyHit) 1 else 0,
+                            hatId = profile?.equippedHat.orEmpty()
+                        ),
+                        contentDescription = profile?.name ?: "Tu",
+                        modifier = Modifier
+                            .align(Alignment.BottomStart)
+                            .offset(x = maxWidth * 0.22f - spritePx / 2 + playerShake.dp, y = -(maxHeight * 0.10f))
+                            .size(spritePx)
+                    )
+                    PixelSprite(
+                        bitmap = PixelArtAssets.getCharacterSprite(enemySpriteId, Facing.LEFT, 0),
+                        contentDescription = enemyDisplayName,
+                        modifier = Modifier
+                            .align(Alignment.BottomStart)
+                            .offset(x = maxWidth * 0.78f - spritePx / 2 + enemyShake.dp, y = -(maxHeight * 0.10f))
+                            .size(spritePx)
+                    )
+
+                    // Pannelli vita in alto, come nei giochi di ruolo portatili
+                    Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(
-                                horizontal = if (isShortLandscape) 10.dp else 14.dp,
-                                vertical = if (isShortLandscape) 4.dp else if (isCompactHeight) 6.dp else 10.dp
-                            )
+                            .padding(horizontal = if (isShortLandscape) 8.dp else 12.dp, vertical = if (isShortLandscape) 6.dp else 10.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
+                        BattleHpPanel(
+                            name = profile?.name ?: "Tu",
+                            hp = playerHp,
+                            maxHp = GameBalance.PLAYER_MAX_HP,
+                            progress = animPlayerHp,
+                            barColor = if (playerHp > 35) EmeraldSuccess else WarmAmber,
+                            borderColor = MaterialTheme.colorScheme.outline,
+                            alignEnd = false,
+                            compact = isShortLandscape,
+                            modifier = Modifier.width(hpPanelWidth)
+                        )
+                        BattleHpPanel(
+                            name = enemyDisplayName,
+                            hp = enemyHp,
+                            maxHp = enemyMaxHp,
+                            progress = animEnemyHp,
+                            barColor = if (config.isBoss) SoftGold else Color(0xFFDC2626),
+                            borderColor = if (config.isBoss) SoftGold else MaterialTheme.colorScheme.outline,
+                            alignEnd = true,
+                            compact = isShortLandscape,
+                            modifier = Modifier.width(hpPanelWidth)
+                        )
+                    }
+
+                    if (!isShortLandscape || phase == BattlePhase.CHOOSE_MOVE || isEnemyHit || isPlayerHit) {
+                        Surface(
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .padding(bottom = 8.dp),
+                            shape = RoundedCornerShape(8.dp),
+                            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.94f),
+                            border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.65f))
                         ) {
-                            // Player Side
-                            Row(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .offset(x = playerShake.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                PixelSprite(
-                                    bitmap = PixelArtAssets.getCharacterSprite(
-                                        id = "avatar_${profile?.avatarId ?: 0}",
-                                        facing = Facing.RIGHT,
-                                        stepFrame = if (isEnemyHit) 1 else 0,
-                                        hatId = profile?.equippedHat.orEmpty()
-                                    ),
-                                    contentDescription = profile?.name ?: "Tu",
-                                    modifier = Modifier.size(if (isShortLandscape) 42.dp else if (isCompactHeight) 54.dp else 70.dp)
-                                )
-                                Surface(
-                                    modifier = Modifier.weight(1f),
-                                    shape = RoundedCornerShape(10.dp),
-                                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.94f),
-                                    border = BorderStroke(2.dp, MaterialTheme.colorScheme.outline)
-                                ) {
-                                    Column(modifier = Modifier.padding(horizontal = 8.dp, vertical = if (isShortLandscape) 3.dp else 5.dp)) {
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.SpaceBetween,
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            Text(
-                                                text = profile?.name ?: "Tu",
-                                                style = if (isShortLandscape) MaterialTheme.typography.labelLarge else MaterialTheme.typography.titleMedium,
-                                                color = MaterialTheme.colorScheme.onSurface,
-                                                maxLines = 1,
-                                                overflow = TextOverflow.Ellipsis,
-                                                modifier = Modifier.weight(1f)
-                                            )
-                                            if (isShortLandscape) {
-                                                Text(
-                                                    text = "$playerHp/${GameBalance.PLAYER_MAX_HP}",
-                                                    style = MaterialTheme.typography.labelSmall,
-                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                                )
-                                            }
-                                        }
-                                        RetroHpBar(
-                                            progress = animPlayerHp,
-                                            barColor = if (playerHp > 35) EmeraldSuccess else WarmAmber,
-                                            modifier = Modifier.fillMaxWidth()
-                                        )
-                                        if (!isShortLandscape) {
-                                            Text("HP $playerHp / ${GameBalance.PLAYER_MAX_HP}", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                        }
-                                    }
-                                }
-                            }
-
-                            Spacer(Modifier.width(10.dp))
-
-                            // Enemy Side
-                            Row(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .offset(x = enemyShake.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Surface(
-                                    modifier = Modifier.weight(1f),
-                                    shape = RoundedCornerShape(10.dp),
-                                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.94f),
-                                    border = BorderStroke(2.dp, if (config.isBoss) SoftGold else MaterialTheme.colorScheme.outline)
-                                ) {
-                                    Column(
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = if (isShortLandscape) 3.dp else 5.dp),
-                                        horizontalAlignment = Alignment.End
-                                    ) {
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.SpaceBetween,
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            if (isShortLandscape) {
-                                                Text(
-                                                    text = "$enemyHp/$enemyMaxHp",
-                                                    style = MaterialTheme.typography.labelSmall,
-                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                                )
-                                            }
-                                            Text(
-                                                text = enemyDisplayName,
-                                                style = if (isShortLandscape) MaterialTheme.typography.labelLarge else MaterialTheme.typography.titleMedium,
-                                                color = MaterialTheme.colorScheme.onSurface,
-                                                maxLines = 1,
-                                                overflow = TextOverflow.Ellipsis,
-                                                modifier = if (isShortLandscape) Modifier.weight(1f).padding(start = 6.dp) else Modifier
-                                            )
-                                        }
-                                        RetroHpBar(
-                                            progress = animEnemyHp,
-                                            barColor = if (config.isBoss) SoftGold else Color(0xFFDC2626),
-                                            modifier = Modifier.fillMaxWidth()
-                                        )
-                                        if (!isShortLandscape) {
-                                            Text("HP $enemyHp / $enemyMaxHp", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                        }
-                                    }
-                                }
-                                PixelSprite(
-                                    bitmap = PixelArtAssets.getCharacterSprite(enemySpriteId, Facing.LEFT, 0),
-                                    contentDescription = enemyDisplayName,
-                                    modifier = Modifier.size(if (isShortLandscape) 42.dp else if (isCompactHeight) 54.dp else 70.dp)
-                                )
-                            }
-                        }
-                        if (!isShortLandscape || phase == BattlePhase.CHOOSE_MOVE || isEnemyHit || isPlayerHit) {
-                            Spacer(Modifier.height(if (isShortLandscape) 3.dp else 5.dp))
-                            Surface(
-                                shape = RoundedCornerShape(8.dp),
-                                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.94f),
-                                border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.65f))
-                            ) {
-                                Text(
-                                    text = battleBanner,
-                                    style = if (isShortLandscape) MaterialTheme.typography.labelMedium else MaterialTheme.typography.labelLarge,
-                                    color = MaterialTheme.colorScheme.primary,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 2.dp)
-                                )
-                            }
+                            Text(
+                                text = battleBanner,
+                                style = if (isShortLandscape) MaterialTheme.typography.labelMedium else MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.primary,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+                            )
                         }
                     }
                 }
@@ -776,7 +679,7 @@ fun YardBattleScreen(
                                         .heightIn(min = 96.dp)
                                         .testTag("move_base_button"),
                                     shape = RoundedCornerShape(14.dp),
-                                    colors = ButtonDefaults.buttonColors(containerColor = DeepBlueAccent)
+                                    colors = ButtonDefaults.buttonColors(containerColor = DeepBlueAccent, contentColor = Color.White)
                                 ) {
                                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                         Icon(Icons.Default.Shield, contentDescription = null, modifier = Modifier.size(28.dp))
@@ -894,7 +797,7 @@ fun YardBattleScreen(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Text(
-                                        text = TextFormatter.toAnnotatedString(q.prompt),
+                                        text = TextFormatter.toAnnotatedString(highlightColor = keywordHighlightColor(), raw = q.prompt),
                                         style = MaterialTheme.typography.titleMedium.copy(
                                             fontSize = 16.sp,
                                             lineHeight = 20.sp
@@ -910,7 +813,7 @@ fun YardBattleScreen(
                                 }
                             } else {
                                 Text(
-                                    text = TextFormatter.toAnnotatedString(q.prompt),
+                                    text = TextFormatter.toAnnotatedString(highlightColor = keywordHighlightColor(), raw = q.prompt),
                                     style = MaterialTheme.typography.headlineSmall.copy(
                                         fontSize = if (isCompactWidth) 19.sp else 20.sp,
                                         lineHeight = if (isCompactWidth) 26.sp else 30.sp
@@ -955,7 +858,7 @@ fun YardBattleScreen(
                                         .testTag("battle_hint_banner")
                                 ) {
                                     Text(
-                                        text = TextFormatter.toAnnotatedString("Indizio: $hintText"),
+                                        text = TextFormatter.toAnnotatedString(highlightColor = keywordHighlightColor(), raw = "Indizio: $hintText"),
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = MaterialTheme.colorScheme.onPrimaryContainer
                                     )
@@ -1111,6 +1014,47 @@ fun YardBattleScreen(
                     viewModel.returnFromMinigame(config)
                 },
                 onCancel = { showExitConfirm = false }
+            )
+        }
+    }
+}
+
+
+/** Pannello nome + barra vita di uno sfidante, sovrapposto all'arena. */
+@Composable
+private fun BattleHpPanel(
+    name: String,
+    hp: Int,
+    maxHp: Int,
+    progress: Float,
+    barColor: Color,
+    borderColor: Color,
+    alignEnd: Boolean,
+    compact: Boolean,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(10.dp),
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.94f),
+        border = BorderStroke(2.dp, borderColor)
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = if (compact) 3.dp else 6.dp),
+            horizontalAlignment = if (alignEnd) Alignment.End else Alignment.Start
+        ) {
+            Text(
+                text = name,
+                style = if (compact) MaterialTheme.typography.labelLarge else MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            RetroHpBar(progress = progress, barColor = barColor, modifier = Modifier.fillMaxWidth())
+            Text(
+                "HP $hp / $maxHp",
+                style = if (compact) MaterialTheme.typography.labelSmall else MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }

@@ -1,5 +1,11 @@
 # Maestri di Pixel
 
+<p align="left">
+  <a href="https://paypal.me/cannos" target="_blank">
+    <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" height="42">
+  </a>
+</p>
+
 **App educativa Android offline-first in pixel-art 16-bit per bambini della 4ª e 5ª elementare**, progettata per tablet in orientamento orizzontale con 6 materie, mini-giochi dedicati, ripetizione spaziata (metodo Leitner), Area Genitori protetta da PIN e sincronizzazione di pacchetti didattici da GitHub.
 
 ![Kotlin](https://img.shields.io/badge/Kotlin-Android-7F52FF?logo=kotlin&logoColor=white)
@@ -11,24 +17,31 @@
 
 ## Anteprima
 
-![Hub Scuola — Cortile e Atrio 16-bit](docs/screenshots/hub_scuola.jpg)
+*Schermate reali dell'app su tablet 1920×1200.*
 
-| Sfida RPG nel Cortile | Palestra Spaziale (Matematica) |
+![Cortile della scuola](docs/screenshots/cortile.jpg)
+
+| Atrio con le aule | Dialoghi con maestri e compagni |
 | :---: | :---: |
-| ![Sfida RPG nel Cortile](docs/screenshots/sfida_cortile.jpg) | ![Palestra Spaziale](docs/screenshots/palestra_spaziale.jpg) |
-| *Battaglie a turni stile GBA con focus mode, indizi, TTS e feedback positivo.* | *Arcade spaziale a 60 fps per tabelline e calcoli, con EMP 50/50 e tastierino opzionale.* |
+| ![Atrio della scuola](docs/screenshots/atrio.jpg) | ![Dialogo con la compagna Gaia](docs/screenshots/dialogo.jpg) |
+| *Ogni porta porta a una materia; le targhe mostrano grado e verifiche in arrivo.* | *I personaggi suggeriscono l'attività consigliata del giorno.* |
 
-| Armadietto, Medaglie e Spaccio Ricompense |
+| Sfida nel Cortile (Storia) | Palestra Spaziale (Matematica) |
+| :---: | :---: |
+| ![Sfida nel Cortile](docs/screenshots/battaglia.jpg) | ![Palestra Spaziale](docs/screenshots/palestra.jpg) |
+| *Battaglia a turni sullo sfondo del cortile, con indizi e lettura ad alta voce.* | *Arcade per tabelline e calcoli, con tastierino opzionale.* |
+
+| Biblioteca Magica (Italiano) |
 | :---: |
-| ![Armadietto e Bacheca Medaglie](docs/screenshots/armadietto_medaglie.jpg) |
-| *Medaglie sbloccabili dai Boss delle materie, armadietto personalizzabile con adesivi, cappelli e compagni pixel-art.* |
+| ![Biblioteca Magica](docs/screenshots/biblioteca.jpg) |
+| *Caccia al libro giusto tra gli scaffali per ortografia e grammatica.* |
 
 ---
 
 ## Funzionalità principali
 
 ### Mondo esplorabile 16-bit (Cortile & Atrio Scuola)
-- **Mappa edge-to-edge adattiva**: la scena 16-bit si adatta dinamicamente alla risoluzione del tablet estendendo naturalmente i bordi del prato e dell'atrio senza bande nere.
+- **Grafica pixel-art LPC a 32 px**: personaggi animati nelle 4 direzioni e sfondi dipinti per Cortile e Atrio, ingranditi a fattore intero (×2, ×3…) per pixel sempre nitidi; lo sfondo ha un bordo extra, quindi niente bande nere.
 - **Doppio controllo**: movimento **Tap-to-Walk / Tap-to-Interact** (basta toccare maestri, porte o sentieri) affiancato da un **D-Pad semitrasparente** opzionale nella zona naturale del pollice sinistro e pulsante contestuale di azione a destra.
 - **Barra HUD superiore separata**: sempre ordinata e ben distanziata dalla mappa, con profilo esploratore, timbri settimanali, materia consigliata, accesso a Mappa rapida, Missioni giornaliere, contatori Stelle/Medaglie, tasto Audio rapido e accesso Area Genitori.
 
@@ -97,16 +110,37 @@ Per la guida passo-passo completa consulta [`github_packs_repo_template/README.m
 ├── app/src/main/java/com/example/
 │   ├── MainActivity.kt          # Entry point edge-to-edge & gestione lifecycle audio/TTS
 │   ├── core/                    # Modelli dati, motore Leitner, persistenza locale, audio/TTS, sync GitHub
-│   ├── pixelart/                # Motore grafico 16-bit Canvas, sprite, mappe e animazioni
+│   ├── pixelart/                # Caricamento sprite LPC, piante delle mappe e percorsi (A*)
 │   ├── ui/
 │   │   ├── components/          # Componenti GBA/M3 condivisi, modali, D-Pad e tastierino
 │   │   ├── screens/             # Hub, 6 mini-giochi, Armadietto, Area Genitori, Profili
 │   │   └── theme/               # Palette anti-abbagliamento Scuro/Chiaro e tipografia Atkinson Hyperlegible
 │   └── viewmodel/               # Stato centralizzato della sessione e dei profili
-├── docs/screenshots/            # Schermate dimostrative per la documentazione
+├── app/src/main/resources/      # maps/*.txt (piante) e sprites/ (personaggi, cappelli, sfondi, crediti)
+├── tools/art/                   # Script che compongono personaggi e sfondi dai pacchetti LPC
+├── docs/screenshots/            # Schermate reali dell'app
 ├── github_packs_repo_template/  # Template repository pacchetti JSON + schemi e validatore Python
 └── BUILD_ANDROID.md             # Guida compilazione e checklist QA su tablet
 ```
+
+---
+
+## Grafica
+
+La grafica usa la serie **LPC (Liberated Pixel Cup)**, uno stile pixel-art a 32 px condiviso da molti autori:
+
+- **Personaggi**: composti con `tools/art/build_characters.py` dai livelli del [Universal LPC Spritesheet Character Generator](https://github.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator) (corpo da bambino per gli avatar, adulti per maestri e personale). I cappelli dell'armadietto sono livelli separati, già allineati alla testa da bambino.
+- **Sfondi**: `tools/art/build_maps.py` dipinge Cortile e Atrio con le piastrelle LPC seguendo le piante in `app/src/main/resources/maps/*.txt`, le stesse che l'app usa per collisioni, porte e personaggi: grafica e logica coincidono sempre.
+- **Rigenerare**: scarica i pacchetti indicati in testa agli script e lancia
+  ```bash
+  python3 tools/art/build_characters.py <generatore_lpc> app/src/main/resources
+  python3 tools/art/build_maps.py <cartella_pacchetti_lpc> app/src/main/resources
+  ```
+
+### Crediti
+
+Grafica LPC sotto licenze **CC-BY-SA 3.0 / GPL 3.0 / OGA-BY 3.0** (alcuni livelli CC0): gli autori di ogni livello e pacchetto sono elencati in
+[`CREDITS-characters.csv`](app/src/main/resources/sprites/CREDITS-characters.csv) e [`CREDITS-maps.txt`](app/src/main/resources/sprites/CREDITS-maps.txt), inclusi anche nell'APK.
 
 ---
 
@@ -126,3 +160,15 @@ gradle :app:testDebugUnitTest
 
 ### Token GitHub (necessario finché il repository dei pacchetti è privato)
 Imposta un Fine-grained PAT con permesso `Contents: Read-only` sul solo repository `maestri-di-pixel-packs` nella variabile `GITHUB_PACKS_PAT` del file `.env` locale (basato su `.env.example`): viene inserito nell'APK in fase di build, mai nel codice sorgente. Senza token, con il repository privato, la sincronizzazione fallisce con un avviso in Area Genitori e l'app continua a funzionare con i pacchetti inclusi.
+
+---
+
+## ☕ Supporta il progetto
+
+Se Maestri di Pixel aiuta anche i tuoi figli a studiare, puoi offrirmi un caffè: mi aiuta a preparare nuovi capitoli e mini-giochi.
+
+<a href="https://paypal.me/cannos" target="_blank">
+  <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" height="48">
+</a>
+
+[![Donate with PayPal](https://img.shields.io/badge/Donate-PayPal-00457C?style=for-the-badge&logo=paypal&logoColor=white)](https://paypal.me/cannos)

@@ -83,6 +83,7 @@ import com.example.core.GameBalance
 import com.example.core.MinigameResult
 import com.example.core.PackData
 import com.example.core.TextFormatter
+import com.example.ui.theme.keywordHighlightColor
 import com.example.pixelart.Facing
 import com.example.pixelart.PixelArtAssets
 import com.example.ui.theme.BackdropScrimDark
@@ -299,7 +300,7 @@ fun DialogBoxModal(
                     )
                     Spacer(Modifier.height(6.dp))
                     Text(
-                        text = TextFormatter.toAnnotatedString(message),
+                        text = TextFormatter.toAnnotatedString(highlightColor = keywordHighlightColor(), raw = message),
                         style = MaterialTheme.typography.bodyLarge.copy(lineHeight = 30.sp),
                         color = MaterialTheme.colorScheme.onSurface
                     )
@@ -454,7 +455,7 @@ fun ExplanationModal(
             }
             Spacer(Modifier.height(12.dp))
             Text(
-                text = TextFormatter.toAnnotatedString(explanation),
+                text = TextFormatter.toAnnotatedString(highlightColor = keywordHighlightColor(), raw = explanation),
                 style = MaterialTheme.typography.bodyLarge.copy(fontSize = 20.sp, lineHeight = 30.sp),
                 color = MaterialTheme.colorScheme.onSurface
             )

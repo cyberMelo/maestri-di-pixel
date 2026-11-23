@@ -70,6 +70,7 @@ import com.example.core.MinigameResult
 import com.example.core.QuestionData
 import com.example.core.SfxType
 import com.example.core.TextFormatter
+import com.example.ui.theme.keywordHighlightColor
 import com.example.pixelart.Facing
 import com.example.pixelart.PixelArtAssets
 import com.example.ui.components.ConfirmModal
@@ -385,7 +386,7 @@ fun LibraryBooksScreen(
                         .heightIn(min = 48.dp)
                         .testTag("library_exit_button"),
                     contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4C1D95))
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4C1D95), contentColor = Color.White)
                 ) {
                     Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = "Esci")
                     if (!isShortLandscape) {
@@ -448,13 +449,13 @@ fun LibraryBooksScreen(
                             )
                         }
                         Text(
-                            text = TextFormatter.toAnnotatedString(currentQuestion?.prompt.orEmpty()),
+                            text = TextFormatter.toAnnotatedString(highlightColor = keywordHighlightColor(), raw = currentQuestion?.prompt.orEmpty()),
                             style = if (isShortLandscape) {
                                 MaterialTheme.typography.titleMedium.copy(fontSize = 15.sp, lineHeight = 19.sp)
                             } else {
                                 MaterialTheme.typography.titleLarge.copy(fontSize = 19.sp, lineHeight = 25.sp)
                             },
-                            color = InkPrimary,
+                            color = MaterialTheme.colorScheme.onSurface,
                             maxLines = if (isShortLandscape) 2 else 3,
                             overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.testTag("library_question_prompt")
